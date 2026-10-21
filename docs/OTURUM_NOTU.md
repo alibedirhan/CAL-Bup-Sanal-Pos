@@ -1,3 +1,16 @@
+# 21 Ekim 2026 gece — iPhone uçtan uca doğrulandı (kullanıcı)
+
+Ana ekran simgesi yeniden eklendi: iOS "Ana Ekrana Ekle" ekranında "Open as
+Web App" anahtarı `display: browser` sayesinde kendiliğinden kapalı geldi;
+simge Safari'de açıldı (adres çubuğu var). Kullanıcı: Safari'de giriş →
+cari + kart → "DenizPay’e giriş yap" → kart sayfasında BUP Doldur → "kart
+yazıldı, çalıştı". Ayrıca standalone uygulamadan açılan uygulama içi tarayıcı
+penceresinde otomatik girişin çalıştığı görüldü (doldurma orada yok: yer imi
+menüsü yok, depo ayrı). Açık kalanlar: Android denemesi, GitHub (K4), eski
+`otomatik-giris` dalı silinebilir (main'e alındı), ödeme/onay gerçek kullanımı.
+
+---
+
 # 21 Ekim 2026 gece — önbellek: no-store → no-cache
 
 Kullanıcı ana ekrandan açınca "sunucudan yanıt çok geç" dedi. Ölçüm: sunucu
