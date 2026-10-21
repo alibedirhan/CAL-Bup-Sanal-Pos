@@ -18,6 +18,7 @@ yazmama, giriş sayfası/başka site, kötü açan, süre); `test:hesap` emülat
 işin kurulduğunu (kartsız) ve kilitte silindiğini doğrular. Gerçek DenizPay'de
 doldurma kullanıcıca denenmedi; card.js'in değeri kabul edip etmediği orada
 görülecek. Kullanıcı telefonda yer imini "BUP Doldur" olarak yeniden kurmalı.
+**Yayında:** kullanıcı izniyle Claude yayınladı, kod özeti `cdbbc57440eb7d4e`, test:yayin geçti.
 
 ---
 
