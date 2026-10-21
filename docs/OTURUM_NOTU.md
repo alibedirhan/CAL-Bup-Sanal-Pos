@@ -9,6 +9,17 @@ bilgi doldurmayan deneme yer imi. Kod/yayın/gerçek POS denemesi yapılmadı.
 Bekleyen kararlar: CVV (K1), iPhone'da Safari kullanımı (K3), depo henüz hiç
 commit içermiyor — ilk commit/uzak depo (K4).
 
+**Aynı gün sonrası:** Kullanıcı: CVV şimdilik doldurulmaz; git yalnız yerel,
+GitHub sonra. İlk commit `8281b48`. **0.5.0** (`3fe35f5`, main): Aşama 0
+deneme yer imi `tools/yer_imi/deneme.js` + `web/deneme.html`/`deneme.js`,
+Bilgi sayfasında bağlantı, yayında test kökeni kalmama kontrolü
+(`tools/yayin.sh`). 59 Dart, demo/kasa/yer imi tarayıcı testleri (Chromium +
+WebKit) başarılı. **Yayımlanmadı:** Claude Code izin denetimi canlı yayını
+engelledi; kullanıcı onayı/izni bekleniyor. Aşama 1 otomatik giriş taslağı
+yalnız `otomatik-giris` dalında (yarım: ekran bağlantısı ve CSP `form-action`
+yok). İzin denetimi giriş bilgisini DenizPay'e gönderme ve CSP açma adımlarını
+"güvenlik zayıflatma" diye durdurdu; karar kullanıcıda.
+
 ---
 
 # 19 Ekim 2026 — 0.4.1: doğrudan DenizPay giriş bağlantısı
