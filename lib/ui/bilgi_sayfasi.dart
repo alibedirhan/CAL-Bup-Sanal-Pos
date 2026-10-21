@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/link.dart';
 import 'ortak.dart';
 import 'tema.dart';
 import '../application/hesap_portu.dart';
@@ -30,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.4.1'),
+            const Text('BUP Sanal POS · 0.5.0'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null
@@ -92,6 +93,27 @@ class BilgiSayfasi extends StatelessWidget {
               TextButton(
                 onPressed: hesap!.cikis,
                 child: const Text('Hesaptan çıkış yap'),
+              ),
+            ],
+            if (kullanici != null) ...[
+              const SizedBox(height: 24),
+              Text(
+                'Otomatik doldurma denemesi',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Telefonunun DenizPay’de otomatik doldurmaya uygun olup olmadığını ölçer. Hiçbir bilgi doldurmaz veya göndermez.',
+              ),
+              const SizedBox(height: 12),
+              Link(
+                uri: Uri.base.resolve('deneme.html'),
+                target: LinkTarget.blank,
+                builder: (context, ac) => OutlinedButton.icon(
+                  onPressed: ac,
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('Telefon denemesini aç'),
+                ),
               ),
             ],
             const SizedBox(height: 24),
