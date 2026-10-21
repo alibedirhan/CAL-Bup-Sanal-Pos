@@ -16,7 +16,7 @@ doğrulandı. Bu liste kullanıcının "geliştirmemiz gerekenleri tespit et" is
    otomatik giriş olmaz, BUP Doldur da firma numarası uyuşmadığı için yazmaz.
    Öneri: cari formunda isteğe bağlı "DenizPay kullanıcı adı/şifre"; şifre yalnız
    cihaz kasasında şifreli (kart gibi), firma eşleşmesi DenizPay'deki numarayla.
-2. **Android denemesi.** Hiç yapılmadı. Chrome'da yer imi adres çubuğuna adı
+2. **Android denemesi.** *Ertelendi (21 Ekim, kullanıcı: "şimdilik kalsın").* Hiç yapılmadı. Chrome'da yer imi adres çubuğuna adı
    yazılarak çalıştırılır; ana ekran simgesi `display: browser` ile Chrome sekmesi.
 3. **Otomatik testlerin GitHub'da çalışması (Actions).** Dart testleri ve
    analiz her gönderimde kendiliğinden koşsun; tarayıcı testleri sonra eklenebilir.
