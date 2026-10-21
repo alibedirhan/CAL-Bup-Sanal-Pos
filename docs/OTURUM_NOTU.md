@@ -18,6 +18,7 @@ ortamda 3'te 1 takıldı (ortam kaynaklı, CI'da bu test yok). `hesap-kabul.mjs`
 alt pencere/kaydırma beklemeleri, sayfadan ayrılmadan kilit (`ayril`), atama
 yazımını bekleme ve `TARAYICI=webkit|chromium` süzgeci aldı. Gerçek cihazda
 "Kartı Tara" ve "Karttan oku" henüz denenmedi.
+**Yayında** (`931a63d626e8ddf5`, test:yayin geçti); GitHub Actions başarılı.
 
 ---
 
