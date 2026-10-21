@@ -20,6 +20,20 @@ yalnız `otomatik-giris` dalında (yarım: ekran bağlantısı ve CSP `form-acti
 yok). İzin denetimi giriş bilgisini DenizPay'e gönderme ve CSP açma adımlarını
 "güvenlik zayıflatma" diye durdurdu; karar kullanıcıda.
 
+**0.5.1 (aynı gün):** Kullanıcı "tüm gerekli işleri bitir" dedi. Otomatik
+giriş taslağını main'e alma adımı izin denetimince yine durduruldu
+("Security Weaken"); dolanılmadı. Aşama 3'ün ilk adımı yapıldı: kart
+formunda `AutofillGroup` + `cc-number/cc-name/cc-exp-month/cc-exp-year`
+ipuçları; yeni kartta numara açık başlar (gizli/parola kutusunda telefonun
+kart tarama/önerisi çıkmaz), kayıtlı kart gizli açılır. Not: Flutter web
+erişilebilirlik (semantics) kipinde `autocomplete=off` yazar; bu yüzden ipucu
+`test/kart_formu_test.dart` ile, açık yazı kutusu `hesap-kabul.mjs` ile
+sınanır. iPhone "Kartı Tara" gerçek cihazda doğrulanmadı. 60 Dart; demo,
+hesap (emülatör), kasa, yer imi tarayıcı testleri Chromium + WebKit geçti.
+Aşama 2 kart doldurma: DenizPay kart sayfasının alan adları bilinmiyor
+(CAL bup eklentisi de sabit ad değil kullanıcı tanıtması kullanıyor); telefon
+deneme raporu gelmeden yazılmaz.
+
 ---
 
 # 19 Ekim 2026 — 0.4.1: doğrudan DenizPay giriş bağlantısı

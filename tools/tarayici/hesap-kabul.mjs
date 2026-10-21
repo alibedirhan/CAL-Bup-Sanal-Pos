@@ -46,6 +46,9 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     await write('Vergi / TC kimlik numarası','0000000000');await button('Cariyi kaydet').click();
     await button('Kart ekle').click();await write('Kart adı','Örnek İş Kartı');
     await write('Kart numarası','4111111111111111');
+    // Yeni kartta numara açık yazı kutusudur. Kart alanı bildirimi (cc-number) erişilebilirlik kipinde
+    // Flutter tarafından kapatıldığı için burada değil, test/kart_formu_test.dart içinde sınanır.
+    assert.equal(await page.evaluate(()=>document.activeElement?.type),'text');
     await write('Kart üzerindeki ad (isteğe bağlı)','Örnek Yerel Kart Sahibi');await write('Ay','12');await write('Yıl','2030');
     await page.getByRole('checkbox',{name:'Kartı ve bu cari altında saklamayı kontrol ettim.'}).click();
     await button('Kartı kaydet').click();

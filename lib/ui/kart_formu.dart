@@ -37,7 +37,10 @@ class _KartFormuState extends State<_KartFormu> {
       _telefon = TextEditingController();
   late final _ay = TextEditingController(text: widget.kart?.ay.toString());
   late final _yil = TextEditingController(text: widget.kart?.yil.toString());
-  bool _mesgul = false, _yukleniyor = false, _goster = false, _onay = false;
+  bool _mesgul = false, _yukleniyor = false, _onay = false;
+  // Yeni kartta numara açık başlar: gizli (parola türü) kutuda telefonun kart
+  // tarama/önerme özelliği çıkmaz. Kayıtlı kart açılırken gizli kalır.
+  late bool _goster = widget.kart == null;
   String? _hata, _bilgi;
   @override
   void initState() {
@@ -167,167 +170,180 @@ class _KartFormuState extends State<_KartFormu> {
         ),
         child: SingleChildScrollView(
           child: SinirliIcerik(
-            child: Form(
-              key: _form,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    widget.kart == null ? 'Kart ekle' : 'Kartı düzenle',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Bu kart ${widget.cari.ad} carisine aittir.'),
-                  const SizedBox(height: 16),
-                  const DurumNotu(
-                    'Tam kart bilgileri yalnız bu tarayıcıda şifreli tutulur. Tarayıcı verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.',
-                  ),
-                  const SizedBox(height: 20),
-                  if (_yukleniyor) const LinearProgressIndicator(),
-                  if (_bilgi != null) ...[
-                    DurumNotu(_bilgi!),
+            // Tarayıcının kart önerisi ve iPhone'daki kart tarama tuşu için
+            // alan türleri bildirilir; görüntü/öneri uygulamaya gönderilmez.
+            child: AutofillGroup(
+              onDisposeAction: AutofillContextAction.cancel,
+              child: Form(
+                key: _form,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      widget.kart == null ? 'Kart ekle' : 'Kartı düzenle',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Bu kart ${widget.cari.ad} carisine aittir.'),
                     const SizedBox(height: 16),
-                  ],
-                  TextFormField(
-                    controller: _ad,
-                    enabled: aktif,
-                    maxLength: 60,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Kart adı',
-                      hintText: 'İş kartı',
+                    const DurumNotu(
+                      'Tam kart bilgileri yalnız bu tarayıcıda şifreli tutulur. Tarayıcı verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.',
                     ),
-                    validator: (v) => (v?.trim().length ?? 0) < 2
-                        ? 'Karta en az 2 karakterlik bir ad ver.'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _numara,
-                    enabled: aktif,
-                    maxLength: 23,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.next,
-                    obscureText: !_goster,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    decoration: InputDecoration(
-                      labelText: 'Kart numarası',
-                      suffixIcon: IconButton(
-                        onPressed: aktif
-                            ? () => setState(() => _goster = !_goster)
-                            : null,
-                        tooltip: _goster
-                            ? 'Kart numarasını gizle'
-                            : 'Kart numarasını göster',
-                        icon: Icon(
-                          _goster
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                        ),
-                      ),
-                    ),
-                    validator: _numaraDenetle,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _sahibi,
-                    enabled: aktif,
-                    maxLength: 120,
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Kart üzerindeki ad (isteğe bağlı)',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _ay,
-                          enabled: aktif,
-                          maxLength: 2,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Ay',
-                            hintText: 'AA',
-                          ),
-                          validator: (v) =>
-                              (int.tryParse(v ?? '') ?? 0) < 1 ||
-                                  (int.tryParse(v ?? '') ?? 0) > 12
-                              ? '01–12 yaz.'
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _yil,
-                          enabled: aktif,
-                          maxLength: 4,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: 'Yıl',
-                            hintText: 'YYYY',
-                          ),
-                          validator: (v) =>
-                              (int.tryParse(v ?? '') ?? 0) < 2000 ||
-                                  (int.tryParse(v ?? '') ?? 0) > 2199
-                              ? 'Dört haneli yıl yaz.'
-                              : null,
-                        ),
-                      ),
+                    const SizedBox(height: 20),
+                    if (_yukleniyor) const LinearProgressIndicator(),
+                    if (_bilgi != null) ...[
+                      DurumNotu(_bilgi!),
+                      const SizedBox(height: 16),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _telefon,
-                    enabled: aktif,
-                    maxLength: 24,
-                    keyboardType: TextInputType.phone,
-                    textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(
-                      labelText: 'İletişim telefonu (isteğe bağlı)',
-                      helperText: 'Bankanın SMS hedefini değiştirmez.',
+                    TextFormField(
+                      controller: _ad,
+                      enabled: aktif,
+                      maxLength: 60,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Kart adı',
+                        hintText: 'İş kartı',
+                      ),
+                      validator: (v) => (v?.trim().length ?? 0) < 2
+                          ? 'Karta en az 2 karakterlik bir ad ver.'
+                          : null,
                     ),
-                    validator: (v) {
-                      try {
-                        kartTelefonu(v ?? '');
-                        return null;
-                      } on PosHatasi catch (e) {
-                        return e.mesaj;
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    value: _onay,
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    title: const Text(
-                      'Kartı ve bu cari altında saklamayı kontrol ettim.',
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _numara,
+                      enabled: aktif,
+                      maxLength: 23,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      obscureText: !_goster,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      autofillHints: const [AutofillHints.creditCardNumber],
+                      decoration: InputDecoration(
+                        labelText: 'Kart numarası',
+                        suffixIcon: IconButton(
+                          onPressed: aktif
+                              ? () => setState(() => _goster = !_goster)
+                              : null,
+                          tooltip: _goster
+                              ? 'Kart numarasını gizle'
+                              : 'Kart numarasını göster',
+                          icon: Icon(
+                            _goster
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                          ),
+                        ),
+                      ),
+                      validator: _numaraDenetle,
                     ),
-                    onChanged: aktif
-                        ? (v) => setState(() => _onay = v ?? false)
-                        : null,
-                  ),
-                  if (_hata != null) ...[
-                    DurumNotu(_hata!, hata: true),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _sahibi,
+                      enabled: aktif,
+                      maxLength: 120,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.creditCardName],
+                      decoration: const InputDecoration(
+                        labelText: 'Kart üzerindeki ad (isteğe bağlı)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _ay,
+                            enabled: aktif,
+                            autofillHints: const [
+                              AutofillHints.creditCardExpirationMonth,
+                            ],
+                            maxLength: 2,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Ay',
+                              hintText: 'AA',
+                            ),
+                            validator: (v) =>
+                                (int.tryParse(v ?? '') ?? 0) < 1 ||
+                                    (int.tryParse(v ?? '') ?? 0) > 12
+                                ? '01–12 yaz.'
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _yil,
+                            enabled: aktif,
+                            autofillHints: const [
+                              AutofillHints.creditCardExpirationYear,
+                            ],
+                            maxLength: 4,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: 'Yıl',
+                              hintText: 'YYYY',
+                            ),
+                            validator: (v) =>
+                                (int.tryParse(v ?? '') ?? 0) < 2000 ||
+                                    (int.tryParse(v ?? '') ?? 0) > 2199
+                                ? 'Dört haneli yıl yaz.'
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _telefon,
+                      enabled: aktif,
+                      maxLength: 24,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.done,
+                      decoration: const InputDecoration(
+                        labelText: 'İletişim telefonu (isteğe bağlı)',
+                        helperText: 'Bankanın SMS hedefini değiştirmez.',
+                      ),
+                      validator: (v) {
+                        try {
+                          kartTelefonu(v ?? '');
+                          return null;
+                        } on PosHatasi catch (e) {
+                          return e.mesaj;
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    CheckboxListTile(
+                      value: _onay,
+                      contentPadding: EdgeInsets.zero,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: const Text(
+                        'Kartı ve bu cari altında saklamayı kontrol ettim.',
+                      ),
+                      onChanged: aktif
+                          ? (v) => setState(() => _onay = v ?? false)
+                          : null,
+                    ),
+                    if (_hata != null) ...[
+                      DurumNotu(_hata!, hata: true),
+                      const SizedBox(height: 16),
+                    ],
+                    FilledButton(
+                      onPressed: aktif ? _kaydet : null,
+                      child: Text(_mesgul ? 'Kaydediliyor…' : 'Kartı kaydet'),
+                    ),
+                    TextButton(
+                      onPressed: _mesgul ? null : () => Navigator.pop(context),
+                      child: const Text('Vazgeç'),
+                    ),
                   ],
-                  FilledButton(
-                    onPressed: aktif ? _kaydet : null,
-                    child: Text(_mesgul ? 'Kaydediliyor…' : 'Kartı kaydet'),
-                  ),
-                  TextButton(
-                    onPressed: _mesgul ? null : () => Navigator.pop(context),
-                    child: const Text('Vazgeç'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
