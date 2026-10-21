@@ -33,6 +33,10 @@ hesap (emülatör), kasa, yer imi tarayıcı testleri Chromium + WebKit geçti.
 Aşama 2 kart doldurma: DenizPay kart sayfasının alan adları bilinmiyor
 (CAL bup eklentisi de sabit ad değil kullanıcı tanıtması kullanıyor); telefon
 deneme raporu gelmeden yazılmaz.
+**Yayın:** Kullanıcı `bash tools/yayin.sh`'yi kendisi çalıştırdı; 0.5.1
+canlıda (kod özeti `c7314b40c33760a0`). `test:yayin` Chromium + WebKit geçti;
+canlı `deneme.js` gerçek DenizPay kökenini taşıyor. Sıradaki: kullanıcının
+iPhone Safari + Android Chrome deneme raporu, otomatik giriş izni/kararı, K3.
 
 ---
 
