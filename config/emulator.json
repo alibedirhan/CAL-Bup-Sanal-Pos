@@ -1,0 +1,9 @@
+{
+  "BUP_DENEME": "false",
+  "BUP_EMULATOR": "true",
+  "FIREBASE_PROJECT_ID": "demo-bup-pos",
+  "FIREBASE_API_KEY": "demo-public-key",
+  "FIREBASE_APP_ID": "1:123:web:demo",
+  "FIREBASE_SENDER_ID": "123",
+  "FIREBASE_AUTH_DOMAIN": "localhost"
+}

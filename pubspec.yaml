@@ -1,0 +1,34 @@
+name: bup_sanal_pos
+description: "BUP Sanal POS — bağımsız, telefon odaklı cari ve kart çalışma alanı."
+publish_to: 'none'
+version: 0.4.1+6
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: 1.0.8
+  firebase_core: 4.13.0
+  firebase_auth: 6.5.7
+  cloud_firestore: 6.8.0
+  url_launcher: 6.3.2
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Roboto-Bold.ttf
+          weight: 700

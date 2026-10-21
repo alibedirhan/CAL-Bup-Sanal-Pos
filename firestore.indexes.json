@@ -1,0 +1,7 @@
+{
+  "indexes": [{"collectionGroup": "cariler", "queryScope": "COLLECTION", "fields": [
+    {"fieldPath": "sahipId", "order": "ASCENDING"},
+    {"fieldPath": "silindi", "order": "ASCENDING"}
+  ]}],
+  "fieldOverrides": [{"collectionGroup": "cariler", "fieldPath": "kartlar", "indexes": []}]
+}

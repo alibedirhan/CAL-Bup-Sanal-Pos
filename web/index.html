@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="BUP Sanal POS — cari ve kart özetleri için telefon odaklı çalışma alanı.">
+  <meta name="theme-color" content="#16343e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sanal POS">
+  <meta name="referrer" content="no-referrer">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="acilis.css">
+  <title>BUP Sanal POS</title>
+</head>
+<body>
+  <div id="acilis" role="status" aria-live="polite">
+    <div class="acilis-kutu">
+      <div class="isaret" aria-hidden="true">BUP</div>
+      <h1>Sanal POS</h1>
+      <p id="acilis-metin">Çalışma alanın hazırlanıyor…</p>
+      <button id="yenile" type="button" hidden>Yeniden dene</button>
+      <noscript>Uygulamayı açmak için tarayıcında JavaScript açık olmalı.</noscript>
+    </div>
+  </div>
+  <script src="acilis.js"></script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

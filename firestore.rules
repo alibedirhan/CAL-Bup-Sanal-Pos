@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function uye() { return request.auth != null && get(/databases/$(database)/documents/kullanicilar/$(request.auth.uid)).data.aktif == true; }
+    function yonetici() { return uye() && get(/databases/$(database)/documents/kullanicilar/$(request.auth.uid)).data.yonetici == true; }
+    function erisim(sahip) { return uye() && (request.auth.uid == sahip || yonetici()); }
+    function hedefAktif(uid) { return get(/databases/$(database)/documents/kullanicilar/$(uid)).data.aktif == true; }
+    function metin(s, min, max) {
+      return s is string && s.size() >= min && s.size() <= max && !s.matches('.*[\\x00-\\x1F\\x7F].*');
+    }
+    function kart(k) {
+      return k.keys().hasOnly(['id', 'ad', 'sonDort', 'ay', 'yil', 'cihazKayitId'])
+        && k.keys().hasAll(['cihazKayitId'])
+        && k.id.matches('^[A-Za-z0-9_-]{1,80}$')
+        && k.ad.matches('^[^\\x00-\\x1F\\x7F]{2,60}$')
+        && !k.ad.matches('.*[0-9][0-9 -]{10,}[0-9].*')
+        && k.sonDort.matches('^[0-9]{4}$')
+        && (!('cihazKayitId' in k) || k.cihazKayitId.matches('^[A-Za-z0-9_-]{1,80}$'))
+        && k.ay is int && k.ay >= 1 && k.ay <= 12
+        && k.yil is int && k.yil >= 2000 && k.yil <= 2199;
+    }
+    function kartlar(l) {
+      let eklenen = l.toSet().difference(resource.data.kartlar.toSet());
+      return l is list && l.size() <= 10
+        && (eklenen.size() == 0 || (eklenen.size() == 1
+          && eklenen.hasOnly([request.resource.data.sonKart]) && kart(request.resource.data.sonKart)));
+    }
+    function bicim(d) {
+      return d.keys().hasOnly(['sahipId', 'ad', 'kod', 'kodAnahtari', 'yildizli', 'surum', 'kartlar', 'sonKart', 'kimlikNo', 'silindi', 'olusturma', 'guncelleme'])
+        && metin(d.ad, 2, 80) && metin(d.sahipId, 1, 128)
+        && d.kod is string && d.kod.matches('^[A-Za-z0-9_-]{1,24}$')
+        && d.kodAnahtari == d.kod.upper() && d.yildizli is bool
+        && d.silindi is bool && d.surum is int && d.surum >= 1
+        && (d.kimlikNo == '' || d.kimlikNo.matches('^[0-9]{10,11}$'))
+        && (d.sonKart == null || kart(d.sonKart))
+        && d.olusturma is timestamp && d.guncelleme == request.time
+        && d.kartlar is list && d.kartlar.size() <= 10
+        && (!d.silindi || d.kartlar.size() == 0);
+    }
+    function iz(id, surum, eylem) {
+      let d = getAfter(/databases/$(database)/documents/denetim/$(id + '_' + string(surum))).data;
+      return d.kullaniciId == request.auth.uid && d.cariId == id && d.surum == surum
+        && d.eylem == eylem && d.zaman == request.time;
+    }
+    function kodKaydi(id, d) {
+      return d.silindi || getAfter(/databases/$(database)/documents/cariKodlari/$(d.sahipId + '_' + d.kodAnahtari)).data.cariId == id;
+    }
+    match /kullanicilar/{uid} {
+      allow get: if request.auth != null && (request.auth.uid == uid || yonetici());
+      allow list: if yonetici();
+      allow create: if yonetici() && request.resource.data.yonetici == false && profilBicim(request.resource.data);
+      allow update: if yonetici() && uid != request.auth.uid
+        && !resource.data.yonetici && profilBicim(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aktif', 'guncelleme']);
+      allow delete: if false;
+      function profilBicim(d) {
+        return d.keys().hasOnly(['ad', 'eposta', 'yonetici', 'aktif', 'olusturma', 'guncelleme'])
+          && metin(d.ad, 2, 80) && metin(d.eposta, 3, 254)
+          && d.yonetici is bool && d.aktif is bool
+          && d.olusturma is timestamp && d.guncelleme == request.time;
+      }
+    }
+    match /cariler/{id} {
+      allow get, list: if erisim(resource.data.sahipId) && (!resource.data.silindi || yonetici());
+      allow create: if uye() && bicim(request.resource.data)
+        && request.resource.data.sahipId == request.auth.uid && !request.resource.data.silindi
+        && request.resource.data.surum == 1 && request.resource.data.olusturma == request.time
+        && request.resource.data.kartlar.size() == 0 && request.resource.data.sonKart == null
+        && kodKaydi(id, request.resource.data) && iz(id, 1, 'ekle');
+      allow update: if erisim(resource.data.sahipId) && !resource.data.silindi
+        && bicim(request.resource.data) && request.resource.data.olusturma == resource.data.olusturma
+        && request.resource.data.surum == resource.data.surum + 1
+        && kartlar(request.resource.data.kartlar)
+        && (request.resource.data.sahipId == resource.data.sahipId || (yonetici() && hedefAktif(request.resource.data.sahipId)))
+        && kodKaydi(id, request.resource.data)
+        && iz(id, request.resource.data.surum, request.resource.data.silindi ? 'sil' : 'kaydet');
+      allow delete: if false;
+    }
+    match /cariKodlari/{key} {
+      allow get: if uye() && (!exists(/databases/$(database)/documents/cariKodlari/$(key)) || erisim(resource.data.sahipId));
+      allow list: if false;
+      allow create: if uye() && request.resource.data.keys().hasOnly(['sahipId', 'kod', 'cariId'])
+        && key == request.resource.data.sahipId + '_' + request.resource.data.kod
+        && erisim(request.resource.data.sahipId)
+        && getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.sahipId == request.resource.data.sahipId
+        && getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.kodAnahtari == request.resource.data.kod
+        && !getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.silindi;
+      allow update: if false;
+      allow delete: if erisim(resource.data.sahipId)
+        && (getAfter(/databases/$(database)/documents/cariler/$(resource.data.cariId)).data.silindi
+          || getAfter(/databases/$(database)/documents/cariler/$(resource.data.cariId)).data.sahipId != resource.data.sahipId
+          || getAfter(/databases/$(database)/documents/cariler/$(resource.data.cariId)).data.kodAnahtari != resource.data.kod);
+    }
+    match /denetim/{id} {
+      allow read: if yonetici();
+      allow create: if uye() && request.resource.data.keys().hasOnly(['kullaniciId', 'cariId', 'surum', 'eylem', 'zaman'])
+        && request.resource.data.kullaniciId == request.auth.uid && request.resource.data.zaman == request.time
+        && request.resource.data.eylem in ['ekle', 'kaydet', 'sil']
+        && id == request.resource.data.cariId + '_' + string(request.resource.data.surum)
+        && getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.surum == request.resource.data.surum
+        && erisim(getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.sahipId);
+      allow update, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

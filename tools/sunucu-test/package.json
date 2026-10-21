@@ -1,0 +1,19 @@
+{
+  "name": "bup-pos-sunucu-kabul",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test kurallar.test.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.0",
+    "firebase": "12.19.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {"@firebase/app": "0.16.2", "@firebase/app-compat": "0.5.18"}
+}

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { cloudFetch,projectId } from './bulut.mjs';
+const config=JSON.parse(await readFile(new URL('../../config/canli.json',import.meta.url),'utf8'));
+assert.equal(config.FIREBASE_PROJECT_ID,projectId);
+assert.equal(config.BUP_DENEME,'false');
+assert.ok(!config.BUP_EMULATOR||config.BUP_EMULATOR==='false');
+const billing=await cloudFetch(`https://cloudbilling.googleapis.com/v1/projects/${projectId}/billingInfo`);
+assert.equal(billing.status,200,'Faturalandırma durumu doğrulanamadı.');
+assert.equal(billing.data.billingEnabled,false,'Bu çalışma yalnız ücretsiz proje içindir.');
+const auth=await cloudFetch(`https://identitytoolkit.googleapis.com/admin/v2/projects/${projectId}/config`);
+assert.equal(auth.status,200,'Firebase Authentication ilk kurulumu gerekiyor: konsolda Başlayın → E-posta/Şifre.');
+assert.equal(auth.data.signIn?.email?.enabled,true,'E-posta/Şifre yöntemi etkin değil.');
+assert.equal(auth.data.signIn?.email?.passwordRequired,true,'E-posta ve şifre yöntemi kullanılmalı.');
+assert.equal(auth.data.emailPrivacyConfig?.enableImprovedEmailPrivacy,true,'Hesap gizliliği etkin olmalı.');
+assert.equal(auth.data.passwordPolicyConfig?.passwordPolicyEnforcementState,'ENFORCE','Sunucu şifre politikası uygulanmalı.');
+assert.equal(auth.data.passwordPolicyConfig?.passwordPolicyVersions?.[0]?.customStrengthOptions?.minPasswordLength,6);
+console.log('Yayın kapısı: ayrı proje, deneme kapalı, emülatör kapalı, faturalandırma kapalı, giriş etkin.');
