@@ -14,7 +14,7 @@ gönderim yok, doğru değerler, süre/kilit reddi); `hesap-kabul.mjs` gerçek f
 POST'unu Playwright'ta yakalayıp yapay sayfayla yanıtlar — gerçek DenizPay'e
 istek yok; alanlar, POST, sorgusuz URL, `opener` yok, kart bilgisi yok.
 Giriş sonucunun gerçek DenizPay'de çalıştığı doğrulanmadı (ilk deneme
-kullanıcıda). Kullanıcının ilk iPhone denemesi: bkz. MOBIL_DOLDURMA_PLANI durum
+kullanıcıda). **Yayında:** kullanıcı yayin.sh çalıştırdı, kod özeti `cbd123b7e5d40b24`, test:yayin (CSP form-action birebir) geçti. Kullanıcının ilk iPhone denemesi: bkz. MOBIL_DOLDURMA_PLANI durum
 satırı. Kart sayfası raporu bekleniyor.
 
 ---
