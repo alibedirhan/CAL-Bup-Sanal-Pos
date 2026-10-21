@@ -59,15 +59,20 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
   void _etkilesim() {
     if (!_basladi || _model.kilitli) return;
     _zamanlayici?.cancel();
-    _zamanlayici = Timer(widget.bostaSure, _kilitle);
+    _zamanlayici = Timer(
+      widget.bostaSure,
+      () => _kilitle(bekleyenIsiSil: false),
+    );
   }
 
-  void _kilitle() {
+  /// "Ekranı kilitle" bekleyen kart işini de siler; sekme değişimi ve boşta
+  /// kalma silmez (kullanıcı DenizPay sekmesinde yer imini kullanacak).
+  void _kilitle({bool bekleyenIsiSil = true}) {
     if (!_basladi || _model.kilitli) return;
     _zamanlayici?.cancel();
     FocusManager.instance.primaryFocus?.unfocus();
     _navigator.currentState?.popUntil((route) => route.isFirst);
-    _model.kilitle();
+    _model.kilitle(bekleyenIsiSil: bekleyenIsiSil);
     widget.canliKilit?.call();
   }
 
@@ -76,7 +81,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      _kilitle();
+      _kilitle(bekleyenIsiSil: false);
     }
   }
 

@@ -77,7 +77,7 @@ class _AnaEkranState extends State<AnaEkran> {
                 padding: EdgeInsets.only(right: 4),
                 child: Chip(
                   label: Text(
-                    m.deneme ? 'Deneme' : '0.7.0',
+                    m.deneme ? 'Deneme' : '0.7.1',
                     style: const TextStyle(fontSize: 11),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 2),

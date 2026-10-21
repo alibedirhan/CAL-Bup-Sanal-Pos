@@ -60,8 +60,9 @@ giriş yap" `PosGirisKapisi` portu üzerinden `web/pos_giris.js` ile sabit
 `login.aspx`'e form POST'u yapar; CSP `form-action` yalnız DenizPay kökenidir.
 Kart seçildiyse ve tam kart bu cihazın kasasındaysa `DoldurmaHazirligi` portu
 (`web/doldurma.js`) yerel depoya 10 dakikalık `DoldurmaIsi` yazar: yalnız kasa
-referansı, cari VKN/TC ve son zaman; kart, CVV, tutar yoktur. Kilit/çıkış ve
-kartsız giriş işi siler. DenizPay kart sayfasında "BUP Doldur" yer imi
+referansı, cari VKN/TC ve son zaman; kart, CVV, tutar yoktur. Elle "Ekranı
+kilitle", çıkış/hesap değişimi ve kartsız giriş işi siler; sekme değişimi ve
+boşta kilidi silmez (DenizPay sekmesine geçmek akışın parçasıdır). DenizPay kart sayfasında "BUP Doldur" yer imi
 (`tools/yer_imi/doldur.js`, kurulum `web/kurulum.html`) `doldur.html`'i açar;
 bu sayfa işi okur, kartı kasadan çözer ve yalnız DenizPay kökenine
 `postMessage` ile yollar. Yer imi yalnız `number`, `name`, `expiry` kutularına

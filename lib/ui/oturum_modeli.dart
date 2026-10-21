@@ -115,8 +115,10 @@ class OturumModeli extends ChangeNotifier {
     notifyListeners();
   }
 
-  void kilitle() {
-    servis.doldurmayiTemizle();
+  /// Sekme değişimi/boşta kilidi bekleyen kart işini silmez: DenizPay sekmesine
+  /// geçmek akışın parçasıdır (iş zaten 10 dakikada biter). Elle kilit siler.
+  void kilitle({bool bekleyenIsiSil = true}) {
+    if (bekleyenIsiSil) servis.doldurmayiTemizle();
     if (kilitli) return;
     _nesil++;
     kilitli = true;
@@ -329,7 +331,6 @@ class OturumModeli extends ChangeNotifier {
 
   @override
   void dispose() {
-    servis.doldurmayiTemizle();
     _kapali = true;
     _izleme?.cancel();
     _nesil++;

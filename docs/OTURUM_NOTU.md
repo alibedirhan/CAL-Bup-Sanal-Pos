@@ -1,3 +1,16 @@
+# 21 Ekim 2026 gece — 0.7.1: sekme değişimi bekleyen kartı silmez
+
+İlk gerçek iPhone denemesi: yer imi DenizPay kart sayfasında çalıştı, firma
+numarasını buldu, `doldur.html`'i açtı (opener var) ama "Bekleyen kart yok"
+dedi. Neden: DenizPay sekmesine geçmek Sanal POS'u (görünürlük/lifecycle)
+kilitliyor; 0.7.0'da kilit ve model `dispose` işi siliyordu. 0.7.1: yalnız elle
+"Ekranı kilitle" ve çıkış/hesap değişimi siler (`canli_app` `_sonUid`); sekme
+değişimi, boşta kilidi ve canlı kilidin modeli kaldırması silmez. Süre 10 dk
+aynen. 2 yeni Dart testi (73 toplam). Bir önceki kullanıcı adımı: eski "BUP
+Deneme" yer imi silindi, "BUP Doldur" yeniden kuruldu ve doğrulandı.
+
+---
+
 # 21 Ekim 2026 gece — 0.7.0: kart doldurma ("BUP Doldur") ve kartsız giriş
 
 Kullanıcı iPhone Safari'de otomatik girişin çalıştığını bildirdi ve kart

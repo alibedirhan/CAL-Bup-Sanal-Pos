@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bup_sanal_pos/app.dart';
 import 'package:bup_sanal_pos/application/portlar.dart';
 import 'package:bup_sanal_pos/application/pos_servisi.dart';
 import 'package:bup_sanal_pos/data/demo_deposu.dart';
@@ -189,6 +190,57 @@ void main() {
     final once = doldurma.temizlenme;
     model.kilitle();
     expect(doldurma.temizlenme, once + 1);
+  });
+
+  // 21 Ekim iPhone denemesi: DenizPay sekmesine geçmek Sanal POS'u kilitliyor,
+  // bu da bekleyen işi siliyordu. Sekme değişimi ve boşta kilit işi korur.
+  testWidgets('Sekme değişimi ve boşta kilidi bekleyen işi silmez', (
+    tester,
+  ) async {
+    final doldurma = SahteDoldurma();
+    var kilitlendi = 0;
+    await tester.pumpWidget(
+      BupPosApp(
+        deneme: false,
+        servis: PosServisi(
+          depo: DemoDeposu(),
+          baglanti: DemoPosBaglantisi(),
+          kullaniciId: DemoDeposu.kullanici,
+          doldurma: doldurma,
+        ),
+        bostaSure: const Duration(seconds: 5),
+        canliKilit: () => kilitlendi++,
+      ),
+    );
+    await tester.pumpAndSettle();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pumpAndSettle();
+    expect(kilitlendi, 1);
+    expect(doldurma.temizlenme, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Boşta süresi dolunca kilit işi silmez', (tester) async {
+    final doldurma = SahteDoldurma();
+    var kilitlendi = 0;
+    await tester.pumpWidget(
+      BupPosApp(
+        deneme: false,
+        servis: PosServisi(
+          depo: DemoDeposu(),
+          baglanti: DemoPosBaglantisi(),
+          kullaniciId: DemoDeposu.kullanici,
+          doldurma: doldurma,
+        ),
+        bostaSure: const Duration(seconds: 5),
+        canliKilit: () => kilitlendi++,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 6));
+    expect(kilitlendi, 1);
+    expect(doldurma.temizlenme, 0);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('Kart seçilmeden ödeme sitesine geçiş düğmesi açıktır', (

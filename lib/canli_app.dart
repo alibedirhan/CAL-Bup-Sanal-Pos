@@ -100,10 +100,17 @@ class _HesapKapisiState extends State<_HesapKapisi> {
   bool _hazir = false, _kilitli = false, _kontrol = false;
   String? _hata;
   int _nesil = 0;
+  String? _sonUid;
   @override
   void initState() {
     super.initState();
     _auth = widget.hesap.degisimler.listen((uid) {
+      // Çıkış veya hesap değişiminde önceki hesabın bekleyen kart işi kalmaz;
+      // aynı hesabın sayfa yenilemesi işi silmez.
+      if (uid == null || (_sonUid != null && uid != _sonUid)) {
+        const CihazDoldurmaHazirligi().temizle();
+      }
+      _sonUid = uid;
       _nesil++;
       unawaited(_profil?.cancel());
       setState(() {
@@ -120,6 +127,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
             setState(() {
               _kontrol = false;
               _kullanici = k?.aktif == true ? k : null;
+              if (_kullanici == null) const CihazDoldurmaHazirligi().temizle();
               _hata = k?.aktif == true
                   ? null
                   : 'Hesabının erişimi kapalı. Yöneticiyle görüş.';
