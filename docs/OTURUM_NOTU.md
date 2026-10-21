@@ -8,6 +8,9 @@ Kullanıcı "1 olsun, Safari içinde açılsın" dedi. `web/manifest.json`
 `yayin-kabul.mjs` ikisini denetler. Kullanıcı eski ana ekran simgesini silip
 Safari'den yeniden eklemeli (eski simge ayrı depoyu kullanmaya devam eder).
 Gerçek cihazda yeni simgenin Safari'de açıldığı henüz doğrulanmadı.
+**Yayında** (`2bc9aa4a2a6ac670`); test:yayin canlıda manifest/meta denetimiyle geçti.
+Kullanıcı ayrıca ücretsiz iPhone'a USB/dosyayla uygulama kurmayı sordu (bkz. sohbet:
+ücretsiz Apple Kimliği 7 günlük imza, Mac/AltStore gerekir; önerilmedi, iş başlatılmadı).
 
 ---
 
