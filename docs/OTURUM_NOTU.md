@@ -9,6 +9,14 @@ değişimi, boşta kilidi ve canlı kilidin modeli kaldırması silmez. Süre 10
 aynen. 2 yeni Dart testi (73 toplam). Bir önceki kullanıcı adımı: eski "BUP
 Deneme" yer imi silindi, "BUP Doldur" yeniden kuruldu ve doğrulandı.
 
+**Yayında** (`b66e940abb80192e`, test:yayin geçti). **Kullanıcının gerçek
+iPhone Safari denemesi başarılı:** numara ve SKT yazıldı, kart görseli
+güncellendi, doldur sekmesi kendiliğinden kapandı, CVV/tutara dokunulmadı
+(tutar kutusunda DenizPay'in kendi ön değeri vardı). Ad Soyad boş kaldı
+(kartta "kart üzerindeki ad" girilmemiş). Kullanıcının ekran görüntüsü tam
+kart numarası içeriyordu; hiçbir dosyaya alınmadı, silmesi önerildi. Android
+henüz denenmedi. Ödeme/onay gerçek kullanımda kullanıcıda.
+
 ---
 
 # 21 Ekim 2026 gece — 0.7.0: kart doldurma ("BUP Doldur") ve kartsız giriş
