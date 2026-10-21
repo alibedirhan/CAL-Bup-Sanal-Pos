@@ -7,7 +7,9 @@
 // Alan adları kullanıcının 21 Ekim iPhone raporundan: name, number, expiry, cvc, Tutar.
 // Derleme: tam satır yorumlar silinir, satırlar birleştirilir (uret.py kuralları).
 (() => {
-const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-1';
+// SURUM_NO doldur sayfasına iletilir; sayfa eski yer imini görünce yeniden kurulum ister.
+// 1. sürüm (21 Ekim) numara göndermiyordu; sayfa numarasız isteği 1 sayar.
+const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-1', SURUM_NO = 1;
 if (window.__bupDoldur) { window.__bupDoldur.kapat(); }
 const kutu = document.createElement('div');
 kutu.setAttribute('style', 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;background:#fff;color:#111;border:3px solid #16343e;border-radius:12px;padding:12px;font:16px/1.4 -apple-system,system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35)');
@@ -47,7 +49,7 @@ const firma = () => {
 };
 if (!firma()) { goster('Sayfada firma numarası bulunamadı; güvenlik için kart yazılmadı.', true); return; }
 const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
-const pencere = window.open(UYGULAMA + '/doldur.html#b=' + id, '_blank');
+const pencere = window.open(UYGULAMA + '/doldur.html#b=' + id + '&s=' + SURUM_NO, '_blank');
 if (!pencere) { goster('Açılır pencere engellendi. Tarayıcı ayarında açılır pencerelere izin ver.', true); return; }
 goster('Sanal POS’tan kart bekleniyor. Açılan sekme kapanmazsa bu sekmeye dön.', false);
 const luhn = n => {

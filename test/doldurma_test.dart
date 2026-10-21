@@ -194,31 +194,44 @@ void main() {
 
   // 21 Ekim iPhone denemesi: DenizPay sekmesine geçmek Sanal POS'u kilitliyor,
   // bu da bekleyen işi siliyordu. Sekme değişimi ve boşta kilit işi korur.
-  testWidgets('Sekme değişimi ve boşta kilidi bekleyen işi silmez', (
-    tester,
-  ) async {
-    final doldurma = SahteDoldurma();
-    var kilitlendi = 0;
-    await tester.pumpWidget(
-      BupPosApp(
-        deneme: false,
-        servis: PosServisi(
-          depo: DemoDeposu(),
-          baglanti: DemoPosBaglantisi(),
-          kullaniciId: DemoDeposu.kullanici,
-          doldurma: doldurma,
+  testWidgets(
+    'Sekme değişimi: kısa dönüşte kilit yok, geç dönüşte kilit; iş kalır',
+    (tester) async {
+      final doldurma = SahteDoldurma();
+      var kilitlendi = 0;
+      var simdi = DateTime.now();
+      await tester.pumpWidget(
+        BupPosApp(
+          deneme: false,
+          servis: PosServisi(
+            depo: DemoDeposu(),
+            baglanti: DemoPosBaglantisi(),
+            kullaniciId: DemoDeposu.kullanici,
+            doldurma: doldurma,
+            saat: () => simdi,
+          ),
+          canliKilit: () => kilitlendi++,
         ),
-        bostaSure: const Duration(seconds: 5),
-        canliKilit: () => kilitlendi++,
-      ),
-    );
-    await tester.pumpAndSettle();
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    await tester.pumpAndSettle();
-    expect(kilitlendi, 1);
-    expect(doldurma.temizlenme, 0);
-    await tester.pumpWidget(const SizedBox());
-  });
+      );
+      await tester.pumpAndSettle();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      simdi = simdi.add(const Duration(minutes: 4, seconds: 59));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(kilitlendi, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      simdi = simdi.add(const Duration(minutes: 5));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expect(kilitlendi, 1);
+      expect(doldurma.temizlenme, 0);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets('Boşta süresi dolunca kilit işi silmez', (tester) async {
     final doldurma = SahteDoldurma();

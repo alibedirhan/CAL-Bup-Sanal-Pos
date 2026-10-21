@@ -1,3 +1,14 @@
+# 21 Ekim 2026 gece — 0.7.3: CI, dönüş süresi, yer imi sürümü, hız, temizlik
+
+Ayrıntı `docs/IYILESTIRME_LISTESI.md` "21 Ekim gece yapılanlar". Testler: 74
+Dart; demo, kasa, doldur, emülatör hesap (Chromium + WebKit). `hesap-kabul`
+atama denetimi yazımı bekleyecek şekilde sağlamlaştırıldı (bir kez zamanlama
+yüzünden düşmüştü). Emülatör derlemesinde SDK değişken adı çakışması
+(`auth`) yakalanıp düzeltildi (canlıyı etkilemiyordu). API anahtarı kısıtlı
+değil; kullanıcıya Google Cloud adımları verildi.
+
+---
+
 # 21 Ekim 2026 gece — iPhone uçtan uca doğrulandı (kullanıcı)
 
 Ana ekran simgesi yeniden eklendi: iOS "Ana Ekrana Ekle" ekranında "Open as

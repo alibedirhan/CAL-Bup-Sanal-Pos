@@ -4,6 +4,23 @@ Durum: iPhone Safari'de otomatik giriş + "BUP Doldur" kart doldurma kullanıcı
 doğrulandı. Bu liste kullanıcının "geliştirmemiz gerekenleri tespit et" isteğiyle
 çıkarıldı; hiçbiri henüz uygulanmadı. Öncelik sırası öneridir, karar kullanıcıda.
 
+## 21 Ekim gece yapılanlar (0.7.3)
+
+Kullanıcı 1, 2, 4, 6, 7, 8'i seçti (eski numaralarla: Actions, API anahtarı,
+şifre sorma, Kartı Tara, yer imi sürümü, temizlik) + "takılmadan kasmadan".
+- Actions: `.github/workflows/kontrol.yml` (biçim, analiz, Dart, demo derleme,
+  demo/kasa/doldur tarayıcı testleri; gizli anahtar yok, yayın yok).
+- API anahtarı: denendi — kısıtlı DEĞİL (başka referrer'dan 200). Değişiklik
+  kullanıcının Google Cloud hesabında; adımlar kullanıcıya verildi. Bilgisayardaki
+  `gcloud` başka projenin (ciftlik-ajandasi) hizmet hesabına bağlı; kullanılmadı.
+- Şifre sorma: DenizPay'den 5 dk içinde dönüşte kilit yok (`donusSuresi`).
+- Kartı Tara: kullanıcı denemesi bekleniyor.
+- Yer imi sürümü: `doldur_sayfasi.js` `EN_AZ_YER_IMI`; yer imi `&s=` gönderir,
+  numarasız (kurulu olan) = 1, yeniden kurulum gerekmez.
+- Temizlik: deneme sayfası/yer imi/testi ve `otomatik-giris` dalı kaldırıldı.
+- Hız: Firebase SDK ve yerel modüller paralel yüklenir; `main.dart.js` ön
+  yüklenir; gstatic/firestore'a önceden bağlantı. Önbellek önceki kayıtta.
+
 ## Önemli
 
 1. ~~**Cariye özel DenizPay kullanıcı adı/şifresi.**~~ *Reddedildi (21 Ekim): kullanıcı

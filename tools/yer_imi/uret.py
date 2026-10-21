@@ -46,13 +46,6 @@ def _sablon(ad: str, gerekli: tuple[str, ...]) -> str:
     return sablon
 
 
-def sayfa_betigi(uygulama: str, pos: str) -> str:
-    """`web/deneme.js` şablonunu kökenler ve deneme yer imiyle doldurur."""
-    return (_sablon('deneme.js', ('__POS_KOKENI__', '__YER_IMI__'))
-            .replace('__POS_KOKENI__', _koken(pos))
-            .replace('__YER_IMI__', json.dumps(yer_imi('deneme', uygulama, pos))))
-
-
 def kurulum_betigi(uygulama: str, pos: str) -> str:
     """`web/kurulum.js` şablonuna "BUP Doldur" yer imini yazar."""
     return _sablon('kurulum.js', ('__YER_IMI__',)).replace(
@@ -66,7 +59,7 @@ def doldur_betigi(pos: str) -> str:
 
 def sayfalar(uygulama: str, pos: str) -> dict[str, str]:
     """Derleme paketine yazılacak, kökenleri doldurulmuş sayfa betikleri."""
-    return {'deneme.js': sayfa_betigi(uygulama, pos), 'kurulum.js': kurulum_betigi(uygulama, pos),
+    return {'kurulum.js': kurulum_betigi(uygulama, pos),
             'doldur_sayfasi.js': doldur_betigi(pos)}
 
 
@@ -81,6 +74,5 @@ if __name__ == '__main__':
     hedef.mkdir(parents=True, exist_ok=True)
     for ad, icerik in sayfalar(a.uygulama, a.pos).items():
         (hedef / ad).write_text(icerik)
-    for ad in ('deneme', 'doldur'):
-        (hedef / f'yer_imi_{ad}.txt').write_text(yer_imi(ad, a.uygulama, a.pos))
+    (hedef / 'yer_imi_doldur.txt').write_text(yer_imi('doldur', a.uygulama, a.pos))
     print(f'Yer imi hazır: {hedef}')

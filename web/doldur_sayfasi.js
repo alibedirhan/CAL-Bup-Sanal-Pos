@@ -3,8 +3,11 @@
 // açan DenizPay sekmesine gönderir. Ağ isteği yapmaz; kart günlüğe yazılmaz.
 // Derlemede tools/yer_imi/uret.py yer tutucuyu doldurur.
 const POS = '__POS_KOKENI__';
+// Yer imi kodu değişip eskisi artık uygun olmadığında bu sayı artırılır;
+// tools/yer_imi/doldur.js SURUM_NO ile aynı tutulur. Numarasız ilk sürüm = 1.
+const EN_AZ_YER_IMI = 1;
 const $ = id => document.getElementById(id);
-const b = /^#b=([0-9a-f]{24})$/.exec(location.hash);
+const b = /^#b=([0-9a-f]{24})(?:&s=([0-9]{1,3}))?$/.exec(location.hash);
 history.replaceState(null, '', location.pathname);
 let acan = null;
 try { acan = window.opener; } catch { acan = null; }
@@ -21,6 +24,9 @@ if (!b || !acan) {
   goster('Bu sayfayı DenizPay kart sayfasında “BUP Doldur” yer imine dokunarak aç.', true);
 } else {
   try {
+    if (Number(b[2] ?? 1) < EN_AZ_YER_IMI) {
+      throw new Error('eski');
+    }
     await import('./doldurma.js');
     const is = globalThis.bupDoldurma.oku();
     if (!is) {
@@ -37,7 +43,9 @@ if (!b || !acan) {
         setTimeout(() => window.close(), 700);
       }
     }
-  } catch {
-    hata('Kart okunamadı. Sanal POS’u yenileyip yeniden dene ya da elle yaz.');
+  } catch (e) {
+    hata(e?.message === 'eski'
+      ? 'Yer imin eski. Sanal POS → Çalışma alanı → “BUP Doldur yer imini kur” ile yeniden kur.'
+      : 'Kart okunamadı. Sanal POS’u yenileyip yeniden dene ya da elle yaz.');
   }
 }

@@ -38,6 +38,8 @@
   mobilde çalışacakmış gibi sunmayın.
 - `domain` ve `application` Flutter/platform/SDK bilmez. `ui` somut depoya
   bağlanmaz. Bileşim `app.dart` içindedir. Dosyalar en fazla 400 satır.
+- GitHub: özel depo `origin` (alibedirhan/CAL-Bup-Sanal-Pos); her işten sonra
+  commit + push. `.github/workflows/kontrol.yml` her gönderimde testleri koşar.
 - Anlamlı davranış değişikliklerini sentetik testlerle doğrulayın.
   `bash tools/kontrol.sh` ve derlenmiş paket üzerinde `npm test`
   (`tools/tarayici/`) çalıştırın. Tarayıcı testi için önizleme sunucusu gerekir.

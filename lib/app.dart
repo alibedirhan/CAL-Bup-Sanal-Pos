@@ -16,6 +16,7 @@ class BupPosApp extends StatefulWidget {
     this.deneme = true,
     this.servis,
     this.bostaSure = const Duration(minutes: 10),
+    this.donusSuresi = const Duration(minutes: 5),
     this.kullanici,
     this.hesap,
     this.yonetim,
@@ -23,7 +24,7 @@ class BupPosApp extends StatefulWidget {
   });
   final bool deneme;
   final PosServisi? servis;
-  final Duration bostaSure;
+  final Duration bostaSure, donusSuresi;
   final Kullanici? kullanici;
   final HesapPortu? hesap;
   final YonetimPortu? yonetim;
@@ -36,6 +37,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
   late final OturumModeli _model;
   final _navigator = GlobalKey<NavigatorState>();
   Timer? _zamanlayici;
+  DateTime? _gizlenme;
   bool _basladi = false;
   @override
   void initState() {
@@ -76,12 +78,27 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
     widget.canliKilit?.call();
   }
 
+  /// Kullanıcı kararı (21 Ekim): DenizPay sekmesine geçip `donusSuresi` içinde
+  /// dönünce şifre sorulmaz, ekran olduğu gibi kalır; daha geç dönüşte kilit.
+  /// Gizliyken saat ilerlemeyebilir (tarayıcı betikleri durdurur); bu yüzden
+  /// süre dönüşte, gizlenme anından ölçülür. Boşta kilidi ayrıca geçerlidir.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.detached) {
       _kilitle(bekleyenIsiSil: false);
+    } else if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _gizlenme ??= _model.servis.saat();
+    } else if (state == AppLifecycleState.resumed) {
+      final gizlenme = _gizlenme;
+      _gizlenme = null;
+      if (gizlenme == null) return;
+      final fark = _model.servis.saat().difference(gizlenme);
+      if (fark.isNegative || fark >= widget.donusSuresi) {
+        _kilitle(bekleyenIsiSil: false);
+      } else {
+        _etkilesim();
+      }
     }
   }
 

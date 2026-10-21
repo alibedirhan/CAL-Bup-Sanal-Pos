@@ -1,12 +1,19 @@
 // Bu şablon yalnız canlı/emülatör derlemesinde bağlanır. Satır içi betik gerekmez.
 try {
-  await import('./kart_kasasi.js');
-  await import('./pos_giris.js');
-  await import('./doldurma.js');
+  // Modüller birbirini beklemeden aynı anda yüklenir (açılış süresi); SDK
+  // modülleri ortak firebase-app'i tarayıcının modül önbelleğinden paylaşır.
   const base = 'https://www.gstatic.com/firebasejs/__FIREBASE_SDK_VERSION__/';
-  window.firebase_core = await import(`${base}firebase-app.js`);
-  window.firebase_auth = await import(`${base}firebase-auth.js`);
-  window.firebase_firestore = await import(`${base}firebase-firestore-pipelines.js`);
+  const [sdkCore, sdkAuth, sdkFirestore] = await Promise.all([
+    import(`${base}firebase-app.js`),
+    import(`${base}firebase-auth.js`),
+    import(`${base}firebase-firestore-pipelines.js`),
+    import('./kart_kasasi.js'),
+    import('./pos_giris.js'),
+    import('./doldurma.js'),
+  ]);
+  window.firebase_core = sdkCore;
+  window.firebase_auth = sdkAuth;
+  window.firebase_firestore = sdkFirestore;
   __EMULATOR_SETUP__
   const script = document.createElement('script');
   script.src = '__BOOTSTRAP_URL__';

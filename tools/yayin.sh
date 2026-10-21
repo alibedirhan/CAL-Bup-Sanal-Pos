@@ -6,15 +6,10 @@ dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub
 bash tools/derle.sh canli
-# Canlı deneme yer imi yalnız gerçek Sanal POS ve DenizPay kökenlerini taşımalı.
-python3 - <<'KONTROL'
-from pathlib import Path
-t = Path('build/canli/deneme.js').read_text()
-assert "const POS = 'https://denizpay.bupilic.com.tr';" in t, 'Canlı POS kökeni yok'
-assert "https://bup-sanal-pos-izmir.web.app" in t, 'Uygulama kökeni yok'
-assert '127.0.0.1' not in t and '__' not in t.replace('__bupDeneme', ''), 'Test kökeni/yer tutucu kaldı'
 # Kart doldurma: kurulum yer imi ve doldur sayfası yalnız gerçek kökenleri taşır.
+python3 - <<'KONTROL'
 import re
+from pathlib import Path
 for ad in ('kurulum.js', 'doldur_sayfasi.js'):
     s = Path('build/canli', ad).read_text()
     assert '127.0.0.1' not in s and not re.search(r'__[A-Z_]+__', s), f'{ad}: test kökeni/yer tutucu kaldı'

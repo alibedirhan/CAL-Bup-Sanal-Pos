@@ -31,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.7.2'),
+            const Text('BUP Sanal POS · 0.7.3'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null
@@ -113,16 +113,6 @@ class BilgiSayfasi extends StatelessWidget {
                   onPressed: ac,
                   icon: const Icon(Icons.bookmark_add_outlined),
                   label: const Text('BUP Doldur yer imini kur'),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Link(
-                uri: Uri.base.resolve('deneme.html'),
-                target: LinkTarget.blank,
-                builder: (context, ac) => TextButton.icon(
-                  onPressed: ac,
-                  icon: const Icon(Icons.science_outlined),
-                  label: const Text('Telefon denemesini aç'),
                 ),
               ),
             ],

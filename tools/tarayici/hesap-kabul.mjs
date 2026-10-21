@@ -135,6 +135,8 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     const cari=(await db.collection('cariler').where('kimlikNo','==','0000000000').get()).docs[0];
     await page.waitForFunction(()=>!document.body.textContent.includes('Atamayı onayla'));
     const kullanici=(await db.collection('kullanicilar').where('eposta','==','yeni@example.test').get()).docs[0];
+    // Onay penceresi kapanmadan önce sorgulanırsa yazım henüz bitmemiş olabilir; en çok 10 sn beklenir.
+    for(let i=0;i<40 && (await cari.ref.get()).data().sahipId!==kullanici.id;i++) await new Promise(r=>setTimeout(r,250));
     assert.equal((await cari.ref.get()).data().sahipId,kullanici.id);
     await page.goto('about:blank');await context.clearCookies();
     // Yeni tarayıcı oturumu: yönetici oturumunu kullanmadan atanmış kaydı açar.

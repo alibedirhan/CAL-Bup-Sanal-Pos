@@ -97,6 +97,23 @@ try {
       await ikinci.waitForEvent('close', { timeout: 8000 });
       await pos.getByText(/Kart yazıldı/).waitFor({ timeout: 8000 });
 
+      // Yer imi sürümü: telefondaki numarasız ilk sürüm çalışır; eski numara yeniden kurulum ister.
+      const sayfaYaniti = async ek => {
+        const [p] = await Promise.all([baglam.waitForEvent('page'), pos.evaluate(([u, ek]) => {
+          window.gelenPaket = null;
+          addEventListener('message', e => { if (e.data?.tur === 'bup-doldur-paket') window.gelenPaket = e.data; }, { once: true });
+          window.open(`${u}/doldur.html#b=${'c'.repeat(24)}${ek}`);
+        }, [UYGULAMA, ek])]);
+        await pos.waitForFunction(() => window.gelenPaket, null, { timeout: 8000 });
+        await p.close().catch(() => {});
+        return pos.evaluate(() => window.gelenPaket);
+      };
+      assert.equal((await sayfaYaniti('')).kart?.numara, KART);
+      assert.equal((await sayfaYaniti('&s=1')).kart?.numara, KART);
+      const eski = await sayfaYaniti('&s=0');
+      assert.equal(eski.kart, undefined);
+      assert.match(eski.hata, /Yer imin eski/);
+
       // Başka carinin DenizPay oturumu: hiçbir şey yazılmaz.
       await pos.goto(`${POS}/baska.aspx`);
       const [ucuncu] = await Promise.all([baglam.waitForEvent('page'), pos.evaluate(kod)]);

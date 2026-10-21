@@ -17,7 +17,7 @@ Future<void> ac(WidgetTester tester, Kullanici? kullanici) async {
 }
 
 void main() {
-  testWidgets('Hesaplı kullanıcıya verisiz telefon denemesi bağlantısı', (
+  testWidgets('Hesaplı kullanıcıya verisiz yer imi kurulum bağlantısı', (
     tester,
   ) async {
     await ac(
@@ -30,21 +30,16 @@ void main() {
         aktif: true,
       ),
     );
-    final linkler = tester.widgetList<Link>(find.byType(Link)).toList();
-    expect(linkler.map((l) => l.uri), [
-      Uri.base.resolve('kurulum.html'),
-      Uri.base.resolve('deneme.html'),
-    ]);
-    for (final link in linkler) {
-      expect(link.uri!.hasQuery, isFalse);
-      expect(link.uri!.hasFragment, isFalse);
-    }
+    final link = tester.widget<Link>(find.byType(Link));
+    expect(link.uri, Uri.base.resolve('kurulum.html'));
+    expect(link.uri!.hasQuery, isFalse);
+    expect(link.uri!.hasFragment, isFalse);
     expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
-    expect(find.text('Telefon denemesini aç'), findsOneWidget);
-    expect(find.text('BUP Sanal POS · 0.7.2'), findsOneWidget);
+    expect(find.text('Telefon denemesini aç'), findsNothing);
+    expect(find.text('BUP Sanal POS · 0.7.3'), findsOneWidget);
   });
 
-  testWidgets('Deneme kipinde telefon denemesi gösterilmez', (tester) async {
+  testWidgets('Deneme kipinde kurulum bağlantısı gösterilmez', (tester) async {
     await ac(tester, null);
     expect(find.byType(Link), findsNothing);
   });

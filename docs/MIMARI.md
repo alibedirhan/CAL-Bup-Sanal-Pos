@@ -48,7 +48,8 @@ Gerçek kart ekleme formu yoktur. Demo kart düğmesi yapay özet oluşturur.
 Cari kodu kullanıcı içinde benzersizdir. Silme onaylıdır. Veri deposundaki
 sürüm kontrolü eski kaydın yeni değişikliği ezmesini engeller.
 
-Arka plana geçiş ve 10 dakika hareketsizlik ekranı kilitler; açık modallar
+Arka plana geçişten 5 dakika sonra dönüş (0.7.3, kullanıcı kararı; daha kısa dönüşte
+ekran olduğu gibi kalır) ve 10 dakika hareketsizlik ekranı kilitler; açık modallar
 kapanır, cari/kart seçimi bırakılır, geç dönen işlem yanıtları gösterilmez.
 Bu bir ekran gizleme davranışıdır; belleği silmez, şifreleme veya gerçek
 yeniden kimlik doğrulama sağlamaz. Üretim oturumu ayrıca tasarlanmalıdır.

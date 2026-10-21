@@ -1,0 +1,45 @@
+# Her gönderimde: biçim, analiz, Dart testleri, demo derlemesi ve yerel tarayıcı
+# testleri. Yalnız yapay veri ve yerel taklit POS kullanır; gerçek DenizPay'e,
+# Firebase canlı projesine veya gizli anahtara erişmez, yayın yapmaz.
+name: Kontrol
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: kontrol-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  kontrol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.2
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/tarayici/package-lock.json
+      - name: Flutter bağımlılıkları
+        run: flutter pub get
+      - name: Biçim, analiz, Dart testleri, demo derlemesi
+        run: bash tools/kontrol.sh
+      - name: Tarayıcı test araçları
+        working-directory: tools/tarayici
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium webkit
+      - name: Tarayıcı testleri (demo, kasa, kart doldurma)
+        run: |
+          python3 tools/sunucu.py --port 4195 --paket web &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4195/ >/dev/null && break; sleep 1; done
+          npm --prefix tools/tarayici run test
+          npm --prefix tools/tarayici run test:kasa
+          npm --prefix tools/tarayici run test:doldur

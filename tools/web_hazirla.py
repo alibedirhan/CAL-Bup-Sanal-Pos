@@ -34,6 +34,9 @@ bootstrap.write_text(metin)
 index = kok / 'index.html'
 html = index.read_text()
 html = re.sub(r'flutter_bootstrap\.js(?:\?v=[a-f0-9]+)?', f'flutter_bootstrap.js?v={surum}', html)
+if html.count('<link rel="preload" href="main.dart.js" as="script">') != 1:
+    raise SystemExit('index.html ön yükleme satırı bulunamadı.')
+html = html.replace('href="main.dart.js" as="script"', f'href="main.dart.js?v={surum}" as="script"')
 if args.paket != 'web':
     proje = Path(__file__).resolve().parents[1]
     config = proje / '.dart_tool/package_config.json'
@@ -65,7 +68,7 @@ if args.paket != 'web':
     html = re.sub(r'<script src="flutter_bootstrap\.js[^\"]*" async></script>',
                   f'<script type="module" src="firebase_baslat.js?v={surum}"></script>', html)
 index.write_text(html)
-# Yer imi sayfaları (deneme, kurulum, doldur): canlıda gerçek kökenler, yerelde yalnız taklit POS kökeni.
+# Yer imi sayfaları (kurulum, doldur): canlıda gerçek kökenler, yerelde yalnız taklit POS kökeni.
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'yer_imi'))
 from uret import CANLI_POS, CANLI_UYGULAMA, TAKLIT_POS, sayfalar  # noqa: E402
 kokenler = {'canli': (CANLI_UYGULAMA, CANLI_POS), 'web': ('http://127.0.0.1:4195', TAKLIT_POS),

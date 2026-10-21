@@ -7,6 +7,7 @@ Future<void> baslat(
   WidgetTester tester, {
   double genislik = 390,
   double olcek = 1,
+  Duration donusSuresi = const Duration(minutes: 5),
 }) async {
   tester.view.physicalSize = Size(genislik, 844);
   tester.view.devicePixelRatio = 1;
@@ -17,7 +18,7 @@ Future<void> baslat(
     tester.view.resetDevicePixelRatio();
     tester.platformDispatcher.clearTextScaleFactorTestValue();
   });
-  await tester.pumpWidget(const BupPosApp());
+  await tester.pumpWidget(BupPosApp(donusSuresi: donusSuresi));
   await tester.pumpAndSettle();
   await tikla(tester, find.text('Denemeyi aç'));
   await tester.pumpAndSettle();
@@ -115,10 +116,10 @@ void main() {
       isNull,
     );
   });
-  testWidgets('Arka plana geçiş açık onay penceresini de kapatır', (
+  testWidgets('Geç dönüşte kilit açık onay penceresini de kapatır', (
     tester,
   ) async {
-    await baslat(tester);
+    await baslat(tester, donusSuresi: Duration.zero);
     await tikla(tester, find.text('Örnek Kuzey Market'));
     await tester.pumpAndSettle();
     await tikla(tester, find.byType(KartKutusu).first);
@@ -132,6 +133,24 @@ void main() {
     expect(find.text('Seçimini kontrol et'), findsNothing);
     expect(find.text('Denemeye devam et'), findsOneWidget);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  });
+  // 21 Ekim kullanıcı kararı: DenizPay sekmesinden kısa sürede dönünce ekran
+  // olduğu gibi kalır (başka kartla ikinci ödeme için şifre sorulmaz).
+  testWidgets('Kısa dönüşte ekran ve açık onay penceresi korunur', (
+    tester,
+  ) async {
+    await baslat(tester);
+    await tikla(tester, find.text('Örnek Kuzey Market'));
+    await tester.pumpAndSettle();
+    await tikla(tester, find.byType(KartKutusu).first);
+    await tester.pumpAndSettle();
+    await tikla(tester, find.text('POS’a geçişi dene'));
+    await tester.pumpAndSettle();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('Seçimini kontrol et'), findsOneWidget);
+    expect(find.text('Denemeye devam et'), findsNothing);
   });
   for (final genislik in [320.0, 390.0, 1024.0]) {
     for (final olcek in [1.0, 1.5]) {
