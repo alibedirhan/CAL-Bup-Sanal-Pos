@@ -112,7 +112,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       }
       _sonUid = uid;
       _nesil++;
-      unawaited(_profil?.cancel());
+      unawaited(_profil?.cancel().catchError((Object _) {}));
       setState(() {
         _kullanici = null;
         _kilitli = false;
@@ -151,8 +151,8 @@ class _HesapKapisiState extends State<_HesapKapisi> {
 
   @override
   void dispose() {
-    _auth?.cancel();
-    _profil?.cancel();
+    _auth?.cancel().catchError((Object _) {});
+    _profil?.cancel().catchError((Object _) {});
     super.dispose();
   }
 

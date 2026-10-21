@@ -8,6 +8,7 @@ import 'tema.dart';
 import '../application/hesap_portu.dart';
 import 'cari_atama.dart';
 import 'kart_formu.dart';
+import 'kart_silme.dart';
 
 class CariProfiliEkrani extends StatelessWidget {
   const CariProfiliEkrani({super.key, required this.model, this.yonetim});

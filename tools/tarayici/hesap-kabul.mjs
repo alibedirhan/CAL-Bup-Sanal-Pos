@@ -4,7 +4,7 @@ import { chromium, webkit } from 'playwright';
 import { fixture, parola } from '../sunucu-test/fixture.mjs';
 
 await mkdir('/tmp/bup-pos-qa-02',{recursive:true});
-for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
+for(const [name,engine] of [['chromium',chromium],['webkit',webkit]].filter(([n])=>!process.env.TARAYICI||process.env.TARAYICI===n)) {
   const {db}=await fixture();
   const browser=await engine.launch();
   let page;
@@ -40,17 +40,35 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       assert.equal(await f.inputValue(),value);
     }
+    // Kart formu alttan kayarak açılır; hareket bitmeden yapılan tıklama üstteki kutuya düşebilir.
+    async function kartFormu() {
+      await button('Kart ekle').click();
+      await page.getByRole('textbox',{name:'Kart adı',exact:true}).waitFor();
+      await page.waitForTimeout(700);
+    }
+    // WebKit'te Playwright'ın kaydırması bitmeden yapılan tıklama üstteki düğmeye düşebiliyor.
+    async function bas(l) { await l.scrollIntoViewIfNeeded(); await page.waitForTimeout(500); await l.click(); }
+    // Sayfadan ayrılmadan önce elle kilit: dinleyiciler kapanır. 0.7.3'ten beri kısa
+    // sekme değişimi kilitlemediği için, açık dinleyiciyle sayfa kapanırken WebKit
+    // iptal edilen veritabanı bağlantısını mesajsız bir hata olarak bildiriyor.
+    async function ayril() {
+      if(!page.url().startsWith('http://127.0.0.1:4197')) return;
+      for(let i=0;i<3 && await page.getByRole('button',{name:'Kartlara dön',exact:true}).count()===0
+        && await button('Ekranı kilitle').count()===0;i++) {await page.keyboard.press('Escape');await page.waitForTimeout(400);}
+      if(await button('Ekranı kilitle').count()) {await button('Ekranı kilitle').click();await button('Kilidi aç').waitFor();}
+    }
     async function open() {
+      await ayril();
       await page.goto('http://127.0.0.1:4197');await page.locator('#acilis').waitFor({state:'detached'});
       const s=page.locator('flt-semantics-placeholder'); if(await s.count()) await s.evaluate(e=>e.click());
     }
     await open(); await button('Giriş yap').waitFor();
     await write('E-posta','admin@example.test');await write('Şifre',parola);await button('Giriş yap').click();
-    await button('Yeni cari').click();
+    await button('Yeni cari').click();await page.getByRole('textbox',{name:'Cari adı',exact:true}).waitFor();await page.waitForTimeout(700);
     await write('Cari adı','Örnek Telefon Carisi');
     assert.equal(await page.getByRole('textbox',{name:'Cari kodu',exact:true}).count(),0);
     await write('Vergi / TC kimlik numarası','0000000000');await button('Cariyi kaydet').click();
-    await button('Kart ekle').click();await write('Kart adı','Örnek İş Kartı');
+    await kartFormu();await write('Kart adı','Örnek İş Kartı');
     await write('Kart numarası','4111111111111111');
     // Yeni kartta numara açık yazı kutusudur. Kart alanı bildirimi (cc-number) erişilebilirlik kipinde
     // Flutter tarafından kapatıldığı için burada değil, test/kart_formu_test.dart içinde sınanır.
@@ -62,7 +80,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     await open();
     await page.getByRole('button',{name:/Örnek Telefon Carisi/}).click();
     await page.getByRole('button',{name:/Örnek İş Kartı, son dört hane 1111/}).waitFor();
-    await button('Bilgiler / düzenle').click();
+    await bas(button('Bilgiler / düzenle'));await page.waitForTimeout(700);
     await page.getByRole('textbox',{name:'Kart numarası',exact:true}).waitFor();
     await button('Kart numarasını göster').click();
     await page.getByRole('textbox',{name:'Kart numarası',exact:true}).click();
@@ -71,14 +89,14 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     await write('İletişim telefonu (isteğe bağlı)','05000000000');
     await page.getByRole('checkbox',{name:'Kartı ve bu cari altında saklamayı kontrol ettim.'}).click();
     await button('Kartı kaydet').click();
-    await button('Kart ekle').click();await write('Kart adı','Örnek İkinci Kart');
+    await kartFormu();await write('Kart adı','Örnek İkinci Kart');
     await write('Kart numarası','5555555555554444');await write('Ay','12');await write('Yıl','2030');
     await page.getByRole('checkbox',{name:'Kartı ve bu cari altında saklamayı kontrol ettim.'}).click();
     await button('Kartı kaydet').click();
     await page.getByRole('button',{name:/Örnek İkinci Kart, son dört hane 4444/}).waitFor();
     assert.equal(await page.getByRole('textbox',{name:/CVV/}).count(),0);
     // Otomatik giriş: seçim kontrolü bilgi göndermez; yalnız düğme tek POST yapar, kart bilgisi yoktur.
-    await page.getByRole('button',{name:/Örnek İş Kartı, son dört hane 1111/}).click();
+    await bas(page.getByRole('button',{name:/Örnek İş Kartı, son dört hane 1111/}));
     await button('Ödeme sitesine geç').click();
     await page.getByRole('checkbox',{name:'Cari ve seçili kartı kontrol ettim.'}).click();
     await button('Seçimi kontrol et').click();
@@ -112,12 +130,12 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     page.on('requestfailed',r=>failed.push({url:r.url(),error:r.failure()?.errorText}));
     await open();await write('E-posta','admin@example.test');await write('Şifre',parola);await button('Giriş yap').click();
     await page.getByRole('button',{name:/Örnek Telefon Carisi/}).click();
-    await page.getByRole('button',{name:'Bilgiler / düzenle',exact:true}).first().click();
+    await bas(page.getByRole('button',{name:'Bilgiler / düzenle',exact:true}).first());await page.waitForTimeout(700);
     await page.getByText(/Bu cihazda tam kart bilgisi yok/).waitFor();
     const emptyNumber=page.getByRole('textbox',{name:'Kart numarası',exact:true});
     await emptyNumber.click();await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
     assert.equal(await emptyNumber.inputValue(),'');
-    await otherDevice.close();page=original;
+    await ayril();await otherDevice.close();page=original;
     if(await button('Kilidi aç').count()) { await write('Şifre',parola);await button('Kilidi aç').click(); }
     await button('Ekranı kilitle').click();await button('Kilidi aç').waitFor();
     assert.equal(await page.evaluate(()=>localStorage.getItem('bup-doldurma-isi')),null,'Kilit bekleyen kart işini silmeli');
@@ -138,7 +156,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     // Onay penceresi kapanmadan önce sorgulanırsa yazım henüz bitmemiş olabilir; en çok 10 sn beklenir.
     for(let i=0;i<40 && (await cari.ref.get()).data().sahipId!==kullanici.id;i++) await new Promise(r=>setTimeout(r,250));
     assert.equal((await cari.ref.get()).data().sahipId,kullanici.id);
-    await page.goto('about:blank');await context.clearCookies();
+    await ayril();await page.goto('about:blank');await context.clearCookies();
     // Yeni tarayıcı oturumu: yönetici oturumunu kullanmadan atanmış kaydı açar.
     const sales=await browser.newContext({viewport:{width:390,height:844}});
     await protect(sales);

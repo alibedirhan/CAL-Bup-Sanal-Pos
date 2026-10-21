@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import '../domain/kart_bilgileri.dart';
+import '../domain/kart_okuma.dart';
+import 'kart_okuma_kutusu.dart';
 import 'ortak.dart';
 import 'oturum_modeli.dart';
 
@@ -116,8 +118,8 @@ class _KartFormuState extends State<_KartFormu> {
         cariId: widget.cari.id,
         ad: _ad.text,
         sonDort: bilgiler.sonDort,
-        ay: int.tryParse(_ay.text) ?? 0,
-        yil: int.tryParse(_yil.text) ?? 0,
+        ay: int.tryParse(_ay.text.trim()) ?? 0,
+        yil: sktYili(_yil.text) ?? 0,
       );
       final tamam = await widget.model.kartKaydet(kart, bilgiler: bilgiler);
       if (!mounted) return;
@@ -139,6 +141,37 @@ class _KartFormuState extends State<_KartFormu> {
     } finally {
       if (mounted) setState(() => _mesgul = false);
     }
+  }
+
+  // Telefonun kart tarayıcısı tarihi tek parça ("07/31") verebilir: iki kutuya böl.
+  void _tarihBol(String deger) {
+    final t = sktCoz(deger);
+    if (t == null) return;
+    _ay.text = t.ay.toString().padLeft(2, '0');
+    _yil.text = '${t.yil}';
+  }
+
+  void _okundu(OkunanKart k) => setState(() {
+    if (k.numara != null) {
+      _numara.text = k.numara!;
+      _goster = true;
+    }
+    if (k.ay != null) {
+      _ay.text = k.ay!.toString().padLeft(2, '0');
+      _yil.text = '${k.yil}';
+    }
+    if (k.ad != null) _sahibi.text = k.ad!;
+  });
+
+  String? _yilDenetle(String? v) {
+    final yil = sktYili(v ?? ''), ay = int.tryParse(_ay.text.trim());
+    if (yil == null) return '2031 ya da 31 yaz.';
+    final simdi = widget.model.servis.saat();
+    if (ay != null &&
+        (yil < simdi.year || (yil == simdi.year && ay < simdi.month))) {
+      return 'Kartın süresi geçmiş.';
+    }
+    return null;
   }
 
   String? _numaraDenetle(String? value) {
@@ -196,6 +229,12 @@ class _KartFormuState extends State<_KartFormu> {
                       DurumNotu(_bilgi!),
                       const SizedBox(height: 16),
                     ],
+                    KartOkumaKutusu(
+                      etkin: aktif,
+                      simdi: widget.model.servis.saat,
+                      okundu: _okundu,
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _ad,
                       enabled: aktif,
@@ -260,16 +299,18 @@ class _KartFormuState extends State<_KartFormu> {
                             autofillHints: const [
                               AutofillHints.creditCardExpirationMonth,
                             ],
-                            maxLength: 2,
+                            maxLength: 7,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
+                            onChanged: _tarihBol,
                             decoration: const InputDecoration(
                               labelText: 'Ay',
                               hintText: 'AA',
+                              counterText: '',
                             ),
                             validator: (v) =>
-                                (int.tryParse(v ?? '') ?? 0) < 1 ||
-                                    (int.tryParse(v ?? '') ?? 0) > 12
+                                (int.tryParse(v?.trim() ?? '') ?? 0) < 1 ||
+                                    (int.tryParse(v?.trim() ?? '') ?? 0) > 12
                                 ? '01–12 yaz.'
                                 : null,
                           ),
@@ -282,18 +323,16 @@ class _KartFormuState extends State<_KartFormu> {
                             autofillHints: const [
                               AutofillHints.creditCardExpirationYear,
                             ],
-                            maxLength: 4,
+                            maxLength: 7,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
+                            onChanged: _tarihBol,
                             decoration: const InputDecoration(
                               labelText: 'Yıl',
                               hintText: 'YYYY',
+                              counterText: '',
                             ),
-                            validator: (v) =>
-                                (int.tryParse(v ?? '') ?? 0) < 2000 ||
-                                    (int.tryParse(v ?? '') ?? 0) > 2199
-                                ? 'Dört haneli yıl yaz.'
-                                : null,
+                            validator: _yilDenetle,
                           ),
                         ),
                       ],
@@ -351,31 +390,4 @@ class _KartFormuState extends State<_KartFormu> {
       );
     },
   );
-}
-
-Future<void> kartSilmeOnayi(
-  BuildContext context,
-  OturumModeli model,
-  KartOzeti kart,
-) async {
-  final onay = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Kart silinsin mi?'),
-      content: Text(
-        '${kart.ad} · ${kart.maske} kaydı ve bu cihazdaki tam bilgileri kaldırılacak.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Vazgeç'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Sil'),
-        ),
-      ],
-    ),
-  );
-  if (onay == true) await model.kartSil(kart.id);
 }

@@ -332,7 +332,8 @@ class OturumModeli extends ChangeNotifier {
   @override
   void dispose() {
     _kapali = true;
-    _izleme?.cancel();
+    // Kapanışta bağlantı kesilmişse iptal de hata verebilir; sahipsiz hata bırakılmaz.
+    _izleme?.cancel().catchError((Object _) {});
     _nesil++;
     super.dispose();
   }

@@ -1,3 +1,26 @@
+# 22 Ekim 2026 — 0.8.0: karttan okuma
+
+Kullanıcı "kartı tarayıp doğru bilgileri doğru yerlere, en doğru şekilde
+kaydetsin" istedi (gerçek cihaz denemesini şimdi yapamıyor). Yapılanlar:
+`lib/domain/kart_okuma.dart` — `sktYili` (31 → 2031), `sktCoz` ("07/31"),
+`kartMetniniOku`: Luhn'dan geçen tek numara (OCR harf karışıklığı ve iki satıra
+bölünme düzeltilir), etiketli/en geç son kullanma (başlangıç tarihi atlanır),
+büyük harfli 2–4 sözcüklü tek ad (banka/ürün/etiket sözcükleri reddedilir);
+belirsizlikte alan boş, CVV hiç okunmaz. Kart formunda en üstte "Karttan oku"
+kutusu (telefonun Canlı Metin/Lens yazısı yapıştırılır, hemen ayrıştırılıp
+silinir, saklanmaz); telefonun kendi "Kartı Tara"sı için ay/yıl kutuları tek
+parça tarihi böler, iki haneli yılı kabul eder; süresi geçmiş kart reddedilir;
+kart numarasında tire kabul. `kartSilmeOnayi` `kart_silme.dart`'a taşındı
+(400 satır). Dinleyici iptallerine hata karşılayıcı eklendi. Testler: 88 Dart
+(11 okuma + 3 form); demo, kasa, doldur; hesap Chromium geçti. Hesap WebKit
+yerel testi ~yarı yarıya tıklama zamanlamasıyla takılıyor; eski 0.7.2 de aynı
+ortamda 3'te 1 takıldı (ortam kaynaklı, CI'da bu test yok). `hesap-kabul.mjs`
+alt pencere/kaydırma beklemeleri, sayfadan ayrılmadan kilit (`ayril`), atama
+yazımını bekleme ve `TARAYICI=webkit|chromium` süzgeci aldı. Gerçek cihazda
+"Kartı Tara" ve "Karttan oku" henüz denenmedi.
+
+---
+
 # 21 Ekim 2026 gece — 0.7.3: CI, dönüş süresi, yer imi sürümü, hız, temizlik
 
 Ayrıntı `docs/IYILESTIRME_LISTESI.md` "21 Ekim gece yapılanlar". Testler: 74

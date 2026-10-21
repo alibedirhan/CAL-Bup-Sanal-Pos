@@ -16,7 +16,8 @@ String kartNumarasi(String deger) {
   if (deger.length > 32) {
     throw const PosHatasi('numara', 'Kart numarasını kontrol et.');
   }
-  final n = deger.replaceAll(' ', '');
+  // Telefonun kart tarayıcısı/otomatik doldurma boşluk veya tire koyabilir.
+  final n = deger.replaceAll(RegExp(r'[ -]'), '');
   if (!RegExp(r'^[0-9]{12,19}$').hasMatch(n) || RegExp(r'^0+$').hasMatch(n)) {
     throw const PosHatasi('numara', 'Kart numarası 12–19 rakam olmalı.');
   }

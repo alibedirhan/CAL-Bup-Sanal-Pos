@@ -14,7 +14,8 @@ Kullanıcı 1, 2, 4, 6, 7, 8'i seçti (eski numaralarla: Actions, API anahtarı,
   kullanıcının Google Cloud hesabında; adımlar kullanıcıya verildi. Bilgisayardaki
   `gcloud` başka projenin (ciftlik-ajandasi) hizmet hesabına bağlı; kullanılmadı.
 - Şifre sorma: DenizPay'den 5 dk içinde dönüşte kilit yok (`donusSuresi`).
-- Kartı Tara: kullanıcı denemesi bekleniyor.
+- Kartı Tara: kullanıcı denemesi bekleniyor. 0.8.0'da "Karttan oku" kutusu ve
+  tarama sonrası tarih/yıl düzeltmeleri eklendi (22 Ekim).
 - Yer imi sürümü: `doldur_sayfasi.js` `EN_AZ_YER_IMI`; yer imi `&s=` gönderir,
   numarasız (kurulu olan) = 1, yeniden kurulum gerekmez.
 - Temizlik: deneme sayfası/yer imi/testi ve `otomatik-giris` dalı kaldırıldı.

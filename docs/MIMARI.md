@@ -72,6 +72,14 @@ yazmaz. CVV/tutar/düğmelere dokunmaz, formu göndermez, uzaktan kod yüklemez.
 Kart doldurma anında sunucu yeniden sorgulanmaz; yetki, işin kurulduğu andaki
 sunucu doğrulaması ve 10 dakikalık süredir (bilinçli ödünleşim).
 
+## Karttan okuma (0.8.0)
+
+Kart formu telefonun kendi kart tarayıcısına `cc-*` ipuçlarıyla açıktır; ay/yıl
+kutuları tek parça tarihi ve iki haneli yılı düzeltir. "Karttan oku" kutusuna
+yapıştırılan yazı `domain/kart_okuma.dart` ile ayrıştırılır, hemen silinir;
+yalnız emin olunan alanlar doldurulur, CVV okunmaz. Görüntü işlenmez/gönderilmez
+(uygulama içi OCR yok: telefonun kendi tanıması daha isabetli ve ücretsiz).
+
 ## Web paketi
 
 Flutter/Dart ve bağımlılık kilit dosyaları projeye aittir. Yazı tipleri ve
