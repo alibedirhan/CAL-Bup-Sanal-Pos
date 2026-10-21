@@ -28,6 +28,11 @@ assert.ok(csp.includes("frame-ancestors 'none'"));
 // Form gönderimi yalnız sabit DenizPay kökenine (otomatik giriş); başka hedef yok.
 assert.equal(csp.split(';').map(s=>s.trim()).find(s=>s.startsWith('form-action')),'form-action https://denizpay.bupilic.com.tr');
 assert.ok(!csp.split('script-src')[1].split(';')[0].includes("'unsafe-inline'"));
+// Ana ekran simgesi tarayıcı içinde açılır (kullanıcı kararı): iPhone'da ayrı depolu uygulama
+// olursa "BUP Doldur" bekleyen kartı göremez.
+const anaSayfa=await (await fetch(origin)).text();
+assert.ok(!/web-app-capable/.test(anaSayfa),'Ana ekran ayrı uygulama olarak açılmamalı');
+assert.equal((await (await fetch(`${origin}/manifest.json`)).json()).display,'browser');
 for(const collection of ['cariler','kullanicilar']) {
   const denied=await fetch(`https://firestore.googleapis.com/v1/projects/bup-sanal-pos-izmir/databases/(default)/documents/${collection}/erisim-siniri-denemesi`);
   assert.equal(denied.status,403,'Oturumsuz veri okuma sunucuda reddedilmeli');

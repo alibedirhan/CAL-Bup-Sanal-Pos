@@ -2,7 +2,7 @@
   "name": "BUP Sanal POS",
   "short_name": "Sanal POS",
   "start_url": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#f4f6f8",
   "theme_color": "#16343e",
   "description": "Cari ve kart özetleri için BUP Sanal POS çalışma alanı.",

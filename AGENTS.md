@@ -3,7 +3,10 @@
 Önce `docs/OTURUM_NOTU.md`, ardından `docs/MIMARI.md` okuyun.
 
 - Ayrı Flutter projesidir. CAL bup ve Sipariş uygulamasına bağımlı değildir.
-- Kullanıcı kararları: bağlantıdan açılan ve ana ekrana eklenen web sürümü;
+- Kullanıcı kararları: bağlantıdan açılan ve ana ekrana eklenen web sürümü
+  (21 Ekim, 0.7.2: ana ekran simgesi Safari/Chrome içinde açılır — manifest
+  `display: browser`, `*-web-app-capable` yok; iPhone'da ayrı depolu uygulama
+  "BUP Doldur"u bozar, geri almayın);
   herkes yalnız kendisine atanmış carileri görür; CAL bup kayıtlarından bağımsız.
 - Kullanıcı yazılımcı değil; Türkçe, kısa ve somut sonuçlarla iletişim kurun.
 - 0.2.0'da Firebase giriş/kalıcı kayıt/yönetim kodu eklendi. Deneme kipi hâlâ

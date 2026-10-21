@@ -1,3 +1,16 @@
+# 21 Ekim 2026 gece — 0.7.2: ana ekran simgesi Safari içinde açılır
+
+Kullanıcı ana ekrandan açmayı sordu. Anlatıldı: iPhone'da ayrı (standalone)
+web uygulamasının deposu Safari'den ayrı; kartlar ve "BUP Doldur" bekleyen
+işi orada görünmez; dokunmasız/otomatik doldurma tarayıcıda mümkün değil.
+Kullanıcı "1 olsun, Safari içinde açılsın" dedi. `web/manifest.json`
+`display: browser`, `index.html`'den `apple-/mobile-web-app-capable` kaldırıldı;
+`yayin-kabul.mjs` ikisini denetler. Kullanıcı eski ana ekran simgesini silip
+Safari'den yeniden eklemeli (eski simge ayrı depoyu kullanmaya devam eder).
+Gerçek cihazda yeni simgenin Safari'de açıldığı henüz doğrulanmadı.
+
+---
+
 # 21 Ekim 2026 gece — 0.7.1: sekme değişimi bekleyen kartı silmez
 
 İlk gerçek iPhone denemesi: yer imi DenizPay kart sayfasında çalıştı, firma

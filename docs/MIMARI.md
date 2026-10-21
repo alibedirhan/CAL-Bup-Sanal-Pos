@@ -76,7 +76,10 @@ sunucu doğrulaması ve 10 dakikalık süredir (bilinçli ödünleşim).
 Flutter/Dart ve bağımlılık kilit dosyaları projeye aittir. Yazı tipleri ve
 CanvasKit kendi paketindedir. Roboto adı ayrıca Flutter motorunun varsayılan
 font isteğini yerel dosyaya yöneltir. CDN'ye çalışma zamanı bağımlılığı yoktur.
-Manifest ve iOS ana ekran simgeleri hazırdır. Service worker/offline iş kaydı
+Manifest ve iOS ana ekran simgeleri hazırdır. Manifest `display: browser`
+(0.7.2): simge Safari/Chrome sekmesi açar; iPhone'da ayrı (standalone) web
+uygulamasının deposu Safari'den ayrı olduğu için kart kasası ve "BUP Doldur"
+işi orada görünmez. Service worker/offline iş kaydı
 yoktur; çevrimdışı ödeme kuyruğu oluşturulmaz. İlk açılış bağlantı gerektirir.
 
 Derleme giriş dosyaları içerik hash'i ile sürümlenir. Önizleme sunucusu sadece

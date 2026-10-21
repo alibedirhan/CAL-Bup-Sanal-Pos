@@ -31,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.7.1'),
+            const Text('BUP Sanal POS · 0.7.2'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null

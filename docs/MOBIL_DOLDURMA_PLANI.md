@@ -208,7 +208,11 @@ yayın öncesi kontroller ve kullanıcı kabul listesi güncellenir.
   saklamayı şifreli olsa da yasaklar ([FAQ 1280](https://www.pcisecuritystandards.org/faqs/1280/)).
   Kullanıcı açıkça seçmeden eklenmez.
 - **K2 — Kanal A/B.** Aşama 0 sonucuyla.
-- **K3 — iPhone'da Safari kullanımı.** Ana ekran uygulaması yerine Safari
+- **K3 — iPhone'da Safari kullanımı.** *Karar (21 Ekim): ana ekran simgesi
+  Safari içinde açılır (0.7.2, `display: browser`). Kullanıcı "uygulama gibi"
+  açılmayı istedi; iPhone'da ayrı depo yüzünden doldurmanın çalışmayacağı
+  anlatıldı, Safari içinde açılmayı seçti. Otomatik (dokunmasız) doldurma
+  tarayıcıda mümkün değil; yer imine dokunmak gerekir.* Ana ekran uygulaması yerine Safari
   sekmesi; mevcut "ana ekrana eklenen" kararını değiştirir.
 - **K4 — Uzak depo.** Aşama T için.
 
