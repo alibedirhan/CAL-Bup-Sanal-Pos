@@ -15,7 +15,7 @@ POST'unu Playwright'ta yakalayıp yapay sayfayla yanıtlar — gerçek DenizPay'
 istek yok; alanlar, POST, sorgusuz URL, `opener` yok, kart bilgisi yok.
 Giriş sonucunun gerçek DenizPay'de çalıştığı doğrulanmadı (ilk deneme
 kullanıcıda). **Yayında:** kullanıcı yayin.sh çalıştırdı, kod özeti `cbd123b7e5d40b24`, test:yayin (CSP form-action birebir) geçti. Kullanıcının ilk iPhone denemesi: bkz. MOBIL_DOLDURMA_PLANI durum
-satırı. Kart sayfası raporu bekleniyor.
+satırı. **Kullanıcı iPhone Safari gerçek denemesi: "giriş yapılmış olarak açıldı" — otomatik giriş çalışıyor.** Kart sayfası raporu bekleniyor.
 
 ---
 
