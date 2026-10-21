@@ -33,14 +33,21 @@ assert.ok(!csp.split('script-src')[1].split(';')[0].includes("'unsafe-inline'"))
 const anaSayfa=await (await fetch(origin)).text();
 assert.ok(!/<meta[^>]+web-app-capable/.test(anaSayfa),'Ana ekran ayrı uygulama olarak açılmamalı');
 assert.equal((await (await fetch(`${origin}/manifest.json`)).json()).display,'browser');
-// Önbellek: her açılışta doğrulanır (no-cache), değişmeyen büyük dosya yeniden inmez (304).
+// Önbellek: sayfa ve küçük betikler her açılışta yeniden istenir (no-cache); büyük dosyalar
+// yalnız sürümlü adresten uzun süre saklanır (Firebase CDN no-cache'te 304 vermiyor).
 assert.equal(response.headers.get('cache-control'),'no-cache');
-const motor=await fetch(`${origin}/canvaskit/canvaskit.wasm`);
-assert.equal(motor.headers.get('cache-control'),'no-cache');
-const etag=motor.headers.get('etag');
-assert.ok(etag,'Büyük dosyada ETag olmalı');
-await motor.arrayBuffer();
-assert.equal((await fetch(`${origin}/canvaskit/canvaskit.wasm`,{headers:{'If-None-Match':etag}})).status,304);
+const ck=(await readFile(new URL('../../build/canli/flutter_bootstrap.js',import.meta.url),'utf8'))
+  .match(/canvasKitBaseUrl: "(canvaskit-[0-9a-f]{12})\/"/)[1];
+const uzun='public, max-age=31536000, immutable';
+for(const yol of [`${ck}/canvaskit.wasm`,`main.dart.js?v=${hash(local).slice(0,16)}`]) {
+  const r=await fetch(`${origin}/${yol}`);
+  assert.equal(r.status,200,yol);
+  assert.equal(r.headers.get('cache-control'),uzun,yol);
+}
+assert.equal((await fetch(`${origin}/canvaskit/canvaskit.wasm`)).headers.get('content-type')?.includes('wasm'),false,'Sürümsüz CanvasKit yolu kalmamalı');
+for(const yol of ['firebase_baslat.js','flutter_bootstrap.js','kart_kasasi.js']) {
+  assert.equal((await fetch(`${origin}/${yol}`)).headers.get('cache-control'),'no-cache',yol);
+}
 for(const collection of ['cariler','kullanicilar']) {
   const denied=await fetch(`https://firestore.googleapis.com/v1/projects/bup-sanal-pos-izmir/databases/(default)/documents/${collection}/erisim-siniri-denemesi`);
   assert.equal(denied.status,403,'Oturumsuz veri okuma sunucuda reddedilmeli');

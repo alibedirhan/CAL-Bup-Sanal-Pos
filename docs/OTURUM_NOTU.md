@@ -4,9 +4,20 @@ Kullanıcı ana ekrandan açınca "sunucudan yanıt çok geç" dedi. Ölçüm: s
 hızlı (ilk yanıt ~0,17 sn) ama `Cache-Control: no-store` yüzünden her açılışta
 ~3 MB sıkıştırılmış dosya (main.dart.js ~0,7 MB + canvaskit.wasm ~2,2 MB)
 yeniden iniyordu. Hosting başlığı `no-cache` yapıldı: dosya saklanır, her
-açılışta ETag ile doğrulanır (değişmediyse 304), sürüm hep güncel. Uygulama
-kodu değişmedi (sürüm 0.7.2 kalır). `yayin-kabul.mjs` başlığı ve 304'ü denetler.
-Yerel `tools/sunucu.py` no-store kalır. Gerçek telefonda hız farkı kullanıcıda.
+açılışta yeniden istenir. Ölçüm: Firebase CDN `no-cache`te ETag'e 304 vermiyor
+(her seferinde 200). Bu yüzden ek olarak: `tools/web_hazirla.py` CanvasKit'i
+motor sürümlü `canvaskit-<rev12>/` klasörüne taşır ve açılışa
+`canvasKitBaseUrl` yazar; `firebase.json` bu klasörü ve `/main.dart.js`'i
+(yalnız `?v=<hash>` ile istenir) `max-age=31536000, immutable` saklatır. Küçük
+betikler/sayfa `no-cache`. `yayin-kabul.mjs` bunları denetler. Uygulama kodu
+değişmedi (0.7.2). Yerel `tools/sunucu.py` no-store kalır.
+
+Kullanıcı ayrıca ana ekrandan açınca DenizPay'in boş giriş sayfasıyla açıldığını
+bildirdi (sol üstte "◀ Sanal POS"): simge hâlâ ayrı uygulama olarak açılıyor;
+iOS dış bağlantıyı Safari'ye verirken form POST gövdesini taşımaz. iOS'un "Ana
+Ekrana Ekle" ekranındaki "Web Uygulaması Olarak Aç" anahtarı kapatılmalı (yeni
+iOS'ta manifest'ten bağımsız varsayılan açık olabilir). BUP Doldur giriş
+sayfasında doğru şekilde yazmayı reddetti.
 
 ---
 

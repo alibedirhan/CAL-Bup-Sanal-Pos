@@ -18,6 +18,18 @@ metin = bootstrap.read_text()
 if 'main.dart.js' not in metin:
     raise SystemExit('Flutter açılış biçimi değişmiş; derleme elle incelenmeli.')
 metin = re.sub(r'main\.dart\.js(?:\?v=[a-f0-9]+)?', f'main.dart.js?v={surum}', metin)
+# CanvasKit (~2 MB sıkıştırılmış) motor sürümlü klasöre taşınır; Hosting bu klasörü ve
+# ?v= ile istenen main.dart.js'i uzun süre önbellekte tutar (firebase.json). Yeni motor
+# veya kod yeni adres demektir; telefon eski dosyayı kullanmaz.
+motor = re.search(r'"engineRevision":"([0-9a-f]{40})"', metin)
+if not motor or metin.count('_flutter.loader.load({') != 1 or 'canvasKitBaseUrl' in metin.split('_flutter.buildConfig')[1]:
+    raise SystemExit('Flutter açılış biçimi değişmiş; CanvasKit yolu elle incelenmeli.')
+ck = f'canvaskit-{motor.group(1)[:12]}'
+import shutil  # noqa: E402
+if (kok / ck).exists():
+    shutil.rmtree(kok / ck)
+(kok / 'canvaskit').rename(kok / ck)
+metin = metin.replace('_flutter.loader.load({', f'_flutter.loader.load({{\n  config: {{canvasKitBaseUrl: "{ck}/"}},')
 bootstrap.write_text(metin)
 index = kok / 'index.html'
 html = index.read_text()
