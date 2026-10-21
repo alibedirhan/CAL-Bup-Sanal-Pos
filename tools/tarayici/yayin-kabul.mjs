@@ -33,6 +33,14 @@ assert.ok(!csp.split('script-src')[1].split(';')[0].includes("'unsafe-inline'"))
 const anaSayfa=await (await fetch(origin)).text();
 assert.ok(!/<meta[^>]+web-app-capable/.test(anaSayfa),'Ana ekran ayrı uygulama olarak açılmamalı');
 assert.equal((await (await fetch(`${origin}/manifest.json`)).json()).display,'browser');
+// Önbellek: her açılışta doğrulanır (no-cache), değişmeyen büyük dosya yeniden inmez (304).
+assert.equal(response.headers.get('cache-control'),'no-cache');
+const motor=await fetch(`${origin}/canvaskit/canvaskit.wasm`);
+assert.equal(motor.headers.get('cache-control'),'no-cache');
+const etag=motor.headers.get('etag');
+assert.ok(etag,'Büyük dosyada ETag olmalı');
+await motor.arrayBuffer();
+assert.equal((await fetch(`${origin}/canvaskit/canvaskit.wasm`,{headers:{'If-None-Match':etag}})).status,304);
 for(const collection of ['cariler','kullanicilar']) {
   const denied=await fetch(`https://firestore.googleapis.com/v1/projects/bup-sanal-pos-izmir/databases/(default)/documents/${collection}/erisim-siniri-denemesi`);
   assert.equal(denied.status,403,'Oturumsuz veri okuma sunucuda reddedilmeli');
