@@ -6,6 +6,8 @@ atama denetimi yazımı bekleyecek şekilde sağlamlaştırıldı (bir kez zaman
 yüzünden düşmüştü). Emülatör derlemesinde SDK değişken adı çakışması
 (`auth`) yakalanıp düzeltildi (canlıyı etkilemiyordu). API anahtarı kısıtlı
 değil; kullanıcıya Google Cloud adımları verildi.
+**Yayında** (`1ad9545e27528f10`, test:yayin geçti). İlk GitHub Actions koşusu
+başarılı; Node 20 uyarısı için checkout/setup-node v5'e geçildi.
 
 ---
 
