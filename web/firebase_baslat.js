@@ -2,6 +2,7 @@
 try {
   await import('./kart_kasasi.js');
   await import('./pos_giris.js');
+  await import('./doldurma.js');
   const base = 'https://www.gstatic.com/firebasejs/__FIREBASE_SDK_VERSION__/';
   window.firebase_core = await import(`${base}firebase-app.js`);
   window.firebase_auth = await import(`${base}firebase-auth.js`);

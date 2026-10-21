@@ -77,7 +77,7 @@ class _AnaEkranState extends State<AnaEkran> {
                 padding: EdgeInsets.only(right: 4),
                 child: Chip(
                   label: Text(
-                    m.deneme ? 'Deneme' : '0.6.0',
+                    m.deneme ? 'Deneme' : '0.7.0',
                     style: const TextStyle(fontSize: 11),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 2),
@@ -165,16 +165,20 @@ class _IslemCubugu extends StatelessWidget {
             Semantics(
               liveRegion: true,
               child: Text(
-                model.seciliKart == null
-                    ? 'Devam etmek için bir kart seç.'
-                    : '${model.seciliKart!.ad} · ${model.seciliKart!.maske}',
+                model.seciliKart != null
+                    ? '${model.seciliKart!.ad} · ${model.seciliKart!.maske}'
+                    : model.otomatikGiris
+                    ? 'Kart seçmeden de DenizPay’e girebilirsin.'
+                    : 'Devam etmek için bir kart seç.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: PosRenk.ikincil),
               ),
             ),
             const SizedBox(height: 10),
             FilledButton.icon(
-              onPressed: model.seciliKart == null || model.mesgul
+              onPressed:
+                  (model.seciliKart == null && !model.otomatikGiris) ||
+                      model.mesgul
                   ? null
                   : () => posOnayiniAc(context, model),
               icon: const Icon(Icons.arrow_forward_rounded),

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#16343e">
+  <title>BUP Doldur kurulumu · BUP Sanal POS</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root { --zemin: #f4f6f6; --kart: #fff; --yazi: #142126; --soluk: #4c5d63; --vurgu: #16343e; }
+    @media (prefers-color-scheme: dark) {
+      :root { --zemin: #0f1a1e; --kart: #17262c; --yazi: #e8eef0; --soluk: #a9b8bd; --vurgu: #8fd0e0; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--zemin); color: var(--yazi); font: 17px/1.55 -apple-system, system-ui, Roboto, sans-serif; }
+    main { max-width: 640px; margin: 0 auto; padding: 20px 16px 48px; }
+    h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+    h2 { font-size: 1.15rem; margin: 0 0 8px; }
+    section { background: var(--kart); border-radius: 14px; padding: 16px; margin: 14px 0; }
+    ol { padding-left: 1.3em; margin: 6px 0; }
+    li { margin: 6px 0; }
+    .soluk { color: var(--soluk); font-size: 15px; }
+    button { font: 600 17px system-ui, sans-serif; padding: 14px 16px; border-radius: 10px; border: 0; background: var(--vurgu); color: var(--zemin); width: 100%; margin: 6px 0; }
+    textarea { width: 100%; height: 4.5em; font: 12px ui-monospace, Menlo, monospace; border-radius: 8px; padding: 8px; background: var(--zemin); color: var(--yazi); border: 1px solid var(--soluk); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>BUP Doldur yer imi</h1>
+  <p class="soluk">Bir kez kurulur. DenizPay kart sayfasında dokununca seçtiğin kartın numarası, adı ve son kullanma tarihi yazılır. CVV ve tutarı sen yazarsın.</p>
+
+  <section>
+    <h2>1. Kodu kopyala</h2>
+    <button id="kopyala" type="button">Yer imi kodunu kopyala</button>
+    <p id="kopya-durum" class="soluk" aria-live="polite"></p>
+    <textarea id="kod" readonly aria-label="Yer imi kodu"></textarea>
+  </section>
+
+  <section>
+    <h2>2. Yer imini kur</h2>
+    <p><strong>iPhone (Safari)</strong></p>
+    <ol>
+      <li>Daha önce “BUP Deneme” kurduysan onu düzenleyeceksin: <em>Yer İşaretleri → Düzenle → BUP Deneme</em>. Kurmadıysan önce Paylaş → <em>Yer İşareti Ekle</em>.</li>
+      <li>Adı <strong>BUP Doldur</strong> yap.</li>
+      <li>Adres kutusunu tamamen sil, basılı tutup <em>Yapıştır</em>, sonra <em>Bitti</em>.</li>
+    </ol>
+    <p><strong>Android (Chrome)</strong></p>
+    <ol>
+      <li>⋮ → ☆ yıldız. Sonra ⋮ → <em>Yer işaretleri</em> → yeni yer işaretinin ⋮ → <em>Düzenle</em>.</li>
+      <li>Adı <strong>BUP Doldur</strong>, adres kutusuna kopyaladığın kod.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>3. Her ödemede</h2>
+    <ol>
+      <li>Sanal POS’ta cariyi ve kartı seç → <em>Ödeme sitesine geç</em> → <em>Seçimi kontrol et</em> → <em>DenizPay’e giriş yap</em>.</li>
+      <li>DenizPay kart sayfası açılınca <em>Yer İşaretleri → BUP Doldur</em>. (Android: adres çubuğuna “BUP Doldur” yaz, yıldızlı öneriyi seç.)</li>
+      <li>Kısa süre bir sekme açılıp kapanır, kart bilgileri yazılır. Açılan sekme kapanmazsa DenizPay sekmesine dön.</li>
+      <li>CVV ve tutarı yaz, ödemeyi kendin onayla.</li>
+    </ol>
+    <p class="soluk">Güvenlik: Yer iminde kart bilgisi yoktur. Kart yalnız 10 dakika içinde, yalnız DenizPay sayfasına ve yalnız sayfadaki firma numarası seçili cariyle aynıysa yazılır. Ekran kilitlenince bekleyen kart silinir.</p>
+  </section>
+</main>
+<script src="kurulum.js"></script>
+</body>
+</html>

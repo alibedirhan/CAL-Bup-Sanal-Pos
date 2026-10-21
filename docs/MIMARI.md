@@ -53,6 +53,23 @@ kapanır, cari/kart seçimi bırakılır, geç dönen işlem yanıtları göster
 Bu bir ekran gizleme davranışıdır; belleği silmez, şifreleme veya gerçek
 yeniden kimlik doğrulama sağlamaz. Üretim oturumu ayrıca tasarlanmalıdır.
 
+## DenizPay girişi ve kart doldurma (0.6.0–0.7.0)
+
+Canlı kipte seçim kontrolünden sonra (kart seçmek isteğe bağlı) "DenizPay’e
+giriş yap" `PosGirisKapisi` portu üzerinden `web/pos_giris.js` ile sabit
+`login.aspx`'e form POST'u yapar; CSP `form-action` yalnız DenizPay kökenidir.
+Kart seçildiyse ve tam kart bu cihazın kasasındaysa `DoldurmaHazirligi` portu
+(`web/doldurma.js`) yerel depoya 10 dakikalık `DoldurmaIsi` yazar: yalnız kasa
+referansı, cari VKN/TC ve son zaman; kart, CVV, tutar yoktur. Kilit/çıkış ve
+kartsız giriş işi siler. DenizPay kart sayfasında "BUP Doldur" yer imi
+(`tools/yer_imi/doldur.js`, kurulum `web/kurulum.html`) `doldur.html`'i açar;
+bu sayfa işi okur, kartı kasadan çözer ve yalnız DenizPay kökenine
+`postMessage` ile yollar. Yer imi yalnız `number`, `name`, `expiry` kutularına
+yazar; sayfadaki "Firma İsmi" numarası işteki VKN/TC ile aynı değilse hiçbir şey
+yazmaz. CVV/tutar/düğmelere dokunmaz, formu göndermez, uzaktan kod yüklemez.
+Kart doldurma anında sunucu yeniden sorgulanmaz; yetki, işin kurulduğu andaki
+sunucu doğrulaması ve 10 dakikalık süredir (bilinçli ödünleşim).
+
 ## Web paketi
 
 Flutter/Dart ve bağımlılık kilit dosyaları projeye aittir. Yazı tipleri ve

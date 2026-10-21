@@ -14,6 +14,7 @@ import 'domain/kullanici.dart';
 import 'data/secim_kontrolu.dart';
 import 'data/cihaz_kart_kasasi.dart';
 import 'data/pos_giris_kapisi.dart';
+import 'data/doldurma_hazirligi.dart';
 import 'ui/giris_sayfasi.dart';
 import 'ui/tema.dart';
 
@@ -173,6 +174,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
           kullaniciId: k.id,
           kartKasasi: const CihazKartKasasi(),
           girisKapisi: const CihazPosGirisKapisi(),
+          doldurma: const CihazDoldurmaHazirligi(),
         ),
         kullanici: k,
         hesap: widget.hesap,

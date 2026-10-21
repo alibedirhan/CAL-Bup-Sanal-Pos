@@ -18,8 +18,10 @@
   "DenizPay'e giriş yap" düğmesi seçili carinin VKN/TC + kural şifresini
   `web/pos_giris.js` ile sabit login.aspx adresine form POST'uyla gönderir;
   CSP `form-action` yalnız https://denizpay.bupilic.com.tr. Boş giriş bağlantısı
-  yedek olarak durur. Plan `docs/MOBIL_DOLDURMA_PLANI.md`; seçili kartın
-  otomatik aktarımı (Aşama 2) hâlâ açık gereksinimdir.
+  yedek olarak durur; kart seçmeden de çalışır (0.7.0). 0.7.0'da Aşama 2:
+  "BUP Doldur" yer imi DenizPay kart sayfasına numara/ad/SKT yazar; ayrıntı ve
+  güvenlik kuralları `docs/MIMARI.md` "DenizPay girişi ve kart doldurma".
+  Plan `docs/MOBIL_DOLDURMA_PLANI.md`. Testi `npm run test:doldur`.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

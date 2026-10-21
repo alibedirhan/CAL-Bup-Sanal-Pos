@@ -30,12 +30,18 @@ void main() {
         aktif: true,
       ),
     );
-    final link = tester.widget<Link>(find.byType(Link));
-    expect(link.uri, Uri.base.resolve('deneme.html'));
-    expect(link.uri!.hasQuery, isFalse);
-    expect(link.uri!.hasFragment, isFalse);
+    final linkler = tester.widgetList<Link>(find.byType(Link)).toList();
+    expect(linkler.map((l) => l.uri), [
+      Uri.base.resolve('kurulum.html'),
+      Uri.base.resolve('deneme.html'),
+    ]);
+    for (final link in linkler) {
+      expect(link.uri!.hasQuery, isFalse);
+      expect(link.uri!.hasFragment, isFalse);
+    }
+    expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
     expect(find.text('Telefon denemesini aç'), findsOneWidget);
-    expect(find.text('BUP Sanal POS · 0.6.0'), findsOneWidget);
+    expect(find.text('BUP Sanal POS · 0.7.0'), findsOneWidget);
   });
 
   testWidgets('Deneme kipinde telefon denemesi gösterilmez', (tester) async {

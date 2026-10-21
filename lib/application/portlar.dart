@@ -1,3 +1,4 @@
+import '../domain/doldurma.dart';
 import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import '../domain/pos_girisi.dart';
@@ -43,6 +44,24 @@ abstract interface class CariIzlemePortu {
 abstract interface class PosGirisKapisi {
   bool get destekli;
   void ac(PosGirisBilgisi giris);
+}
+
+/// Kart sayfası yer iminin okuyacağı bekleyen işi bu cihazda tutar. Eşzamanlıdır;
+/// kilit, çıkış ve kartsız girişte temizlenir.
+abstract interface class DoldurmaHazirligi {
+  bool get destekli;
+  void hazirla(DoldurmaIsi is_);
+  void temizle();
+}
+
+class KapaliDoldurmaHazirligi implements DoldurmaHazirligi {
+  const KapaliDoldurmaHazirligi();
+  @override
+  bool get destekli => false;
+  @override
+  void hazirla(DoldurmaIsi is_) {}
+  @override
+  void temizle() {}
 }
 
 class KapaliPosGirisKapisi implements PosGirisKapisi {

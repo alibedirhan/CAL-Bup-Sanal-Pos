@@ -1,3 +1,4 @@
+import '../domain/doldurma.dart';
 import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import 'portlar.dart';
@@ -15,9 +16,11 @@ class PosServisi {
     DateTime Function()? saat,
     this.kartKasasi = const KapaliKartKasasi(),
     this.girisKapisi = const KapaliPosGirisKapisi(),
+    this.doldurma = const KapaliDoldurmaHazirligi(),
   }) : saat = saat ?? DateTime.now;
   static const girisSuresi = Duration(minutes: 2);
   final PosGirisKapisi girisKapisi;
+  final DoldurmaHazirligi doldurma;
   final KartKasasi kartKasasi;
   KartIslemleri get _kart => KartIslemleri(depo, kartKasasi, kullaniciId);
   final CariDeposu depo;
@@ -76,6 +79,14 @@ class PosServisi {
           'Cari bilgisi değişti. Güncel kaydı yeniden seçin.',
         );
       }
+      if (secim.kartId == null) {
+        return DenemeSonucu(
+          guncel.cari.ad,
+          '',
+          kimlikNo: guncel.cari.kimlikNo,
+          zaman: saat(),
+        );
+      }
       final kartlar = guncel.kartlar.where(
         (k) => k.id == secim.kartId && k.cariId == guncel.cari.id,
       );
@@ -101,6 +112,7 @@ class PosServisi {
         sonuc.kartSonDort,
         kimlikNo: guncel.cari.kimlikNo,
         zaman: saat(),
+        kart: kart,
       );
     } finally {
       _aktarimSuruyor = false;
@@ -119,6 +131,28 @@ class PosServisi {
         'Seçim kontrolünün süresi doldu. Kartlara dönüp yeniden kontrol et.',
       );
     }
-    girisKapisi.ac(PosGirisBilgisi.kimlikten(sonuc.kimlikNo));
+    final giris = PosGirisBilgisi.kimlikten(sonuc.kimlikNo);
+    // Kart sayfası yer imi için yalnız bu doğrulanmış kartın kasa referansı
+    // bırakılır; kartsız veya başka cihazda eklenmiş kartta eski iş silinir.
+    final kart = sonuc.kart;
+    doldurmayiTemizle();
+    if (kart != null && kart.cihazKayitId != null && doldurma.destekli) {
+      doldurma.hazirla(
+        DoldurmaIsi(
+          kullaniciId: kullaniciId,
+          kart: kart,
+          kimlikNo: sonuc.kimlikNo,
+          son: saat().add(DoldurmaIsi.sure),
+        ),
+      );
+    }
+    girisKapisi.ac(giris);
+  }
+
+  /// Hata yutulur: temizleme kilit/çıkış akışını hiçbir zaman durdurmaz.
+  void doldurmayiTemizle() {
+    try {
+      doldurma.temizle();
+    } catch (_) {}
   }
 }

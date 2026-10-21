@@ -31,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.6.0'),
+            const Text('BUP Sanal POS · 0.7.0'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null
@@ -63,7 +63,7 @@ class BilgiSayfasi extends StatelessWidget {
               'POS bağlantısı',
               kullanici == null
                   ? 'Şu an geçiş denemesi yapılabilir. Gerçek ödeme bağlantısı henüz kurulmadı.'
-                  : '“DenizPay’e giriş yap” seçili carinin VKN / TC ve POS şifresiyle DenizPay’i yeni sekmede açar. Kart bilgileri, CVV ve tutarı ödeme sayfasında gir; kart aktarımı henüz bağlı değil.',
+                  : '“DenizPay’e giriş yap” seçili carinin VKN / TC ve POS şifresiyle DenizPay’i yeni sekmede açar; kart seçmeden de çalışır. Kart seçtiysen DenizPay kart sayfasında “BUP Doldur” yer imine dokun. CVV ve tutarı her zaman sen yazarsın.',
             ),
             if (hesap != null) ...[
               const SizedBox(height: 16),
@@ -98,18 +98,28 @@ class BilgiSayfasi extends StatelessWidget {
             if (kullanici != null) ...[
               const SizedBox(height: 24),
               Text(
-                'Otomatik doldurma denemesi',
+                'Kart doldurma yer imi',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Telefonunun DenizPay’de otomatik doldurmaya uygun olup olmadığını ölçer. Hiçbir bilgi doldurmaz veya göndermez.',
+                'Telefona bir kez “BUP Doldur” yer imi kurulur. DenizPay kart sayfasında dokununca seçili kartın numarası, adı ve son kullanma tarihi yazılır.',
               ),
               const SizedBox(height: 12),
               Link(
-                uri: Uri.base.resolve('deneme.html'),
+                uri: Uri.base.resolve('kurulum.html'),
                 target: LinkTarget.blank,
                 builder: (context, ac) => OutlinedButton.icon(
+                  onPressed: ac,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: const Text('BUP Doldur yer imini kur'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Link(
+                uri: Uri.base.resolve('deneme.html'),
+                target: LinkTarget.blank,
+                builder: (context, ac) => TextButton.icon(
                   onPressed: ac,
                   icon: const Icon(Icons.science_outlined),
                   label: const Text('Telefon denemesini aç'),

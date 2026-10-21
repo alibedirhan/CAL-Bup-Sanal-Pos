@@ -2,6 +2,15 @@
   "name": "bup-pos-tarayici-kabul",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node kabul.mjs", "test:hesap": "node hesap-kabul.mjs", "test:yayin": "node yayin-kabul.mjs", "test:kasa": "node kasa-kabul.mjs", "test:yer-imi": "node yer-imi-kabul.mjs" },
-  "devDependencies": { "playwright": "1.63.0" }
+  "scripts": {
+    "test": "node kabul.mjs",
+    "test:hesap": "node hesap-kabul.mjs",
+    "test:yayin": "node yayin-kabul.mjs",
+    "test:kasa": "node kasa-kabul.mjs",
+    "test:yer-imi": "node yer-imi-kabul.mjs",
+    "test:doldur": "node doldur-kabul.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
 }

@@ -3,6 +3,8 @@
 Kaynakta satır sonu yorumu, yüzde işareti, ters tırnak bulunmamalıdır; tam
 satır yorumlar silinir, satırlar boşlukla birleştirilir. Yalnız yerel derleme.
 """
+import json
+import re
 from pathlib import Path
 from urllib.parse import quote, urlparse
 
@@ -27,7 +29,7 @@ def yer_imi(ad: str, uygulama: str, pos: str) -> str:
     if any(k in kaynak for k in ('%', '`', '\r', '__bupGizli')):
         raise SystemExit('Yer imi kaynağında izin verilmeyen karakter var.')
     kod = kaynak.replace('__UYGULAMA_KOKENI__', _koken(uygulama)).replace('__POS_KOKENI__', _koken(pos))
-    if '__' in kod.replace('__bupDeneme', ''):
+    if re.search(r'__[A-Z_]+__', kod):
         raise SystemExit('Doldurulmamış yer tutucu kaldı.')
     satirlar = [s.strip() for s in kod.splitlines()]
     kod = ' '.join(s for s in satirlar if s and not s.startswith('//'))
@@ -37,14 +39,35 @@ def yer_imi(ad: str, uygulama: str, pos: str) -> str:
     return 'javascript:' + quote(kod, safe="!$&'()*+,;=:@/?~-._[]{}<>|^\\\"")
 
 
+def _sablon(ad: str, gerekli: tuple[str, ...]) -> str:
+    sablon = (KOK.parents[1] / 'web' / ad).read_text()
+    if any(y not in sablon for y in gerekli):
+        raise SystemExit(f'{ad} şablonu beklenen yer tutucuları içermiyor.')
+    return sablon
+
+
 def sayfa_betigi(uygulama: str, pos: str) -> str:
-    """`web/deneme.js` şablonunu kökenler ve yer imiyle doldurur."""
-    import json
-    sablon = (KOK.parents[1] / 'web' / 'deneme.js').read_text()
-    if '__POS_KOKENI__' not in sablon or '__YER_IMI__' not in sablon:
-        raise SystemExit('deneme.js şablonu beklenen yer tutucuları içermiyor.')
-    return (sablon.replace('__POS_KOKENI__', _koken(pos))
+    """`web/deneme.js` şablonunu kökenler ve deneme yer imiyle doldurur."""
+    return (_sablon('deneme.js', ('__POS_KOKENI__', '__YER_IMI__'))
+            .replace('__POS_KOKENI__', _koken(pos))
             .replace('__YER_IMI__', json.dumps(yer_imi('deneme', uygulama, pos))))
+
+
+def kurulum_betigi(uygulama: str, pos: str) -> str:
+    """`web/kurulum.js` şablonuna "BUP Doldur" yer imini yazar."""
+    return _sablon('kurulum.js', ('__YER_IMI__',)).replace(
+        '__YER_IMI__', json.dumps(yer_imi('doldur', uygulama, pos)))
+
+
+def doldur_betigi(pos: str) -> str:
+    """`web/doldur_sayfasi.js` kartı yalnız bu DenizPay kökenine gönderir."""
+    return _sablon('doldur_sayfasi.js', ('__POS_KOKENI__',)).replace('__POS_KOKENI__', _koken(pos))
+
+
+def sayfalar(uygulama: str, pos: str) -> dict[str, str]:
+    """Derleme paketine yazılacak, kökenleri doldurulmuş sayfa betikleri."""
+    return {'deneme.js': sayfa_betigi(uygulama, pos), 'kurulum.js': kurulum_betigi(uygulama, pos),
+            'doldur_sayfasi.js': doldur_betigi(pos)}
 
 
 if __name__ == '__main__':
@@ -52,10 +75,12 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--uygulama', required=True)
     p.add_argument('--pos', required=True)
-    p.add_argument('--cikti', required=True, help='deneme.js yazılacak klasör')
+    p.add_argument('--cikti', required=True, help='sayfa betiklerinin yazılacağı klasör')
     a = p.parse_args()
     hedef = Path(a.cikti)
     hedef.mkdir(parents=True, exist_ok=True)
-    (hedef / 'deneme.js').write_text(sayfa_betigi(a.uygulama, a.pos))
-    (hedef / 'yer_imi_deneme.txt').write_text(yer_imi('deneme', a.uygulama, a.pos))
+    for ad, icerik in sayfalar(a.uygulama, a.pos).items():
+        (hedef / ad).write_text(icerik)
+    for ad in ('deneme', 'doldur'):
+        (hedef / f'yer_imi_{ad}.txt').write_text(yer_imi(ad, a.uygulama, a.pos))
     print(f'Yer imi hazır: {hedef}')

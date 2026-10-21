@@ -1,6 +1,14 @@
 # Telefonda giriş ve kart doldurma planı — 21 Ekim 2026
 
-Durum (21 Ekim akşam): Aşama T, 0 ve 1 uygulandı (0.6.0); Aşama 3'ün ilk
+Güncel (21 Ekim gece, 0.7.0): Aşama 2 uygulandı — kanal B (yer imi
+`doldur.html`'i açar), kart sayfası `index.aspx` alanları kullanıcı raporundan
+(`name`, `number`, `expiry`, `cvc`, `Tutar`), firma numarası eşleşmesi. Plandan
+bilinçli farklar: iş tek kullanımlık değil, 10 dakika içinde yeniden
+kullanılabilir (yanlış dokunuştan sonra tekrar için; teslim yalnız DenizPay
+kökenine); doldurma anında sunucu yeniden sorgulanmaz (MIMARI.md). Gerçek
+DenizPay'de doldurma henüz kullanıcıca denenmedi.
+
+Önceki durum (21 Ekim akşam): Aşama T, 0 ve 1 uygulandı (0.6.0); Aşama 3'ün ilk
 adımı (kart formu `cc-*` ipuçları) 0.5.1'de. Aşama 2 bekliyor. iPhone Safari
 ilk deneme sonucu: yer imi DenizPay'de çalışıyor (CSP engellemiyor); giriş
 sayfası alanları `lvergino`, `lkullaniciadi`, `lsifre`, `btngiris` (CAL bup ile

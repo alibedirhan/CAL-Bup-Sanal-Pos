@@ -78,6 +78,8 @@ class _PosOnayiState extends State<PosOnayi> {
               Text(
                 m.deneme
                     ? 'Cari ve kart seçimi doğrulandı. Gerçek POS açılmadı; ödeme veya SMS işlemi yapılmadı.'
+                    : m.otomatikGiris && _sonuc?.kart != null
+                    ? 'DenizPay yeni sekmede bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “BUP Doldur” yer imine dokun; kart numarası, ad ve son kullanma yazılır. CVV ve tutarı sen gir. Burada ödeme yapılmadı.'
                     : m.otomatikGiris
                     ? 'DenizPay yeni sekmede bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgileri, CVV ve tutarı ödeme sayfasında gir. Burada ödeme yapılmadı.'
                     : 'DenizPay giriş ekranı yeni sekmede açılır. Giriş, kart bilgileri, CVV ve tutarı ödeme sitesinde girmen gerekir. Seçili kart otomatik aktarılmaz; burada ödeme yapılmadı.',
@@ -134,7 +136,9 @@ class _PosOnayiState extends State<PosOnayi> {
               const SizedBox(height: 16),
               _Satir(
                 'Kart',
-                '${m.seciliKart?.ad ?? ''} · ${m.seciliKart?.maske ?? ''}',
+                m.seciliKart == null
+                    ? 'Seçilmedi · kart bilgilerini ödeme sayfasında yazarsın'
+                    : '${m.seciliKart!.ad} · ${m.seciliKart!.maske}',
               ),
               const SizedBox(height: 22),
               DurumNotu(

@@ -127,13 +127,15 @@ class CariProfili {
   final List<KartOzeti> kartlar;
 }
 
+/// `kartId` yoksa kartsız geçiştir: yalnız cari doğrulanır, kart doldurulmaz.
 class PosSecimi {
   const PosSecimi({
     required this.cariId,
     required this.cariSurumu,
     required this.kartId,
   });
-  final String cariId, kartId;
+  final String cariId;
+  final String? kartId;
   final int cariSurumu;
 }
 
@@ -145,7 +147,11 @@ class DenemeSonucu {
     this.kartSonDort, {
     this.kimlikNo = '',
     this.zaman,
+    this.kart,
   });
   final String cariAdi, kartSonDort, kimlikNo;
   final DateTime? zaman;
+
+  /// Sunucudan yeniden okunan kart özeti; kartsız geçişte yoktur.
+  final KartOzeti? kart;
 }

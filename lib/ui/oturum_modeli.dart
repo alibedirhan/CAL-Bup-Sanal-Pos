@@ -116,6 +116,7 @@ class OturumModeli extends ChangeNotifier {
   }
 
   void kilitle() {
+    servis.doldurmayiTemizle();
     if (kilitli) return;
     _nesil++;
     kilitli = true;
@@ -300,11 +301,15 @@ class OturumModeli extends ChangeNotifier {
   Future<DenemeSonucu?> dene() async {
     final p = profil;
     final kart = seciliKart;
-    if (p == null || kart == null) return null;
+    if (p == null || (kart == null && !otomatikGiris)) return null;
     DenemeSonucu? sonuc;
     final tamam = await _calistir((nesil) async {
       sonuc = await servis.dene(
-        PosSecimi(cariId: p.cari.id, cariSurumu: p.cari.surum, kartId: kart.id),
+        PosSecimi(
+          cariId: p.cari.id,
+          cariSurumu: p.cari.surum,
+          kartId: kart?.id,
+        ),
         oturumAcik: () => _guncel(nesil),
       );
     });
@@ -324,6 +329,7 @@ class OturumModeli extends ChangeNotifier {
 
   @override
   void dispose() {
+    servis.doldurmayiTemizle();
     _kapali = true;
     _izleme?.cancel();
     _nesil++;

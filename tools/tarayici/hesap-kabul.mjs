@@ -96,6 +96,12 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     // Yeni sekme Sanal POS'a geri ulaşamaz; gönderimden sonra sayfada geçici form/değer kalmaz.
     assert.equal(await posSekmesi.evaluate(()=>window.opener),null);
     assert.equal(await page.evaluate(()=>[...document.querySelectorAll('form')].filter(f=>/denizpay/.test(f.action)).length),0);
+    // Bu cihazda eklenen kart için "BUP Doldur" işi kurulur: yalnız kasa referansı, kart yok.
+    const doldurmaIsi=JSON.parse(await page.evaluate(()=>localStorage.getItem('bup-doldurma-isi')));
+    assert.deepEqual(Object.keys(doldurmaIsi).sort(),['kart','kimlikNo','son','uid','v']);
+    assert.equal(doldurmaIsi.kimlikNo,'0000000000');
+    assert.ok(doldurmaIsi.son>Date.now() && doldurmaIsi.son-Date.now()<=10*60*1000+5000);
+    assert.ok(!/4111|5555|05000000000|Örnek Yerel Kart Sahibi/.test(JSON.stringify(doldurmaIsi)),'Bekleyen işte kart bilgisi olmamalı');
     await posSekmesi.close();
     await button('Kartlara dön').click();
     // Aynı hesap, ayrı tarayıcı profili: özet var; tam numara bu cihazda yok.
@@ -114,6 +120,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     await otherDevice.close();page=original;
     if(await button('Kilidi aç').count()) { await write('Şifre',parola);await button('Kilidi aç').click(); }
     await button('Ekranı kilitle').click();await button('Kilidi aç').waitFor();
+    assert.equal(await page.evaluate(()=>localStorage.getItem('bup-doldurma-isi')),null,'Kilit bekleyen kart işini silmeli');
     await write('Şifre',parola);await button('Kilidi aç').click();
     await page.getByRole('button',{name:/Örnek Telefon Carisi/}).waitFor();
     await page.getByRole('tab',{name:'Çalışma alanı',exact:true}).click();

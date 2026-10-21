@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#16343e">
+  <title>Kart doldurma · BUP Sanal POS</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root { --zemin: #f4f6f6; --yazi: #142126; --soluk: #4c5d63; --uyari: #b3261e; }
+    @media (prefers-color-scheme: dark) { :root { --zemin: #0f1a1e; --yazi: #e8eef0; --soluk: #a9b8bd; --uyari: #ffb4ab; } }
+    body { margin: 0; background: var(--zemin); color: var(--yazi); font: 18px/1.5 -apple-system, system-ui, Roboto, sans-serif; }
+    main { max-width: 560px; margin: 0 auto; padding: 32px 16px; }
+    h1 { font-size: 1.4rem; margin: 0 0 12px; }
+    .hata { color: var(--uyari); font-weight: 600; }
+    .soluk { color: var(--soluk); font-size: 16px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>BUP Sanal POS · kart doldurma</h1>
+  <p id="durum" aria-live="polite">Hazırlanıyor…</p>
+  <p class="soluk">Bu sayfa yalnız DenizPay’deki “BUP Doldur” yer iminden açılır. Kart bilgisi yalnız DenizPay sekmesine gönderilir; CVV ve tutar gönderilmez.</p>
+</main>
+<script type="module" src="doldur_sayfasi.js"></script>
+</body>
+</html>

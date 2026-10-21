@@ -53,10 +53,11 @@ if args.paket != 'web':
     html = re.sub(r'<script src="flutter_bootstrap\.js[^\"]*" async></script>',
                   f'<script type="module" src="firebase_baslat.js?v={surum}"></script>', html)
 index.write_text(html)
-# Telefon denemesi sayfası: canlıda gerçek kökenler, yerelde yalnız taklit POS kökeni.
+# Yer imi sayfaları (deneme, kurulum, doldur): canlıda gerçek kökenler, yerelde yalnız taklit POS kökeni.
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'yer_imi'))
-from uret import CANLI_POS, CANLI_UYGULAMA, TAKLIT_POS, sayfa_betigi  # noqa: E402
+from uret import CANLI_POS, CANLI_UYGULAMA, TAKLIT_POS, sayfalar  # noqa: E402
 kokenler = {'canli': (CANLI_UYGULAMA, CANLI_POS), 'web': ('http://127.0.0.1:4195', TAKLIT_POS),
             'emulator': ('http://127.0.0.1:4197', TAKLIT_POS)}[args.paket]
-(kok / 'deneme.js').write_text(sayfa_betigi(*kokenler))
+for ad, icerik in sayfalar(*kokenler).items():
+    (kok / ad).write_text(icerik)
 print(f'Web paketi hazır: {surum} (yalnız yerel derleme)')

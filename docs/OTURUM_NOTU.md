@@ -1,3 +1,26 @@
+# 21 Ekim 2026 gece — 0.7.0: kart doldurma ("BUP Doldur") ve kartsız giriş
+
+Kullanıcı iPhone Safari'de otomatik girişin çalıştığını bildirdi ve kart
+sayfası raporunu gönderdi (`/index.aspx`; `name`, `number`, `expiry`, `cvc`,
+`Tutar`, `Button#`; üstte "Firma İsmi : … (VKN)"; card.js görünümlü form).
+Ekran görüntüsü gerçek müşteri adı/VKN içerir; dosyaya alınmadı. Kullanıcı
+ayrıca kartsız cariyle de DenizPay'e girişi istedi.
+
+Yapılanlar: kartsız giriş (`PosSecimi.kartId` boş olabilir; canlı kipte kart
+seçmeden "Ödeme sitesine geç" açık). Aşama 2: `DoldurmaIsi` (domain),
+`DoldurmaHazirligi` portu, `web/doldurma.js`, `web/doldur.html` +
+`doldur_sayfasi.js`, yer imi `tools/yer_imi/doldur.js`, kurulum
+`web/kurulum.html` (Bilgi sayfasında "BUP Doldur yer imini kur"; deneme
+bağlantısı ikincil). Ayrıntı MIMARI.md. `uret.py` üç sayfa betiği üretir,
+`yayin.sh` canlı kökenleri denetler. Testler: 71 Dart; `test:doldur` (yeni,
+Chromium + WebKit: yazma, CVV/tutar/düğmeye dokunmama, firma uyuşmazlığında
+yazmama, giriş sayfası/başka site, kötü açan, süre); `test:hesap` emülatörde
+işin kurulduğunu (kartsız) ve kilitte silindiğini doğrular. Gerçek DenizPay'de
+doldurma kullanıcıca denenmedi; card.js'in değeri kabul edip etmediği orada
+görülecek. Kullanıcı telefonda yer imini "BUP Doldur" olarak yeniden kurmalı.
+
+---
+
 # 21 Ekim 2026 akşam — 0.6.0: DenizPay'e otomatik giriş
 
 Kullanıcı açıkça "kaydettiğim cari ile giriş yapılmalı… otomatik girişi yap"
