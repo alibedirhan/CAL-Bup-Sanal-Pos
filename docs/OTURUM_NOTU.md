@@ -9,6 +9,11 @@ penceresinde otomatik girişin çalıştığı görüldü (doldurma orada yok: y
 menüsü yok, depo ayrı). Açık kalanlar: Android denemesi, GitHub (K4), eski
 `otomatik-giris` dalı silinebilir (main'e alındı), ödeme/onay gerçek kullanımı.
 
+**GitHub (K4):** kullanıcı özel depo açtı; `origin` =
+https://github.com/alibedirhan/CAL-Bup-Sanal-Pos (private doğrulandı), `main`
+gönderildi. Göndermeden önce geçmiş tarandı: gerçek müşteri adı/VKN/kart yok,
+`config/canli.json` git dışı. İyileştirme listesi: `docs/IYILESTIRME_LISTESI.md`.
+
 ---
 
 # 21 Ekim 2026 gece — önbellek: no-store → no-cache

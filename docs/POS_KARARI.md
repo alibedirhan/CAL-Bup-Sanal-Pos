@@ -1,5 +1,9 @@
 # Mobil POS kararı — 18 Ekim 2026
 
+> **Güncel değil (21 Ekim):** 0.6.0'dan beri otomatik giriş, 0.7.0'dan beri
+> "BUP Doldur" kart doldurma var. Güncel akış `MIMARI.md` "DenizPay girişi ve
+> kart doldurma", plan `MOBIL_DOLDURMA_PLANI.md`. Aşağısı tarihsel kayıttır.
+
 ## 0.4.1 güncel geçiş kararı — 19 Ekim 2026
 
 Kullanıcı artık ana sayfa yerine doğrudan
