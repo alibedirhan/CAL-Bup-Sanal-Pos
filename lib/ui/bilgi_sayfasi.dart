@@ -31,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.5.1'),
+            const Text('BUP Sanal POS · 0.6.0'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null
@@ -63,7 +63,7 @@ class BilgiSayfasi extends StatelessWidget {
               'POS bağlantısı',
               kullanici == null
                   ? 'Şu an geçiş denemesi yapılabilir. Gerçek ödeme bağlantısı henüz kurulmadı.'
-                  : 'Ödeme düğmesi doğrudan DenizPay girişini yeni sekmede açar. Giriş ve kart alanlarını ödeme sitesinde doldurman gerekir; otomatik aktarım henüz bağlı değil.',
+                  : '“DenizPay’e giriş yap” seçili carinin VKN / TC ve POS şifresiyle DenizPay’i yeni sekmede açar. Kart bilgileri, CVV ve tutarı ödeme sayfasında gir; kart aktarımı henüz bağlı değil.',
             ),
             if (hesap != null) ...[
               const SizedBox(height: 16),

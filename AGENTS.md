@@ -14,9 +14,12 @@
   mevcut sunucu şeması ve rezervasyon uyumluluğu içindir; gerçek kayıtları
   yeniden yazmayın. POS şifresi, kullanıcının bildirdiği ilk iki + son iki
   hane kuralıyla yalnız açık kopyalama isteğinde hesaplanır; ayrıca saklanmaz.
-- POS otomasyonu tamamlanmış değildir. 0.4.1 kullanıcı kararıyla düğme doğrudan
-  https://denizpay.bupilic.com.tr/login.aspx adresini yeni sekmede açar. Ayrıntı
-  `docs/POS_KARARI.md`; seçili kartın otomatik aktarımı hâlâ açık gereksinimdir.
+- POS otomasyonu tamamlanmış değildir. 0.6.0 kullanıcı kararıyla (21 Ekim)
+  "DenizPay'e giriş yap" düğmesi seçili carinin VKN/TC + kural şifresini
+  `web/pos_giris.js` ile sabit login.aspx adresine form POST'uyla gönderir;
+  CSP `form-action` yalnız https://denizpay.bupilic.com.tr. Boş giriş bağlantısı
+  yedek olarak durur. Plan `docs/MOBIL_DOLDURMA_PLANI.md`; seçili kartın
+  otomatik aktarımı (Aşama 2) hâlâ açık gereksinimdir.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

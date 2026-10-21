@@ -10,11 +10,17 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
   let page;
   const disallowed=[];
   const failed=[];
+  const posIstekleri=[];
   try {
     async function protect(context) {
       await context.route('**/*',async route=>{
         const u=new URL(route.request().url());
         for(const secret of ['4111111111111111','5555555555554444','05000000000']) assert.ok(!(route.request().postData()??'').includes(secret),'Tam kart bilgisi ağ isteğine girmemeli');
+        // Otomatik giriş formu gerçek DenizPay'e çıkmaz: istek tarayıcıda yakalanıp yapay sayfayla yanıtlanır.
+        if(u.hostname==='denizpay.bupilic.com.tr') {
+          posIstekleri.push({method:route.request().method(),url:u.href,govde:route.request().postData()??''});
+          return route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<!doctype html><title>Yapay POS</title><p>yapay</p>'});
+        }
         if(!['127.0.0.1','www.gstatic.com','apis.google.com'].includes(u.hostname)) {
           disallowed.push(`${u.hostname}${u.pathname}`);return route.abort();
         }
@@ -71,6 +77,27 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     await button('Kartı kaydet').click();
     await page.getByRole('button',{name:/Örnek İkinci Kart, son dört hane 4444/}).waitFor();
     assert.equal(await page.getByRole('textbox',{name:/CVV/}).count(),0);
+    // Otomatik giriş: seçim kontrolü bilgi göndermez; yalnız düğme tek POST yapar, kart bilgisi yoktur.
+    await page.getByRole('button',{name:/Örnek İş Kartı, son dört hane 1111/}).click();
+    await button('Ödeme sitesine geç').click();
+    await page.getByRole('checkbox',{name:'Cari ve seçili kartı kontrol ettim.'}).click();
+    await button('Seçimi kontrol et').click();
+    await page.getByRole('link',{name:'Boş giriş sayfasını aç',exact:true}).waitFor();
+    assert.deepEqual(posIstekleri,[]);
+    const [posSekmesi]=await Promise.all([context.waitForEvent('page'),button('DenizPay’e giriş yap').click()]);
+    await posSekmesi.waitForLoadState();
+    await page.getByText(/DenizPay yeni sekmede açıldı/).waitFor();
+    assert.equal(posIstekleri.length,1);
+    const [posIstek]=posIstekleri;
+    assert.equal(posIstek.method,'POST');
+    assert.equal(posIstek.url,'https://denizpay.bupilic.com.tr/login.aspx');
+    assert.deepEqual(Object.fromEntries(new URLSearchParams(posIstek.govde)),
+      {__VIEWSTATE:'',lvergino:'0000000000',lkullaniciadi:'0000000000',lsifre:'0000',btngiris:'Giriş Yap'});
+    // Yeni sekme Sanal POS'a geri ulaşamaz; gönderimden sonra sayfada geçici form/değer kalmaz.
+    assert.equal(await posSekmesi.evaluate(()=>window.opener),null);
+    assert.equal(await page.evaluate(()=>[...document.querySelectorAll('form')].filter(f=>/denizpay/.test(f.action)).length),0);
+    await posSekmesi.close();
+    await button('Kartlara dön').click();
     // Aynı hesap, ayrı tarayıcı profili: özet var; tam numara bu cihazda yok.
     const original=page;
     const otherDevice=await browser.newContext({viewport:{width:390,height:844}});
@@ -135,7 +162,7 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]]) {
     if(unexpected.length) await writeFile(`/tmp/bup-pos-qa-02/${name}-ag.json`,JSON.stringify({errors,failed},null,2));
     assert.deepEqual(unexpected,[],'Beklenmeyen tarayıcı hatası olmamalı');
     assert.deepEqual(disallowed,[],'SDK ve yerel emülatör dışında istek olmamalı');
-    console.log(`PASS ${name}: giriş, kalıcı cari/kart, kilit doğrulaması, hesap açma, atama, yetki iptali`);
+    console.log(`PASS ${name}: giriş, kalıcı cari/kart, otomatik DenizPay giriş formu, kilit doğrulaması, hesap açma, atama, yetki iptali`);
     if(errors.length) console.log(`  Tarayıcının ayrıca iptal olarak doğruladığı yerel RPC oturumu: ${errors.length}`);
   } catch(e) {
     console.error('Engellenen harici istekler:',disallowed);

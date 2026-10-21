@@ -35,7 +35,7 @@ void main() {
     expect(link.uri!.hasQuery, isFalse);
     expect(link.uri!.hasFragment, isFalse);
     expect(find.text('Telefon denemesini aç'), findsOneWidget);
-    expect(find.text('BUP Sanal POS · 0.5.1'), findsOneWidget);
+    expect(find.text('BUP Sanal POS · 0.6.0'), findsOneWidget);
   });
 
   testWidgets('Deneme kipinde telefon denemesi gösterilmez', (tester) async {

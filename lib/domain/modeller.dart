@@ -137,8 +137,15 @@ class PosSecimi {
   final int cariSurumu;
 }
 
-/// Ödeme sonucu değildir; yalnız ağsız prototipin geçiş doğrulamasıdır.
+/// Ödeme sonucu değildir; yalnız güncel seçimin doğrulandığını gösterir.
+/// `kimlikNo` ve `zaman` servis tarafından sunucudan okunan kayıttan yazılır.
 class DenemeSonucu {
-  const DenemeSonucu(this.cariAdi, this.kartSonDort);
-  final String cariAdi, kartSonDort;
+  const DenemeSonucu(
+    this.cariAdi,
+    this.kartSonDort, {
+    this.kimlikNo = '',
+    this.zaman,
+  });
+  final String cariAdi, kartSonDort, kimlikNo;
+  final DateTime? zaman;
 }

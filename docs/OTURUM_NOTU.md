@@ -1,3 +1,24 @@
+# 21 Ekim 2026 akşam — 0.6.0: DenizPay'e otomatik giriş
+
+Kullanıcı açıkça "kaydettiğim cari ile giriş yapılmalı… otomatik girişi yap"
+dedi ve Claude Code otomatik izin kipini kapattı. `otomatik-giris` dalındaki
+taslak main'e alındı ve tamamlandı: seçim kontrolünden sonra "DenizPay’e giriş
+yap" düğmesi (2 dk içinde, kilitliyken değil) `web/pos_giris.js` ile
+`login.aspx`'e form POST'u yapar (`__VIEWSTATE` boş, `lvergino`,
+`lkullaniciadi` = VKN/TC, `lsifre` = ilk 2 + son 2, `btngiris`); yeni sekme
+`noopener`, geçici form gezinmeden sonra silinir (CAL bup gibi). "Boş giriş
+sayfasını aç" yedek. CSP `form-action` `'none'` → yalnız
+`https://denizpay.bupilic.com.tr` (firebase.json, tools/sunucu.py);
+`yayin-kabul.mjs` bunu birebir denetler. Testler: 3 yeni Dart (düğmesiz
+gönderim yok, doğru değerler, süre/kilit reddi); `hesap-kabul.mjs` gerçek form
+POST'unu Playwright'ta yakalayıp yapay sayfayla yanıtlar — gerçek DenizPay'e
+istek yok; alanlar, POST, sorgusuz URL, `opener` yok, kart bilgisi yok.
+Giriş sonucunun gerçek DenizPay'de çalıştığı doğrulanmadı (ilk deneme
+kullanıcıda). Kullanıcının ilk iPhone denemesi: bkz. MOBIL_DOLDURMA_PLANI durum
+satırı. Kart sayfası raporu bekleniyor.
+
+---
+
 # 21 Ekim 2026 — telefonda giriş/kart doldurma planı (uygulanmadı)
 
 Kullanıcı kart seçip ödeme sitesine geçince bilgilerin kendiliğinden dolmasını,

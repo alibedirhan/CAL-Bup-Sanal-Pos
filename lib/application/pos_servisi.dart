@@ -4,6 +4,7 @@ import 'portlar.dart';
 import 'kart_kasasi.dart';
 import 'kart_islemleri.dart';
 import '../domain/kart_bilgileri.dart';
+import '../domain/pos_girisi.dart';
 
 /// Flutter, Firebase, tarayıcı ve ekran durumundan bağımsız iş akışı.
 class PosServisi {
@@ -13,7 +14,10 @@ class PosServisi {
     required this.kullaniciId,
     DateTime Function()? saat,
     this.kartKasasi = const KapaliKartKasasi(),
+    this.girisKapisi = const KapaliPosGirisKapisi(),
   }) : saat = saat ?? DateTime.now;
+  static const girisSuresi = Duration(minutes: 2);
+  final PosGirisKapisi girisKapisi;
   final KartKasasi kartKasasi;
   KartIslemleri get _kart => KartIslemleri(depo, kartKasasi, kullaniciId);
   final CariDeposu depo;
@@ -92,9 +96,29 @@ class PosServisi {
       if (!oturumAcik()) {
         throw const PosHatasi('kilit', 'Ekran kilitlendi. Yeniden kart seçin.');
       }
-      return sonuc;
+      return DenemeSonucu(
+        sonuc.cariAdi,
+        sonuc.kartSonDort,
+        kimlikNo: guncel.cari.kimlikNo,
+        zaman: saat(),
+      );
     } finally {
       _aktarimSuruyor = false;
     }
+  }
+
+  bool get otomatikGiris => girisKapisi.destekli;
+
+  /// Yalnız kısa süre önce doğrulanmış seçimle, eşzamanlı çağrılır.
+  void girisiAc(DenemeSonucu sonuc) {
+    final zaman = sonuc.zaman;
+    final fark = zaman == null ? null : saat().difference(zaman);
+    if (fark == null || fark.isNegative || fark > girisSuresi) {
+      throw const PosHatasi(
+        'sure',
+        'Seçim kontrolünün süresi doldu. Kartlara dönüp yeniden kontrol et.',
+      );
+    }
+    girisKapisi.ac(PosGirisBilgisi.kimlikten(sonuc.kimlikNo));
   }
 }

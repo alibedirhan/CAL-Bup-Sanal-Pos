@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../domain/hata.dart';
+import '../domain/modeller.dart';
 import 'ortak.dart';
 import 'oturum_modeli.dart';
 import 'tema.dart';
@@ -21,8 +23,10 @@ class PosOnayi extends StatefulWidget {
 }
 
 class _PosOnayiState extends State<PosOnayi> {
-  bool _onay = false, _mesgul = false, _tamam = false;
+  bool _onay = false, _mesgul = false, _girisAcildi = false;
+  DenemeSonucu? _sonuc;
   String? _hata;
+  bool get _tamam => _sonuc != null;
   Future<void> _dene() async {
     if (!_onay || _mesgul) return;
     setState(() {
@@ -33,11 +37,24 @@ class _PosOnayiState extends State<PosOnayi> {
     if (!mounted) return;
     setState(() {
       _mesgul = false;
-      _tamam = sonuc != null;
+      _sonuc = sonuc;
       _hata = sonuc == null
           ? widget.model.hata ?? 'Seçimi yenileyip tekrar deneyin.'
           : null;
     });
+  }
+
+  // Açılır pencere izni için tıklamayla eşzamanlı çalışır; yanıt okunmaz.
+  void _girisYap() {
+    try {
+      widget.model.posGirisiniAc(_sonuc!);
+      setState(() {
+        _girisAcildi = true;
+        _hata = null;
+      });
+    } on PosHatasi catch (e) {
+      setState(() => _hata = e.mesaj);
+    }
   }
 
   @override
@@ -61,19 +78,45 @@ class _PosOnayiState extends State<PosOnayi> {
               Text(
                 m.deneme
                     ? 'Cari ve kart seçimi doğrulandı. Gerçek POS açılmadı; ödeme veya SMS işlemi yapılmadı.'
+                    : m.otomatikGiris
+                    ? 'DenizPay yeni sekmede bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgileri, CVV ve tutarı ödeme sayfasında gir. Burada ödeme yapılmadı.'
                     : 'DenizPay giriş ekranı yeni sekmede açılır. Giriş, kart bilgileri, CVV ve tutarı ödeme sitesinde girmen gerekir. Seçili kart otomatik aktarılmaz; burada ödeme yapılmadı.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
+              if (m.otomatikGiris) ...[
+                DurumNotu(
+                  _girisAcildi
+                      ? 'DenizPay yeni sekmede açıldı. Giriş olmadıysa aşağıdaki boş giriş sayfasından bilgileri elle gir.'
+                      : 'Başka bir cariyle açık DenizPay sekmesi varsa önce onu kapat.',
+                ),
+                const SizedBox(height: 12),
+                if (_hata != null) ...[
+                  DurumNotu(_hata!, hata: true),
+                  const SizedBox(height: 12),
+                ],
+                FilledButton.icon(
+                  onPressed: _girisYap,
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('DenizPay’e giriş yap'),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (!m.deneme) ...[
                 Link(
                   uri: Uri.parse('https://denizpay.bupilic.com.tr/login.aspx'),
                   target: LinkTarget.blank,
-                  builder: (context, ac) => FilledButton.icon(
-                    onPressed: ac,
-                    icon: const Icon(Icons.open_in_new),
-                    label: const Text('DenizPay ödeme girişini aç'),
-                  ),
+                  builder: (context, ac) => m.otomatikGiris
+                      ? OutlinedButton.icon(
+                          onPressed: ac,
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('Boş giriş sayfasını aç'),
+                        )
+                      : FilledButton.icon(
+                          onPressed: ac,
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('DenizPay ödeme girişini aç'),
+                        ),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -97,6 +140,8 @@ class _PosOnayiState extends State<PosOnayi> {
               DurumNotu(
                 m.deneme
                     ? 'Bu adım yalnızca geçiş denemesidir. Gerçek POS bağlantısı sağlayıcı doğrulamasından sonra açılacak.'
+                    : m.otomatikGiris
+                    ? 'Güncel cari ve kart özeti kontrol edilir. Tam kart bilgisi ödeme sitesine gönderilmez. Giriş bilgileri yalnız sonraki adımda “DenizPay’e giriş yap”a bastığında DenizPay’e gider.'
                     : 'Güncel cari ve kart özeti kontrol edilir. Tam kart bilgisi veya giriş şifresi bu uygulamadan ödeme sitesine gönderilmez.',
               ),
               const SizedBox(height: 12),

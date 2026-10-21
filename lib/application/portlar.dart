@@ -1,4 +1,6 @@
+import '../domain/hata.dart';
 import '../domain/modeller.dart';
+import '../domain/pos_girisi.dart';
 
 /// Canlı adaptör kimliği doğrulanmış oturumu kullanmalı, erişimi sunucuda
 /// denetlemeli ve sürüm denetimini atomik uygulamalıdır. İstemci kontrolü yetmez.
@@ -34,4 +36,22 @@ abstract interface class PosBaglantisi {
 
 abstract interface class CariIzlemePortu {
   Stream<List<CariOzeti>> izle(String kullaniciId);
+}
+
+/// Sağlayıcı giriş sayfasını kullanıcının tıklamasıyla açar. Tarayıcının açılır
+/// pencere iznini kaybetmemek için eşzamanlıdır; yanıt/sonuç okunmaz.
+abstract interface class PosGirisKapisi {
+  bool get destekli;
+  void ac(PosGirisBilgisi giris);
+}
+
+class KapaliPosGirisKapisi implements PosGirisKapisi {
+  const KapaliPosGirisKapisi();
+  @override
+  bool get destekli => false;
+  @override
+  void ac(PosGirisBilgisi giris) => throw const PosHatasi(
+    'giris_yok',
+    'Otomatik giriş bu cihazda kullanılamıyor.',
+  );
 }

@@ -1,6 +1,12 @@
 # Telefonda giriş ve kart doldurma planı — 21 Ekim 2026
 
-Durum: **plan; uygulanmadı.** Kod, yayın veya gerçek POS denemesi yapılmadı.
+Durum (21 Ekim akşam): Aşama T, 0 ve 1 uygulandı (0.6.0); Aşama 3'ün ilk
+adımı (kart formu `cc-*` ipuçları) 0.5.1'de. Aşama 2 bekliyor. iPhone Safari
+ilk deneme sonucu: yer imi DenizPay'de çalışıyor (CSP engellemiyor); giriş
+sayfası alanları `lvergino`, `lkullaniciadi`, `lsifre`, `btngiris` (CAL bup ile
+aynı); B kanalında açılan Sanal POS sayfası `opener`'ı gördü ve yanıt gönderdi,
+DenizPay tarafında alındığı doğrulanamadı; A kanalında `opener` yoktu. Kart
+sayfası alan raporu henüz yok.
 
 ## Kullanıcı isteği ve sınırlar
 

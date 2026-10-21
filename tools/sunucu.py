@@ -30,7 +30,7 @@ class Onizleme(SimpleHTTPRequestHandler):
                          "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com "
                          "http://127.0.0.1:8088 http://127.0.0.1:9098 ws://127.0.0.1:8088; "
                          "worker-src 'self' blob:; frame-src 'self' https://bup-sanal-pos-izmir.firebaseapp.com; "
-                         "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'none'")
+                         "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action https://denizpay.bupilic.com.tr")
         super().end_headers()
 
 

@@ -311,6 +311,17 @@ class OturumModeli extends ChangeNotifier {
     return tamam ? sonuc : null;
   }
 
+  /// Canlı kipte ve tarayıcı giriş formu yüklüyse "DenizPay'e giriş yap" görünür.
+  bool get otomatikGiris => !deneme && servis.otomatikGiris;
+
+  /// Kullanıcı tıklamasında eşzamanlı çalışır; kilitliyken giriş açılmaz.
+  void posGirisiniAc(DenemeSonucu sonuc) {
+    if (_kapali || kilitli) {
+      throw const PosHatasi('kilit', 'Ekran kilitlendi. Yeniden kart seçin.');
+    }
+    servis.girisiAc(sonuc);
+  }
+
   @override
   void dispose() {
     _kapali = true;

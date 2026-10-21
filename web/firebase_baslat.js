@@ -1,6 +1,7 @@
 // Bu şablon yalnız canlı/emülatör derlemesinde bağlanır. Satır içi betik gerekmez.
 try {
   await import('./kart_kasasi.js');
+  await import('./pos_giris.js');
   const base = 'https://www.gstatic.com/firebasejs/__FIREBASE_SDK_VERSION__/';
   window.firebase_core = await import(`${base}firebase-app.js`);
   window.firebase_auth = await import(`${base}firebase-auth.js`);

@@ -25,6 +25,8 @@ assert.equal(response.headers.get('x-content-type-options'),'nosniff');
 assert.equal(response.headers.get('x-frame-options'),'DENY');
 const csp=response.headers.get('content-security-policy');
 assert.ok(csp.includes("frame-ancestors 'none'"));
+// Form gönderimi yalnız sabit DenizPay kökenine (otomatik giriş); başka hedef yok.
+assert.equal(csp.split(';').map(s=>s.trim()).find(s=>s.startsWith('form-action')),'form-action https://denizpay.bupilic.com.tr');
 assert.ok(!csp.split('script-src')[1].split(';')[0].includes("'unsafe-inline'"));
 for(const collection of ['cariler','kullanicilar']) {
   const denied=await fetch(`https://firestore.googleapis.com/v1/projects/bup-sanal-pos-izmir/databases/(default)/documents/${collection}/erisim-siniri-denemesi`);
