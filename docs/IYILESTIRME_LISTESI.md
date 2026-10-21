@@ -6,7 +6,10 @@ doğrulandı. Bu liste kullanıcının "geliştirmemiz gerekenleri tespit et" is
 
 ## Önemli
 
-1. **Cariye özel DenizPay kullanıcı adı/şifresi.** Şu an her cari için kullanıcı
+1. ~~**Cariye özel DenizPay kullanıcı adı/şifresi.**~~ *Reddedildi (21 Ekim): kullanıcı
+   cariyi ve VKN/TC'yi kendisi ekliyor, DenizPay girişi için VKN/TC yeterli;
+   "DenizPay tarafında bir şey yapma". Yapılmayacak.*
+   Eski öneri: Şu an her cari için kullanıcı
    adı = VKN/TC, şifre = ilk 2 + son 2 hane. CAL bup saha testinde (7 Ekim) ikinci
    cari bu kuralla reddedilmişti (POS'ta VKN yerine TC kayıtlıydı); CAL bup bunun
    için cariye özel giriş alanı ekledi. Sanal POS'ta yok: kural tutmayan caride
@@ -46,8 +49,8 @@ doğrulandı. Bu liste kullanıcının "geliştirmemiz gerekenleri tespit et" is
 
 ## Bizim çözemeyeceklerimiz (bilinçli riskler)
 
-- DenizPay şifre kuralı (VKN'nin ilk 2 + son 2 hanesi) çok zayıf; numarayı bilen
-  girer. Sağlayıcıya bildirilmesi önerilir.
+- DenizPay şifre kuralı (VKN'nin ilk 2 + son 2 hanesi) zayıf; numarayı bilen
+  girer. Kullanıcı kararı: DenizPay tarafına hiçbir şey yapılmaz/önerilmez.
 - Kart numaraları telefonda şifreli tutulur; PCI uyumluluk iddiası yoktur.
 - Dokunmasız (otomatik) doldurma tarayıcıda mümkün değil; App Store uygulaması
   veya Safari eklentisi ücretli Apple hesabı gerektirir (kullanıcı istemedi).
