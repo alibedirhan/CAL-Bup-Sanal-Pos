@@ -14,7 +14,7 @@ kaldırıldı, süzgeçler tek satır; profilde kartlar üstte, "Cari bilgileri"
 yanında simge; canlıda boş liste yazısı düzeltildi. Testler: 92 Dart (yeni
 `test/kucuk_ekran_test.dart`, SE boyutu); demo, kasa, doldur, hesap (Chromium +
 WebKit) geçti. Madde 5 (DenizPay'e 2 dokunuş) kullanıcı onayı bekliyor.
-**Yayın bekliyor** (kullanıcı izni).
+**Yayında** (`f11920742279fa32`, test:yayin geçti; kullanıcı izniyle).
 
 ---
 
