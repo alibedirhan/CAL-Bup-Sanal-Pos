@@ -57,10 +57,16 @@ def doldur_betigi(pos: str) -> str:
     return _sablon('doldur_sayfasi.js', ('__POS_KOKENI__',)).replace('__POS_KOKENI__', _koken(pos))
 
 
+def sonuc_betigi(pos: str) -> str:
+    """`web/sonuc_sayfasi.js` sonucu yalnız bu DenizPay kökeninden alır."""
+    return _sablon('sonuc_sayfasi.js', ("'__POS_KOKENI__'",)).replace('__POS_KOKENI__', _koken(pos))
+
+
 def sayfalar(uygulama: str, pos: str) -> dict[str, str]:
     """Derleme paketine yazılacak, kökenleri doldurulmuş sayfa betikleri."""
     return {'kurulum.js': kurulum_betigi(uygulama, pos),
-            'doldur_sayfasi.js': doldur_betigi(pos)}
+            'doldur_sayfasi.js': doldur_betigi(pos),
+            'sonuc_sayfasi.js': sonuc_betigi(pos)}
 
 
 if __name__ == '__main__':

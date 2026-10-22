@@ -25,6 +25,11 @@
   "BUP Doldur" yer imi DenizPay kart sayfasına numara/ad/SKT yazar; ayrıntı ve
   güvenlik kuralları `docs/MIMARI.md` "DenizPay girişi ve kart doldurma".
   Plan `docs/MOBIL_DOLDURMA_PLANI.md`. Testi `npm run test:doldur`.
+- 0.9.0 (22 Ekim) tahsilat kaydı + gün sonu: DenizPay sonuç ekranında "BUP
+  Doldur" (yer imi 2) → `sonuc.html` → telefondaki sonuç kutusu → oturumu açık
+  Sanal POS sekmesi `posIslemleri`'ne yazar. Kayıtlar yalnız eklenir; gün Türkiye
+  saatiyle 00:00'da kapanır. SESSION oturum kararını değiştirmeyin; ayrıntı
+  `docs/TAHSILAT.md`. Testi `npm run test:tahsilat` (emülatör).
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

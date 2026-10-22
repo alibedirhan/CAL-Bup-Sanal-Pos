@@ -148,8 +148,9 @@ class DenemeSonucu {
     this.kimlikNo = '',
     this.zaman,
     this.kart,
+    this.cariId = '',
   });
-  final String cariAdi, kartSonDort, kimlikNo;
+  final String cariAdi, kartSonDort, kimlikNo, cariId;
   final DateTime? zaman;
 
   /// Sunucudan yeniden okunan kart özeti; kartsız geçişte yoktur.

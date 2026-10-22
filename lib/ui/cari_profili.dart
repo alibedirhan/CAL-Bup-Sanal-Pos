@@ -9,6 +9,7 @@ import '../application/hesap_portu.dart';
 import 'cari_atama.dart';
 import 'kart_formu.dart';
 import 'kart_silme.dart';
+import 'islem_formu.dart';
 
 class CariProfiliEkrani extends StatelessWidget {
   const CariProfiliEkrani({super.key, required this.model, this.yonetim});
@@ -157,6 +158,24 @@ class CariProfiliEkrani extends StatelessWidget {
                   padding: EdgeInsets.only(top: 8),
                   child: Text('Bu cariye en fazla 10 kart eklenebilir.'),
                 ),
+              if (model.servis.tahsilat != null &&
+                  p.cari.kimlikNo.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton.icon(
+                    onPressed: model.mesgul
+                        ? null
+                        : () => islemFormunuAc(
+                            context,
+                            model.servis.tahsilat!,
+                            p,
+                          ),
+                    icon: const Icon(Icons.receipt_long_outlined, size: 20),
+                    label: const Text('Ödeme sonucunu elle kaydet'),
+                  ),
+                ),
+              ],
               const SizedBox(height: 32),
               const Divider(),
               const SizedBox(height: 20),

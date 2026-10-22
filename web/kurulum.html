@@ -28,7 +28,7 @@
 <body>
 <main>
   <h1>BUP Doldur yer imi</h1>
-  <p class="soluk">Bir kez kurulur. DenizPay kart sayfasında dokununca seçtiğin kartın numarası, adı ve son kullanma tarihi yazılır. CVV ve tutarı sen yazarsın.</p>
+  <p class="soluk">Bir kez kurulur. DenizPay kart sayfasında dokununca seçtiğin kartın numarası, adı ve son kullanma tarihi yazılır. CVV ve tutarı sen yazarsın. Ödeme bitince sonuç ekranında dokununca sonuç cariye kaydedilir. 0.9.0’dan önce kurduysan bir kez yeniden kur.</p>
 
   <section>
     <h2>1. Kodu kopyala</h2>
@@ -59,8 +59,9 @@
       <li>DenizPay kart sayfası açılınca <em>Yer İşaretleri → BUP Doldur</em>. (Android: adres çubuğuna “BUP Doldur” yaz, yıldızlı öneriyi seç.)</li>
       <li>Kısa süre bir sekme açılıp kapanır, kart bilgileri yazılır. Açılan sekme kapanmazsa DenizPay sekmesine dön.</li>
       <li>CVV ve tutarı yaz, ödemeyi kendin onayla.</li>
+      <li>Sonuç ekranı (<em>Onay Formu</em> ya da <em>Hata Formu</em>) açılınca yine <em>BUP Doldur</em>’a dokun. Açılan sekmede cari ve tutarı kontrol edip <em>Bu cariye kaydet</em>’e bas. Sonuç, Sanal POS’a dönünce gün sonuna yazılır.</li>
     </ol>
-    <p class="soluk">Güvenlik: Yer iminde kart bilgisi yoktur. Kart yalnız 10 dakika içinde, yalnız DenizPay sayfasına ve yalnız sayfadaki firma numarası seçili cariyle aynıysa yazılır. Ekran kilitlenince bekleyen kart silinir.</p>
+    <p class="soluk">Güvenlik: Yer iminde kart bilgisi yoktur. Kart yalnız 10 dakika içinde, yalnız DenizPay sayfasına ve yalnız sayfadaki firma numarası seçili cariyle aynıysa yazılır. Ekran kilitlenince bekleyen kart silinir. Sonuç ekranında yalnız açıklama, sipariş numaraları ve tutar okunur.</p>
   </section>
 </main>
 <script src="kurulum.js"></script>

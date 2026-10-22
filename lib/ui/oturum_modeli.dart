@@ -321,12 +321,25 @@ class OturumModeli extends ChangeNotifier {
   bool get otomatikGiris => !deneme && servis.otomatikGiris;
 
   /// Kullanıcı tıklamasında eşzamanlı çalışır; kilitliyken giriş açılmaz.
-  void posGirisiniAc(DenemeSonucu sonuc) {
+  /// Dönen iş giriş kaydının sunucuya yazılmasını bekler (tahsilat yoksa `null`).
+  Future<void>? posGirisiniAc(DenemeSonucu sonuc) {
     if (_kapali || kilitli) {
       throw const PosHatasi('kilit', 'Ekran kilitlendi. Yeniden kart seçin.');
     }
-    servis.girisiAc(sonuc);
+    final giris = servis.girisiAc(sonuc);
+    return giris == null ? null : servis.tahsilat!.girisKaydet(giris);
   }
+
+  /// DenizPay sonuç ekranından gelen kaydın sonucu (üstte not olarak).
+  void tahsilatBildir(String mesaj) {
+    if (_kapali) return;
+    uyari = mesaj;
+    notifyListeners();
+  }
+
+  /// Elle açılan DenizPay girişi başka cariye ait olabilir: yer imi sonucu
+  /// önceki cariye bağlamasın.
+  void acikGirisiTemizle() => servis.tahsilat?.acikGirisiTemizle();
 
   @override
   void dispose() {

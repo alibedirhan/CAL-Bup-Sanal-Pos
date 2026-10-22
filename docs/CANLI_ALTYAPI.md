@@ -77,6 +77,8 @@ Cari, rezervasyon ve `denetim` kaydı aynı işlemde değişir. Rezervasyon tek
 başına bırakılamaz veya başka cariye geçirilemez. Atama/silme de atomiktir.
 
 `denetim`: yalnız aktör UID, cari ID, sürüm, işlem türü ve sunucu zamanı.
+`posGirisleri`, `posIslemleri` (0.9.0): yalnız eklenen tahsilat kayıtları;
+ayrıntı [TAHSILAT.md](TAHSILAT.md).
 Kart, kimlik numarası, ad, şifre veya telefon içermez. Değiştirilemez.
 Operasyon geçmişidir; ödeme kaydı veya banka sonucu değildir.
 

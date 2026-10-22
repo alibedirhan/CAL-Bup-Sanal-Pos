@@ -1,7 +1,7 @@
 name: bup_sanal_pos
 description: "BUP Sanal POS — bağımsız, telefon odaklı cari ve kart çalışma alanı."
 publish_to: 'none'
-version: 0.8.1+15
+version: 0.9.0+16
 
 environment:
   sdk: ^3.11.0
@@ -14,6 +14,7 @@ dependencies:
   firebase_auth: 6.5.7
   cloud_firestore: 6.8.0
   url_launcher: 6.3.2
+  web: 1.1.1
   flutter_localizations:
     sdk: flutter
 

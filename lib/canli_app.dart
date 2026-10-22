@@ -15,6 +15,11 @@ import 'data/secim_kontrolu.dart';
 import 'data/cihaz_kart_kasasi.dart';
 import 'data/pos_giris_kapisi.dart';
 import 'data/doldurma_hazirligi.dart';
+import 'data/acik_giris.dart';
+import 'data/dosya_indirici.dart';
+import 'data/firestore_islemleri.dart';
+import 'data/sonuc_kutusu.dart';
+import 'application/tahsilat_servisi.dart';
 import 'ui/giris_sayfasi.dart';
 import 'ui/tema.dart';
 
@@ -109,6 +114,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       // aynı hesabın sayfa yenilemesi işi silmez.
       if (uid == null || (_sonUid != null && uid != _sonUid)) {
         const CihazDoldurmaHazirligi().temizle();
+        const CihazAcikGiris().temizle();
       }
       _sonUid = uid;
       _nesil++;
@@ -127,7 +133,10 @@ class _HesapKapisiState extends State<_HesapKapisi> {
             setState(() {
               _kontrol = false;
               _kullanici = k?.aktif == true ? k : null;
-              if (_kullanici == null) const CihazDoldurmaHazirligi().temizle();
+              if (_kullanici == null) {
+                const CihazDoldurmaHazirligi().temizle();
+                const CihazAcikGiris().temizle();
+              }
               _hata = k?.aktif == true
                   ? null
                   : 'Hesabının erişimi kapalı. Yöneticiyle görüş.';
@@ -183,6 +192,14 @@ class _HesapKapisiState extends State<_HesapKapisi> {
           kartKasasi: const CihazKartKasasi(),
           girisKapisi: const CihazPosGirisKapisi(),
           doldurma: const CihazDoldurmaHazirligi(),
+          tahsilat: TahsilatServisi(
+            depo: FirestoreIslemDeposu(widget.hesap.db),
+            kullaniciId: k.id,
+            kullaniciAdi: k.ad,
+            acikGiris: const CihazAcikGiris(),
+            indirici: const CihazDosyaIndirici(),
+            kutu: const CihazSonucKutusu(),
+          ),
         ),
         kullanici: k,
         hesap: widget.hesap,

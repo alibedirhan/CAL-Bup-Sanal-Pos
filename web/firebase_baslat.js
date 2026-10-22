@@ -10,6 +10,8 @@ try {
     import('./kart_kasasi.js'),
     import('./pos_giris.js'),
     import('./doldurma.js'),
+    import('./acik_giris.js'),
+    import('./sonuc_kutusu.js'),
   ]);
   window.firebase_core = sdkCore;
   window.firebase_auth = sdkAuth;

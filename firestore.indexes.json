@@ -1,7 +1,17 @@
 {
-  "indexes": [{"collectionGroup": "cariler", "queryScope": "COLLECTION", "fields": [
-    {"fieldPath": "sahipId", "order": "ASCENDING"},
-    {"fieldPath": "silindi", "order": "ASCENDING"}
-  ]}],
+  "indexes": [
+    {"collectionGroup": "cariler", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath": "sahipId", "order": "ASCENDING"},
+      {"fieldPath": "silindi", "order": "ASCENDING"}
+    ]},
+    {"collectionGroup": "posGirisleri", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath": "kullaniciId", "order": "ASCENDING"},
+      {"fieldPath": "zaman", "order": "ASCENDING"}
+    ]},
+    {"collectionGroup": "posIslemleri", "queryScope": "COLLECTION", "fields": [
+      {"fieldPath": "kullaniciId", "order": "ASCENDING"},
+      {"fieldPath": "zaman", "order": "ASCENDING"}
+    ]}
+  ],
   "fieldOverrides": [{"collectionGroup": "cariler", "fieldPath": "kartlar", "indexes": []}]
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#16343e">
+  <title>Ödeme sonucu · BUP Sanal POS</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    :root { --zemin: #f4f6f6; --kart: #fff; --yazi: #142126; --soluk: #4c5d63; --vurgu: #16343e; --iyi: #1b6b3a; --uyari: #b3261e; --cizgi: #d5dddf; }
+    @media (prefers-color-scheme: dark) {
+      :root { --zemin: #0f1a1e; --kart: #17262c; --yazi: #e8eef0; --soluk: #a9b8bd; --vurgu: #8fd0e0; --iyi: #8fdca6; --uyari: #ffb4ab; --cizgi: #2c3d44; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--zemin); color: var(--yazi); font: 18px/1.5 -apple-system, system-ui, Roboto, sans-serif; }
+    main { max-width: 560px; margin: 0 auto; padding: 24px 16px 40px; }
+    h1 { font-size: 1.3rem; margin: 0 0 12px; }
+    #ozet { background: var(--kart); border-radius: 14px; padding: 16px; margin: 0 0 16px; }
+    #ozet[hidden] { display: none; }
+    #sonuc { font-size: 1.25rem; font-weight: 700; margin: 0 0 12px; }
+    #sonuc.basarili { color: var(--iyi); }
+    #sonuc.hata { color: var(--uyari); }
+    dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; }
+    dt { color: var(--soluk); font-size: 15px; padding-top: 2px; }
+    dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+    #cari { font-size: 1.15rem; }
+    #durum { margin: 0 0 14px; }
+    #durum.hata { color: var(--uyari); font-weight: 600; }
+    #durum.tamam { color: var(--iyi); font-weight: 700; }
+    button { font: 600 18px system-ui, sans-serif; padding: 15px 16px; border-radius: 12px; border: 0; background: var(--vurgu); color: var(--zemin); width: 100%; }
+    button[hidden] { display: none; }
+    button:disabled { opacity: .5; }
+    .soluk { color: var(--soluk); font-size: 15px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>BUP Sanal POS · ödeme sonucu</h1>
+  <section id="ozet" hidden aria-labelledby="sonuc">
+    <p id="sonuc"></p>
+    <dl>
+      <dt>Cari</dt><dd id="cari"></dd>
+      <dt>Tutar</dt><dd id="tutar"></dd>
+      <dt>Pos Sipariş No</dt><dd id="pos-no"></dd>
+      <dt>Açıklama</dt><dd id="aciklama"></dd>
+    </dl>
+  </section>
+  <p id="durum" aria-live="polite">Hazırlanıyor…</p>
+  <button id="kaydet" type="button" hidden disabled>Bu cariye kaydet</button>
+  <p class="soluk">Bu sayfa DenizPay sonuç ekranındaki “BUP Doldur” yer iminden açılır. Sonuç, Sanal POS’ta son girdiğin cariye kaydedilir; kayıt sonradan değiştirilemez. Kart bilgisi okunmaz.</p>
+</main>
+<script type="module" src="sonuc_sayfasi.js"></script>
+</body>
+</html>

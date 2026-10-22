@@ -1,6 +1,10 @@
 // Kart doldurma yer imi "BUP Doldur" (Aşama 2, docs/MOBIL_DOLDURMA_PLANI.md).
 // Yalnız DenizPay kart sayfasında kart numarası, kart üzerindeki ad ve son
 // kullanma kutularını yazar. CVV, tutar ve düğmelere dokunmaz; formu göndermez.
+// 2. sürüm (0.9.0): DenizPay sonuç ekranında (Onay Formu / Hata Formu) sayfadaki
+// etiketli kutuların yazısını Sanal POS'un sonuc.html sayfasına verir; sayfa
+// sonucu okur, kişi onaylayınca son girilen cariye kaydeder (docs/TAHSILAT.md).
+// Kart sayfasında hiçbir şey gönderilmez; kart numarasına benzeyen yazı atılır.
 // Kart bilgisi yer iminde durmaz: Sanal POS'un doldur.html sayfası bu cihazdaki
 // bekleyen işten okur ve yalnız DenizPay kökenine postMessage ile gönderir.
 // Sayfadaki "Firma İsmi" numarası seçili carinin VKN/TC'si değilse hiçbir şey yazılmaz.
@@ -9,7 +13,7 @@
 (() => {
 // SURUM_NO doldur sayfasına iletilir; sayfa eski yer imini görünce yeniden kurulum ister.
 // 1. sürüm (21 Ekim) numara göndermiyordu; sayfa numarasız isteği 1 sayar.
-const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-1', SURUM_NO = 1;
+const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-2', SURUM_NO = 2;
 if (window.__bupDoldur) { window.__bupDoldur.kapat(); }
 const kutu = document.createElement('div');
 kutu.setAttribute('style', 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;background:#fff;color:#111;border:3px solid #16343e;border-radius:12px;padding:12px;font:16px/1.4 -apple-system,system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35)');
@@ -42,21 +46,52 @@ const alan = ad => {
   return e;
 };
 const k = { numara: alan('number'), ad: alan('name'), skt: alan('expiry') };
-if (!k.numara || !k.skt) { goster('Kart kutuları bulunamadı. Kart numarasını yazdığın ödeme sayfasında dokun.', true); return; }
 const firma = () => {
   const m = /Firma\s*[İI]smi\s*:?[^(\n]*\(\s*([0-9]{10,11})\s*\)/.exec(document.body.innerText);
   return m ? m[1] : null;
 };
-if (!firma()) { goster('Sayfada firma numarası bulunamadı; güvenlik için kart yazılmadı.', true); return; }
-const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
-const pencere = window.open(UYGULAMA + '/doldur.html#b=' + id + '&s=' + SURUM_NO, '_blank');
-if (!pencere) { goster('Açılır pencere engellendi. Tarayıcı ayarında açılır pencerelere izin ver.', true); return; }
-goster('Sanal POS’tan kart bekleniyor. Açılan sekme kapanmazsa bu sekmeye dön.', false);
 const luhn = n => {
   let t = 0, cift = false;
   for (let i = n.length - 1; i >= 0; i--, cift = !cift) { let r = Number(n[i]); if (cift) { r *= 2; if (r > 9) { r -= 9; } } t += r; }
   return t > 0 && t / 10 === Math.floor(t / 10);
 };
+const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
+const metin = document.body.innerText;
+if ((!k.numara || !k.skt) && /(Onay|Hata)\s+Formu/i.test(metin) && /Sipari[şs]\s+Numaras/i.test(metin)) {
+  const alanlar = [];
+  let son = '';
+  const gez = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  for (let n = gez.nextNode(); n && alanlar.length < 40; n = gez.nextNode()) {
+    if (n.nodeType === 3) {
+      const t = n.nodeValue.replace(/\s+/g, ' ').trim();
+      if (t && !['SCRIPT', 'STYLE'].includes(n.parentNode.tagName)) { son = t.slice(0, 80); }
+    } else if ((n.tagName === 'INPUT' && !['hidden', 'password', 'checkbox', 'radio', 'submit', 'button', 'image', 'file'].includes(n.type)) || n.tagName === 'TEXTAREA') {
+      const v = String(n.value).replace(/\s+/g, ' ').trim().slice(0, 200);
+      const rakam = v.replace(/[ -]/g, '');
+      if (v && !(/^[0-9 -]+$/.test(v) && rakam.length >= 13 && rakam.length <= 19 && luhn(rakam))) { alanlar.push([son, v]); }
+    }
+  }
+  const pencere = window.open(UYGULAMA + '/sonuc.html#b=' + id + '&s=' + SURUM_NO, '_blank');
+  if (!pencere) { goster('Açılır pencere engellendi. Tarayıcı ayarında açılır pencerelere izin ver.', true); return; }
+  goster('Sonuç Sanal POS’a aktarılıyor. Açılan sekmede bilgileri kontrol edip kaydet.', false);
+  dinle = e => {
+    if (e.source !== pencere || e.origin !== UYGULAMA || !e.data || e.data.id !== id) { return; }
+    if (e.data.tur === 'bup-sonuc-iste') {
+      clearTimeout(zaman);
+      pencere.postMessage({ tur: 'bup-sonuc-paket', id: id, sayfa: { metin: metin.slice(0, 5000), alanlar: alanlar, firma: firma() } }, UYGULAMA);
+    } else if (e.data.tur === 'bup-sonuc-durum' && typeof e.data.mesaj === 'string') {
+      goster(e.data.mesaj.slice(0, 300), e.data.hata === true);
+    }
+  };
+  window.addEventListener('message', dinle);
+  zaman = setTimeout(() => { goster('Sanal POS’tan yanıt gelmedi. Yer imine yeniden dokun.', true); }, 120000);
+  return;
+}
+if (!k.numara || !k.skt) { goster('Kart kutuları bulunamadı. Kart numarasını yazdığın ödeme sayfasında, ödeme bitince sonuç ekranında dokun.', true); return; }
+if (!firma()) { goster('Sayfada firma numarası bulunamadı; güvenlik için kart yazılmadı.', true); return; }
+const pencere = window.open(UYGULAMA + '/doldur.html#b=' + id + '&s=' + SURUM_NO, '_blank');
+if (!pencere) { goster('Açılır pencere engellendi. Tarayıcı ayarında açılır pencerelere izin ver.', true); return; }
+goster('Sanal POS’tan kart bekleniyor. Açılan sekme kapanmazsa bu sekmeye dön.', false);
 const grupla = n => {
   const boy = /^3[47]/.test(n) ? [4, 6, 5] : [4, 4, 4, 4, 3];
   const p = [];

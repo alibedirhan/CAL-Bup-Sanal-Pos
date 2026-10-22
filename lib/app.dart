@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'application/pos_servisi.dart';
 import 'data/demo_deposu.dart';
+import 'data/demo_islemleri.dart';
+import 'data/dosya_indirici.dart';
+import 'application/tahsilat_servisi.dart';
 import 'ui/ana_ekran.dart';
 import 'ui/karsilama.dart';
 import 'ui/oturum_modeli.dart';
@@ -39,6 +42,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
   Timer? _zamanlayici;
   DateTime? _gizlenme;
   bool _basladi = false;
+  StreamSubscription<void>? _kutu;
   @override
   void initState() {
     super.initState();
@@ -50,12 +54,40 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
             depo: DemoDeposu(),
             baglanti: DemoPosBaglantisi(),
             kullaniciId: DemoDeposu.kullanici,
+            tahsilat: TahsilatServisi(
+              depo: DemoIslemDeposu(),
+              kullaniciId: DemoDeposu.kullanici,
+              kullaniciAdi: 'Deneme Kullanıcısı',
+              indirici: const CihazDosyaIndirici(),
+            ),
           ),
       deneme: widget.deneme,
     );
     // Canlı kipte demo deposundan liste dahi istenmez.
     if (widget.deneme || widget.servis != null) unawaited(_model.yukle());
     if (_basladi) _etkilesim();
+    // DenizPay sonuç sayfasının bu telefona bıraktığı sonuçlar: açılışta, başka
+    // sekmede eklenince ve sekmeye dönüşte yazılır (oturum yalnız bu sekmede).
+    final tahsilat = _model.servis.tahsilat;
+    if (tahsilat != null && tahsilat.kutu.destekli) {
+      _kutu = tahsilat.kutu.degisimler.listen((_) => _kutuyuIsle());
+      unawaited(_kutuyuIsle());
+    }
+  }
+
+  Future<void> _kutuyuIsle() async {
+    final sonuclar = await _model.servis.tahsilat!.kutuyuIsle();
+    if (!mounted || sonuclar.isEmpty) return;
+    // Hata varsa o görünür; yoksa son kayıt.
+    final not = sonuclar.lastWhere(
+      (s) => !s.tamam,
+      orElse: () => sonuclar.last,
+    );
+    _model.tahsilatBildir(
+      sonuclar.length > 1 && not.tamam
+          ? '${sonuclar.length} DenizPay sonucu kaydedildi. Son: ${not.mesaj}'
+          : not.mesaj,
+    );
   }
 
   void _etkilesim() {
@@ -98,6 +130,8 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
         _kilitle(bekleyenIsiSil: false);
       } else {
         _etkilesim();
+        // Kilitlenince yazılmaz: kilit açılınca yeni ekran yazar ve sonucu gösterir.
+        if (_kutu != null) unawaited(_kutuyuIsle());
       }
     }
   }
@@ -106,6 +140,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _zamanlayici?.cancel();
+    _kutu?.cancel();
     _model.dispose();
     super.dispose();
   }

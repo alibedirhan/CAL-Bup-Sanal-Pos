@@ -10,11 +10,14 @@ bash tools/derle.sh canli
 python3 - <<'KONTROL'
 import re
 from pathlib import Path
-for ad in ('kurulum.js', 'doldur_sayfasi.js'):
+for ad in ('kurulum.js', 'doldur_sayfasi.js', 'sonuc_sayfasi.js'):
     s = Path('build/canli', ad).read_text()
     assert '127.0.0.1' not in s and not re.search(r'__[A-Z_]+__', s), f'{ad}: test kökeni/yer tutucu kaldı'
 d = Path('build/canli/doldur_sayfasi.js').read_text()
 assert "const POS = 'https://denizpay.bupilic.com.tr';" in d, 'Doldur sayfasında canlı POS kökeni yok'
+r = Path('build/canli/sonuc_sayfasi.js').read_text()
+assert "const POS = 'https://denizpay.bupilic.com.tr';" in r, 'Sonuç sayfasında canlı POS kökeni yok'
+assert "import('./sonuc_kutusu.js')" in Path('build/canli/firebase_baslat.js').read_text(), 'Sonuç kutusu yüklenmiyor'
 k = Path('build/canli/kurulum.js').read_text()
 assert 'denizpay.bupilic.com.tr' in k and 'bup-sanal-pos-izmir.web.app' in k, 'Kurulum yer iminde canlı kökenler yok'
 KONTROL

@@ -3,6 +3,7 @@ import 'bilgi_sayfasi.dart';
 import 'cari_formu.dart';
 import 'cari_listesi.dart';
 import 'cari_profili.dart';
+import 'gun_sonu_sayfasi.dart';
 import 'ortak.dart';
 import 'oturum_modeli.dart';
 import 'pos_onayi.dart';
@@ -77,7 +78,7 @@ class _AnaEkranState extends State<AnaEkran> {
                 padding: EdgeInsets.only(right: 4),
                 child: Chip(
                   label: Text(
-                    m.deneme ? 'Deneme' : '0.8.1',
+                    m.deneme ? 'Deneme' : '0.9.0',
                     style: const TextStyle(fontSize: 11),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 2),
@@ -112,6 +113,12 @@ class _AnaEkranState extends State<AnaEkran> {
                           model: m,
                           yeniCari: () => cariFormunuAc(context, m),
                         )
+                      : _sekme == 1 && m.servis.tahsilat != null
+                      ? GunSonuSayfasi(
+                          servis: m.servis.tahsilat!,
+                          yonetici: widget.kullanici?.yonetici ?? false,
+                          deneme: m.deneme,
+                        )
                       : BilgiSayfasi(
                           kilitle: widget.kilitle,
                           kullanici: widget.kullanici,
@@ -132,6 +139,11 @@ class _AnaEkranState extends State<AnaEkran> {
                       icon: Icon(Icons.people_outline),
                       selectedIcon: Icon(Icons.people_rounded),
                       label: 'Cariler',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.receipt_long_outlined),
+                      selectedIcon: Icon(Icons.receipt_long_rounded),
+                      label: 'Gün sonu',
                     ),
                     NavigationDestination(
                       icon: Icon(Icons.tune_rounded),

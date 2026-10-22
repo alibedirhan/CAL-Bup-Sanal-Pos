@@ -19,7 +19,7 @@ class PosOnayi extends StatefulWidget {
 class _PosOnayiState extends State<PosOnayi> {
   bool _onay = false, _mesgul = false, _girisAcildi = false;
   DenemeSonucu? _sonuc;
-  String? _hata;
+  String? _hata, _kayitHatasi;
   bool get _tamam => _sonuc != null;
   Future<void> _dene() async {
     if (!_onay || _mesgul) return;
@@ -41,10 +41,21 @@ class _PosOnayiState extends State<PosOnayi> {
   // Açılır pencere izni için tıklamayla eşzamanlı çalışır; yanıt okunmaz.
   void _girisYap() {
     try {
-      widget.model.posGirisiniAc(_sonuc!);
+      final kayit = widget.model.posGirisiniAc(_sonuc!);
       setState(() {
         _girisAcildi = true;
         _hata = null;
+        _kayitHatasi = null;
+      });
+      // Giriş kaydı gün sonundaki "sonuç bekleyen" uyarısı içindir; yazılamazsa
+      // ödeme sonucu yine kaydedilebilir, kişi yalnız bilgilendirilir.
+      kayit?.catchError((Object _) {
+        if (mounted) {
+          setState(
+            () => _kayitHatasi =
+                'Giriş kaydı sunucuya yazılamadı (bağlantı). Ödeme sonucunu yine kaydedebilirsin.',
+          );
+        }
       });
     } on PosHatasi catch (e) {
       setState(() => _hata = e.mesaj);
@@ -82,11 +93,17 @@ class _PosOnayiState extends State<PosOnayi> {
               const SizedBox(height: 24),
               if (m.otomatikGiris) ...[
                 DurumNotu(
-                  _girisAcildi
-                      ? 'DenizPay yeni sekmede açıldı. Giriş olmadıysa aşağıdaki boş giriş sayfasından bilgileri elle gir.'
-                      : 'Başka bir cariyle açık DenizPay sekmesi varsa önce onu kapat.',
+                  !_girisAcildi
+                      ? 'Başka bir cariyle açık DenizPay sekmesi varsa önce onu kapat.'
+                      : m.servis.tahsilat != null
+                      ? 'DenizPay yeni sekmede açıldı. Ödeme bitince sonuç ekranında (Onay Formu / Hata Formu) “BUP Doldur”a dokun; sonuç bu cariye kaydedilir.'
+                      : 'DenizPay yeni sekmede açıldı. Giriş olmadıysa aşağıdaki boş giriş sayfasından bilgileri elle gir.',
                 ),
                 const SizedBox(height: 12),
+                if (_kayitHatasi != null) ...[
+                  DurumNotu(_kayitHatasi!, hata: true),
+                  const SizedBox(height: 12),
+                ],
                 if (_hata != null) ...[
                   DurumNotu(_hata!, hata: true),
                   const SizedBox(height: 12),
@@ -104,7 +121,14 @@ class _PosOnayiState extends State<PosOnayi> {
                   target: LinkTarget.blank,
                   builder: (context, ac) => m.otomatikGiris
                       ? OutlinedButton.icon(
-                          onPressed: ac,
+                          // Elle girişte cari farklı olabilir: sonuç önceki
+                          // cariye bağlanmasın diye son giriş işareti silinir.
+                          onPressed: ac == null
+                              ? null
+                              : () {
+                                  m.acikGirisiTemizle();
+                                  ac();
+                                },
                           icon: const Icon(Icons.open_in_new),
                           label: const Text('Boş giriş sayfasını aç'),
                         )

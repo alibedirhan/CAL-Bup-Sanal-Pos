@@ -146,3 +146,83 @@ test('Eski istemci yerel kart referansını düşüremez; eski özetler okunur v
   await assertSucceeds(change(db,'kendi',uid,{surum:3,kartlar:[current]}));
   await assertFails(change(db,'kendi',uid,{surum:4,kartlar:[old]}));
 });
+
+// 0.9.0 tahsilat kayıtları: yalnız eklenir, sunucu saatiyle; cari erişimi ve VKN eşleşmeli.
+const KIMLIK='0000000001';
+const tahsilatCari=async()=>{
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await setDoc(doc(ctx.firestore(),'cariler','kendi'),{...record(uid,KIMLIK),kimlikNo:KIMLIK});
+  });
+};
+const girisVerisi=(patch={})=>({kullaniciId:uid,kullaniciAd:'Örnek Kullanıcı',cariId:'kendi',cariAd:'Örnek Market',
+  kimlikNo:KIMLIK,kartSonDort:'1111',zaman:serverTimestamp(),...patch});
+const islemVerisi=(no='VP10000000000000001',patch={})=>({...girisVerisi(),girisId:'A'.repeat(20),sonuc:'basarili',
+  aciklama:'Ödeme Başarıyla Gerçekleştirildi',posSiparisNo:no,uyeSiparisNo:'600001',tutarMetni:'4500',tutarKurus:450000,
+  kaynak:'yer_imi',...patch});
+test('Giriş ve işlem kaydı kendi carisi için eklenir, sonra değiştirilemez/silinemez',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  await assertSucceeds(setDoc(doc(db,'posGirisleri','A'.repeat(20)),girisVerisi()));
+  const ref=doc(db,'posIslemleri','VP10000000000000001');
+  await assertSucceeds(getDoc(ref)); // olmayan kayıt sorgulanabilir
+  await assertSucceeds(setDoc(ref,islemVerisi()));
+  await assertSucceeds(getDoc(ref));
+  await assertFails(setDoc(ref,islemVerisi(undefined,{tutarMetni:'1',tutarKurus:100}))); // ikinci yazım
+  await assertFails(updateDoc(ref,{tutarMetni:'1'}));
+  const {deleteDoc}=await import('firebase/firestore');
+  await assertFails(deleteDoc(ref));
+  await assertFails(updateDoc(doc(db,'posGirisleri','A'.repeat(20)),{cariAd:'Başka'}));
+  await assertFails(deleteDoc(doc(db,'posGirisleri','A'.repeat(20))));
+  // Hata sonucu, okunamayan tutar ve kartsız/girişsiz elle kayıt da kabul edilir.
+  await assertSucceeds(setDoc(doc(db,'posIslemleri','VP0002'),islemVerisi('VP0002',{sonuc:'hata',aciklama:'3D Şifresi Yanlış.',
+    uyeSiparisNo:'',tutarMetni:'4,500.00',tutarKurus:null,kartSonDort:'',girisId:'',kaynak:'elle'})));
+});
+test('Yanlış VKN, başka kullanıcının carisi, başkası adına ve istemci saatiyle kayıt reddedilir',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  const yaz=(no,patch)=>setDoc(doc(db,'posIslemleri',no),islemVerisi(no,patch));
+  await assertSucceeds(yaz('VP0009',{}));
+  await assertFails(yaz('VP10',{kimlikNo:'0000000009'}));
+  await assertFails(yaz('VP11',{cariId:'yabanci'}));
+  await assertFails(yaz('VP12',{kullaniciId:other}));
+  await assertFails(yaz('VP13',{kullaniciAd:'Başka Ad'}));
+  const {Timestamp}=await import('firebase/firestore');
+  await assertFails(yaz('VP14',{zaman:Timestamp.fromMillis(Date.now()-86400000)}));
+  await assertFails(setDoc(doc(db,'posIslemleri','VP15'),islemVerisi('VP16')));
+  await assertFails(yaz('vp17',{posSiparisNo:'vp17'}));
+  await assertFails(yaz('VP18',{sonuc:'belki'}));
+  await assertFails(yaz('VP19',{tutarKurus:-1}));
+  await assertFails(yaz('VP20',{numara:'4111111111111111'}));
+  await assertFails(yaz('VP21',{aciklama:'satır\nsonu'}));
+  await assertFails(setDoc(doc(db,'posGirisleri','kisa'),girisVerisi()));
+  await assertFails(setDoc(doc(dbFor('pasif'),'posGirisleri','B'.repeat(20)),girisVerisi({kullaniciId:'pasif'})));
+  await assertFails(setDoc(doc(dbFor(null),'posGirisleri','C'.repeat(20)),girisVerisi()));
+});
+test('Silinmiş cariye kayıt eklenemez',async()=>{
+  await tahsilatCari();
+  await env.withSecurityRulesDisabled(async ctx=>{await updateDoc(doc(ctx.firestore(),'cariler','kendi'),{silindi:true});});
+  await assertFails(setDoc(doc(dbFor(uid),'posIslemleri','VP30'),islemVerisi('VP30')));
+});
+test('Kayıtları sahibi ve yönetici okur; satıcı yalnız kendi kayıtlarını listeler',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  await setDoc(doc(db,'posIslemleri','VP40'),islemVerisi('VP40'));
+  await setDoc(doc(db,'posGirisleri','D'.repeat(20)),girisVerisi());
+  const {orderBy,Timestamp}=await import('firebase/firestore');
+  const gun=c=>query(collection(c,'posIslemleri'),where('zaman','>=',Timestamp.fromMillis(Date.now()-86400000)),orderBy('zaman'));
+  await assertSucceeds(getDocs(query(collection(db,'posIslemleri'),where('kullaniciId','==',uid),
+    where('zaman','>=',Timestamp.fromMillis(Date.now()-86400000)),orderBy('zaman'))));
+  await assertFails(getDocs(gun(db)));
+  await assertSucceeds(getDocs(gun(dbFor('admin'))));
+  await assertSucceeds(getDocs(query(collection(dbFor('admin'),'posGirisleri'))));
+  await assertFails(getDoc(doc(dbFor(other),'posIslemleri','VP40')));
+  await assertFails(getDoc(doc(dbFor(other),'posGirisleri','D'.repeat(20))));
+  await assertFails(getDocs(query(collection(dbFor(other),'posIslemleri'),where('kullaniciId','==',uid))));
+  // Başkasının kaydıyla aynı numara: okunamaz, üstüne yazılamaz.
+  await env.withSecurityRulesDisabled(async ctx=>{
+    await setDoc(doc(ctx.firestore(),'cariler','b-cari'),{...record(other,'0000000002'),kimlikNo:'0000000002'});
+  });
+  await assertFails(setDoc(doc(dbFor(other),'posIslemleri','VP40'),{...islemVerisi('VP40'),kullaniciId:other,
+    cariId:'b-cari',kimlikNo:'0000000002'}));
+});
+test('Yönetici başkasına atanmış cari için kendi adına kayıt ekleyebilir',async()=>{
+  await tahsilatCari();
+  await assertSucceeds(setDoc(doc(dbFor('admin'),'posIslemleri','VP50'),{...islemVerisi('VP50'),kullaniciId:'admin'}));
+});

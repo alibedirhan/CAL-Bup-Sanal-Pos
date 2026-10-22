@@ -7,7 +7,8 @@
     "test:hesap": "node hesap-kabul.mjs",
     "test:yayin": "node yayin-kabul.mjs",
     "test:kasa": "node kasa-kabul.mjs",
-    "test:doldur": "node doldur-kabul.mjs"
+    "test:doldur": "node doldur-kabul.mjs",
+    "test:tahsilat": "node tahsilat-kabul.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

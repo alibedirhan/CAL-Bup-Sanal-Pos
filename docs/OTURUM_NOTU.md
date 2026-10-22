@@ -1,3 +1,27 @@
+# 22 Ekim 2026 — 0.9.0: tahsilat kaydı ve gün sonu
+
+Kullanıcı isteği: cariyle DenizPay'e girilip alınan ödeme kesin o cariye yazılsın;
+24 saatteki tüm işlemler tarih/saat/cari adıyla kaydedilsin; gün bitince gün sonu
+kendiliğinden oluşsun. Kullanıcı bilgisi: DenizPay'e hangi VKN ile girildiyse
+tahsilat LED'de o cariye eklenir. Sonuç ekranları kullanıcı görüntülerinden
+(Onay Formu / Hata Formu; alanlar `docs/TAHSILAT.md`).
+Yapılanlar: "DenizPay'e giriş yap" → `posGirisleri` + cihazda son giriş işareti;
+"BUP Doldur" yer imi 2. sürüm sonuç ekranını okur → `sonuc.html` (onay "Bu cariye
+kaydet") → telefondaki sonuç kutusu → oturumu açık Sanal POS sekmesi
+`posIslemleri`'ne yazar (SESSION oturumu nedeniyle; sekme kapalıysa yeniden
+girişte). Profilde "Ödeme sonucunu elle kaydet". Yeni "Gün sonu" sekmesi (Türkiye
+saati, carilere göre, başarısız denemeler, sonuç bekleyen giriş uyarısı, yönetici
+"Herkes", Excel'e aktar CSV). Kurallar: yalnız ekleme, sunucu saati, VKN cariyle
+aynı, Pos Sipariş No tekil. Kurulum ve Çalışma alanı yazıları: yer imi bir kez
+yeniden kurulmalı. Gün sonu ekranında ekran okuyucu için kart/satır bölümleri.
+Testler: 115 Dart; kurallar 24; demo, kasa, doldur (+sonuç ekranı), hesap ve yeni
+`test:tahsilat` (emülatör, Chromium + WebKit) geçti; canlı paket derlendi, yayın
+denetimi geçti. **Yayınlanmadı** (kullanıcı izni bekleniyor; yayında indeksler
+birkaç dakikada kurulur). Gerçek DenizPay sonuç sayfası HTML'i görülmedi —
+ilk gerçek ödemede denenmeli; okunamazsa sayfa "elle kaydet" der.
+
+---
+
 # 22 Ekim 2026 — 0.8.1: arayüz taraması, ilk paket
 
 Kullanıcı arayüz taraması istedi → `docs/ARAYUZ_TARAMASI.md` (18 madde). Kullanıcı

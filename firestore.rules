@@ -101,6 +101,45 @@ service cloud.firestore {
         && erisim(getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.sahipId);
       allow update, delete: if false;
     }
+    // Tahsilat kayıtları (0.9.0): yalnız eklenir, değiştirilemez/silinemez. Zaman sunucu
+    // saatidir; gün Türkiye saatiyle 00:00'da biter, o günün gün sonu kendiliğinden kesinleşir.
+    // Cari erişimi ve VKN/TC sunucudaki cari kaydıyla aynı olmalıdır.
+    function tahsilatOrtak(d) {
+      let c = get(/databases/$(database)/documents/cariler/$(d.cariId)).data;
+      return d.kullaniciId == request.auth.uid
+        && d.kullaniciAd == get(/databases/$(database)/documents/kullanicilar/$(request.auth.uid)).data.ad
+        && metin(d.cariId, 1, 128) && metin(d.cariAd, 2, 80)
+        && d.kimlikNo is string && d.kimlikNo.matches('^[0-9]{10,11}$')
+        && d.kartSonDort is string && d.kartSonDort.matches('^([0-9]{4})?$')
+        && d.zaman == request.time
+        && erisim(c.sahipId) && !c.silindi && c.kimlikNo == d.kimlikNo;
+    }
+    match /posGirisleri/{id} {
+      allow get, list: if erisim(resource.data.kullaniciId);
+      allow create: if uye() && id.matches('^[A-Za-z0-9]{20}$')
+        && request.resource.data.keys().hasOnly(['kullaniciId', 'kullaniciAd', 'cariId', 'cariAd', 'kimlikNo', 'kartSonDort', 'zaman'])
+        && request.resource.data.keys().size() == 7
+        && tahsilatOrtak(request.resource.data);
+      allow update, delete: if false;
+    }
+    match /posIslemleri/{id} {
+      // Olmayan kaydı sorgulamak serbesttir: aynı Pos Sipariş Numarası ikinci kez yazılmaz.
+      allow get: if uye() && (resource == null || erisim(resource.data.kullaniciId));
+      allow list: if erisim(resource.data.kullaniciId);
+      allow create: if uye() && id.matches('^[A-Z0-9_-]{4,64}$')
+        && request.resource.data.keys().hasOnly(['kullaniciId', 'kullaniciAd', 'cariId', 'cariAd', 'kimlikNo', 'kartSonDort',
+          'girisId', 'sonuc', 'aciklama', 'posSiparisNo', 'uyeSiparisNo', 'tutarMetni', 'tutarKurus', 'kaynak', 'zaman'])
+        && request.resource.data.keys().size() == 15
+        && islemBicim(id, request.resource.data) && tahsilatOrtak(request.resource.data);
+      allow update, delete: if false;
+      function islemBicim(id, d) {
+        return d.posSiparisNo == id && d.sonuc in ['basarili', 'hata'] && d.kaynak in ['yer_imi', 'elle']
+          && metin(d.aciklama, 1, 200) && metin(d.tutarMetni, 1, 40)
+          && (d.uyeSiparisNo == '' || metin(d.uyeSiparisNo, 1, 40))
+          && d.girisId is string && d.girisId.matches('^([A-Za-z0-9]{20})?$')
+          && (d.tutarKurus == null || (d.tutarKurus is int && d.tutarKurus >= 0 && d.tutarKurus <= 99999999999));
+      }
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }

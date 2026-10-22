@@ -6,6 +6,8 @@ import 'kart_kasasi.dart';
 import 'kart_islemleri.dart';
 import '../domain/kart_bilgileri.dart';
 import '../domain/pos_girisi.dart';
+import '../domain/tahsilat.dart';
+import 'tahsilat_servisi.dart';
 
 /// Flutter, Firebase, tarayıcı ve ekran durumundan bağımsız iş akışı.
 class PosServisi {
@@ -17,7 +19,11 @@ class PosServisi {
     this.kartKasasi = const KapaliKartKasasi(),
     this.girisKapisi = const KapaliPosGirisKapisi(),
     this.doldurma = const KapaliDoldurmaHazirligi(),
+    this.tahsilat,
   }) : saat = saat ?? DateTime.now;
+
+  /// Canlı kipte giriş/işlem kayıtları ve gün sonu; demoda bellekte.
+  final TahsilatServisi? tahsilat;
   static const girisSuresi = Duration(minutes: 2);
   final PosGirisKapisi girisKapisi;
   final DoldurmaHazirligi doldurma;
@@ -85,6 +91,7 @@ class PosServisi {
           '',
           kimlikNo: guncel.cari.kimlikNo,
           zaman: saat(),
+          cariId: guncel.cari.id,
         );
       }
       final kartlar = guncel.kartlar.where(
@@ -113,6 +120,7 @@ class PosServisi {
         kimlikNo: guncel.cari.kimlikNo,
         zaman: saat(),
         kart: kart,
+        cariId: guncel.cari.id,
       );
     } finally {
       _aktarimSuruyor = false;
@@ -121,8 +129,9 @@ class PosServisi {
 
   bool get otomatikGiris => girisKapisi.destekli;
 
-  /// Yalnız kısa süre önce doğrulanmış seçimle, eşzamanlı çağrılır.
-  void girisiAc(DenemeSonucu sonuc) {
+  /// Yalnız kısa süre önce doğrulanmış seçimle, eşzamanlı çağrılır. Dönen
+  /// giriş kaydı (tahsilat açıksa) ayrıca sunucuya yazılmalıdır.
+  PosGirisi? girisiAc(DenemeSonucu sonuc) {
     final zaman = sonuc.zaman;
     final fark = zaman == null ? null : saat().difference(zaman);
     if (fark == null || fark.isNegative || fark > girisSuresi) {
@@ -146,7 +155,10 @@ class PosServisi {
         ),
       );
     }
+    // Sonuç ekranındaki yer imi sonucu bu cariye bağlar; DenizPay'den önce yazılır.
+    final kayit = tahsilat?.girisHazirla(sonuc);
     girisKapisi.ac(giris);
+    return kayit;
   }
 
   /// Hata yutulur: temizleme kilit/çıkış akışını hiçbir zaman durdurmaz.

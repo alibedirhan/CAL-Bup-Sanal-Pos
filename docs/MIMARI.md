@@ -72,6 +72,14 @@ yazmaz. CVV/tutar/düğmelere dokunmaz, formu göndermez, uzaktan kod yüklemez.
 Kart doldurma anında sunucu yeniden sorgulanmaz; yetki, işin kurulduğu andaki
 sunucu doğrulaması ve 10 dakikalık süredir (bilinçli ödünleşim).
 
+## Tahsilat kaydı ve gün sonu (0.9.0)
+
+Ayrıntı [TAHSILAT.md](TAHSILAT.md). `domain/tahsilat.dart` (tutar, Türkiye günü,
+giriş/işlem), `domain/gun_sonu.dart` (hesap, CSV), `application/tahsilat_servisi.dart`
+(`IslemDeposu`, `AcikGirisPortu`, `SonucKutusu`, `DosyaIndirici` portları).
+Sunucuya yalnız Sanal POS sekmesi yazar (SESSION oturumu); DenizPay'den açılan
+`sonuc.html` sonucu yalnız yerel kutuya bırakır. Kayıtlar yalnız eklenir.
+
 ## Karttan okuma (0.8.0)
 
 Kart formu telefonun kendi kart tarayıcısına `cc-*` ipuçlarıyla açıktır; ay/yıl
