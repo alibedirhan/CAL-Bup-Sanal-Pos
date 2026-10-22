@@ -16,9 +16,27 @@ aynı, Pos Sipariş No tekil. Kurulum ve Çalışma alanı yazıları: yer imi b
 yeniden kurulmalı. Gün sonu ekranında ekran okuyucu için kart/satır bölümleri.
 Testler: 115 Dart; kurallar 24; demo, kasa, doldur (+sonuç ekranı), hesap ve yeni
 `test:tahsilat` (emülatör, Chromium + WebKit) geçti; canlı paket derlendi, yayın
-denetimi geçti. **Yayınlanmadı** (kullanıcı izni bekleniyor; yayında indeksler
-birkaç dakikada kurulur). Gerçek DenizPay sonuç sayfası HTML'i görülmedi —
-ilk gerçek ödemede denenmeli; okunamazsa sayfa "elle kaydet" der.
+denetimi geçti. **Yayında** (kullanıcı izniyle `yayin.sh`, kod özeti
+`dc286f0bf720da32`; kurallar + indeksler + hosting; `test:yayin` Chromium/WebKit
+geçti; `sonuc.html` ve betikleri canlıda 200, POS kökeni gerçek). Gerçek DenizPay
+sonuç sayfası HTML'i görülmedi — ilk gerçek ödemede denenmeli; okunamazsa sayfa
+"elle kaydet" der. Kullanıcı yer imini bir kez yeniden kurmalı.
+
+Yayın sonrası risk taraması (kullanıcıya raporlandı, kod değişmedi):
+1. Sonuç ekranı okuma yalnız etiketli kutu ve "etiket alt satırda" düzenini
+   tanır; "Tutar: 4500" gibi aynı satır veya tablo (sekmeyle ayrılan) düzeni
+   okunamaz → elle kayıt. Önerildi: aynı satır yedek okuması.
+2. Cihazdaki işaret yalnız son DenizPay girişini tutar. DenizPay oturumu büyük
+   olasılıkla tarayıcıda tektir (son giriş geçerli) ama doğrulanmadı; önceki
+   cari için açılmış eski sekmede ödeme yanlış cariye bağlanabilir. Önlem şimdilik
+   sonuç sayfasındaki cari adı onayı. Önerildi: kart sayfasında yer iminin okuduğu
+   "Firma İsmi (VKN)" numarasını o DenizPay sekmesinin sessionStorage'ına not
+   edip sonuç ekranında karşılaştırmak; ☰ görüntüsü bekleniyor.
+3. Sanal POS'a 5 dk'dan geç dönüşte kilit; kayıt şifre girilince yapılır.
+4. Safari 7 gün etkileşimsiz siteye ait betik deposunu (IndexedDB/localStorage)
+   silebilir: kart kasası etkilenir (0.9.0'dan önce de vardı); tahsilat sunucuda.
+5. 00:00'a yakın ödeme geç dönüşte ertesi güne yazılır; kutu 48 saatte düşer;
+   yayından sonra indeksler birkaç dakika kurulur.
 
 ---
 
