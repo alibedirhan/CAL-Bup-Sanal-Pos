@@ -4,11 +4,16 @@
 // "bup-sonuc-yanit" ile sonucu bildirir. Oturum yalnız o sekmede olduğu için
 // (Persistence.SESSION) sunucuya yazma burada yapılmaz. Kart bilgisi yoktur.
 const KUTU = 'bup-sonuc-kutusu', YANIT = 'bup-sonuc-yanit';
-const SURE = 48 * 60 * 60 * 1000, EN_FAZLA = 20;
+// Ödeme sonucu değerlidir: Sanal POS uzun süre açılmasa da 30 gün bekler (kural da
+// 31 güne kadar kabul eder). 1: 0.9.0 sonuç sayfası; 2: cari eşleşmesiyle (0.10.0).
+const SURE = 30 * 24 * 60 * 60 * 1000, EN_FAZLA = 20;
 const ALANLAR = 'aciklama,cariAd,cariId,girisId,kartSonDort,kimlikNo,okunma,posSiparisNo,sonuc,tutarMetni,uid,uyeSiparisNo,v';
+const ESLESME = ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim'];
 const metin = (v, en, bos = false) => typeof v === 'string' && (bos || v.length > 0) && v.length <= en && !/[\x00-\x1f\x7f]/.test(v);
 export function gecerli(s) {
-  return !!s && typeof s === 'object' && Object.keys(s).sort().join(',') === ALANLAR && s.v === 1 &&
+  const surum = s?.v === 1 ? Object.keys(s).sort().join(',') === ALANLAR
+    : s?.v === 2 && Object.keys(s).filter(k => k !== 'eslesme').sort().join(',') === ALANLAR && ESLESME.includes(s.eslesme);
+  return !!s && typeof s === 'object' && surum &&
     metin(s.uid, 128) && /^[A-Za-z0-9]{20}$/.test(s.girisId) && metin(s.cariId, 128) && metin(s.cariAd, 80) &&
     /^[0-9]{10,11}$/.test(s.kimlikNo) && /^([0-9]{4})?$/.test(s.kartSonDort) && ['basarili', 'hata'].includes(s.sonuc) &&
     metin(s.aciklama, 200) && /^[A-Z0-9_-]{4,64}$/.test(s.posSiparisNo) && metin(s.uyeSiparisNo, 40, true) &&
@@ -31,6 +36,8 @@ globalThis.bupSonucKutusu = Object.freeze({
     return 'ok';
   },
   oku() { return JSON.stringify(liste()); },
+  // Sonuç sayfası: aynı numara daha önce hangi cari için alındı.
+  bul(posSiparisNo) { return liste().find(x => x.posSiparisNo === posSiparisNo) ?? null; },
   sil(posSiparisNo) {
     try { yaz(liste().filter(x => x.posSiparisNo !== posSiparisNo)); } catch { /* depo kapalı */ }
     return 'ok';

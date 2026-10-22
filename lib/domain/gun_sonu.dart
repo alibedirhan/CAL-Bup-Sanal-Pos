@@ -129,6 +129,8 @@ String gunSonuCsv(GunSonu g) {
       'Açıklama',
       'Kullanıcı',
       'Kayıt',
+      'Cari eşleşmesi',
+      'Sonuç okunma (telefon saati)',
     ],
     for (final i in g.islemler)
       [
@@ -147,6 +149,8 @@ String gunSonuCsv(GunSonu g) {
         i.aciklama,
         i.kullaniciAd,
         i.kaynak == IslemKaynagi.elle ? 'Elle' : 'Sonuç ekranından',
+        i.eslesme.etiket,
+        i.okunma == null ? '' : tarihSaatYaz(i.okunma!),
       ],
   ];
   return '﻿${satirlar.map((s) => s.map(hucre).join(';')).join('\r\n')}\r\n';

@@ -1,3 +1,32 @@
+# 22 Ekim 2026 — 0.10.0: cari eşleştirme, okuma sağlamlığı, denetim izi
+
+Kullanıcı 0.9.0 yayınını onayladı (yayında `dc286f0bf720da32`) ve risk raporundan
+sonra "eksiklerimizi kapatalım; titiz, güvenli, yöneticilere sunulacak" dedi.
+Yapılanlar:
+1. **Cari eşleştirme** (`web/cari_eslestir.js`): telefonda tek "son giriş" yerine
+   son 10 giriş (2 saat). Yer imi 3 kart sayfasındaki "Firma İsmi" VKN'sini o
+   DenizPay sekmesinin sessionStorage'ına not eder. Sonuç: sonuç ekranındaki
+   firma → kesin; sekme notu (sonrasında başka cariyle giriş yoksa) → kesin;
+   tek cari girişi → kesin; aksi hâlde aday listesi, kişi seçmeden kaydedilmez.
+2. **Denetim izi:** `posIslemleri`'ne `eslesme` ve `okunma` (telefon saati,
+   bilgi). Kural 17 alan; elle ⇔ `elle`; `son_giris` yalnız 0.9.0'dan kutuda
+   kalan sonuç için. Gün sonu satırında "cari seçilerek kaydedildi" ve geç
+   okunma notu; CSV'ye iki sütun.
+3. **Okuma sağlamlığı:** aynı satır "Etiket: değer", tablo (sekme), büyük
+   harf İ/Ş, yıldızlı etiket; rakamsız tutar reddi. Yer imi algısı Türkçe İ.
+4. Aynı ödeme başka cariye kayıtlıysa uyarı (sessiz "tamam" yok); kutudaki ilk
+   seçim değiştirilemez. Sonuç kutusu 30 gün bekler (48 saat yerine). Gece
+   yarısı geçişi mesajda söylenir. Kart kaydında `storage.persist()`; Bilgi
+   sayfasında Safari 7 gün notu.
+Öz-denetimde bulunan ve düzeltilen: 0.9.0 biçimli bekleyen sonuç `son_giris`
+ile kuralca reddedilip kaybolacaktı → kural kabul eder, e2e gerçek kurallarla
+sınar; telefon saati ileri ise kayıt reddedilecekti → okunma sınırı +1 gün.
+Testler: 122 Dart; kurallar 25; `test:saf` (yeni, CI'da); demo, kasa, doldur
+(yeni eşleştirme senaryoları), hesap, tahsilat — Chromium + WebKit geçti.
+Kullanıcı yer imini 0.10.0 için bir kez yeniden kurmalı (sonuç sayfası 3 ister).
+
+---
+
 # 22 Ekim 2026 — 0.9.0: tahsilat kaydı ve gün sonu
 
 Kullanıcı isteği: cariyle DenizPay'e girilip alınan ödeme kesin o cariye yazılsın;

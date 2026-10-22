@@ -25,7 +25,7 @@ class SahteAcikGiris implements AcikGirisPortu {
   @override
   bool get destekli => true;
   @override
-  void hazirla(AcikGiris acik) {
+  void ekle(AcikGiris acik) {
     yazilan.add(acik);
     kapiAcikmiydi.add(kapi.girisler.isNotEmpty);
   }
@@ -62,22 +62,32 @@ class SahteKutu implements SonucKutusu {
   Stream<void> get degisimler => _olay.stream;
 }
 
-Map<String, Object?> bekleyen(String no, {String uid = 'u1', Object? sonuc}) =>
-    {
-      'v': 1,
-      'uid': uid,
-      'girisId': 'G' * 20,
-      'cariId': 'demo-cari-0',
-      'cariAd': 'Örnek Kuzey Market',
-      'kimlikNo': '0000000001',
-      'kartSonDort': '1111',
-      'sonuc': sonuc ?? 'basarili',
-      'aciklama': 'Ödeme Başarıyla Gerçekleştirildi',
-      'posSiparisNo': no,
-      'uyeSiparisNo': '600001',
-      'tutarMetni': '4500',
-      'okunma': DateTime.now().millisecondsSinceEpoch,
-    };
+/// Sonuç sayfasının bıraktığı kayıt; `v: 1` 0.9.0 biçimidir (eşleşme yok).
+Map<String, Object?> bekleyen(
+  String no, {
+  String uid = 'u1',
+  Object? sonuc,
+  int v = 2,
+  String eslesme = 'kart_sayfasi',
+  String cariId = 'demo-cari-0',
+  String cariAd = 'Örnek Kuzey Market',
+  DateTime? okunma,
+}) => {
+  'v': v,
+  if (v != 1) 'eslesme': eslesme,
+  'uid': uid,
+  'girisId': 'G' * 20,
+  'cariId': cariId,
+  'cariAd': cariAd,
+  'kimlikNo': '0000000001',
+  'kartSonDort': '1111',
+  'sonuc': sonuc ?? 'basarili',
+  'aciklama': 'Ödeme Başarıyla Gerçekleştirildi',
+  'posSiparisNo': no,
+  'uyeSiparisNo': '600001',
+  'tutarMetni': '4500',
+  'okunma': (okunma ?? DateTime.now()).millisecondsSinceEpoch,
+};
 
 /// İstenen numarada istenen hatayı veren depo.
 class HataliDepo extends DemoIslemDeposu {
@@ -172,6 +182,86 @@ void main() {
       },
     );
 
+    test(
+      'Eşleşme ve okunma kayda geçer; 0.9.0 sonucu son giriş sayılır',
+      () async {
+        final okunma = DateTime.now().subtract(const Duration(minutes: 3));
+        final kutu = SahteKutu()
+          ..kayitlar.addAll([
+            bekleyen('VP6001', eslesme: 'secim', okunma: okunma),
+            bekleyen('VP6002', v: 1),
+            bekleyen('VP6003', eslesme: 'elle'), // yer imi elle diyemez
+            bekleyen('VP6004', eslesme: 'son_giris'), // yalnız 0.9.0
+            bekleyen('VP6005', v: 3),
+          ]);
+        final depo = DemoIslemDeposu();
+        final servis = TahsilatServisi(
+          depo: depo,
+          kullaniciId: 'u1',
+          kullaniciAdi: 'Örnek Satıcı',
+          kutu: kutu,
+        );
+        expect((await servis.kutuyuIsle()).map((s) => s.tamam), [true, true]);
+        expect(kutu.kayitlar, isEmpty);
+        final l = (await depo.gun(servis.bugun, kullaniciId: 'u1')).islemler;
+        PosIslemi no(String n) => l.singleWhere((x) => x.posSiparisNo == n);
+        expect(no('VP6001').eslesme, CariEslesmesi.secim);
+        expect(
+          no('VP6001').okunma!.millisecondsSinceEpoch,
+          okunma.millisecondsSinceEpoch,
+        );
+        expect(no('VP6002').eslesme, CariEslesmesi.sonGiris);
+        expect(
+          l.where(
+            (x) => {'VP6003', 'VP6004', 'VP6005'}.contains(x.posSiparisNo),
+          ),
+          isEmpty,
+        );
+      },
+    );
+
+    test('Aynı ödeme başka cariye kayıtlıysa "tamam" denmez', () async {
+      final kutu = SahteKutu()..kayitlar.add(bekleyen('VP6101'));
+      final servis = TahsilatServisi(
+        depo: DemoIslemDeposu(),
+        kullaniciId: 'u1',
+        kullaniciAdi: 'Örnek Satıcı',
+        kutu: kutu,
+      );
+      expect((await servis.kutuyuIsle()).single.tamam, isTrue);
+      kutu.kayitlar.add(
+        bekleyen('VP6101', cariId: 'demo-cari-1', cariAd: 'Örnek Sahil Gıda'),
+      );
+      final s = (await servis.kutuyuIsle()).single;
+      expect(s.tamam, isFalse);
+      expect(s.mesaj, contains('zaten Örnek Kuzey Market carisine kayıtlı'));
+      expect(s.mesaj, contains('Seçtiğin Örnek Sahil Gıda değil'));
+      expect(kutu.yanitlar.last.$2, isFalse);
+      expect(kutu.kayitlar, isEmpty);
+    });
+
+    test('Dün okunan sonuç bugün yazılınca gün açıkça söylenir', () async {
+      // 22 Ekim 00:05 Türkiye saati; sonuç 21 Ekim 23:58'de okundu.
+      final simdi = DateTime.utc(2026, 10, 21, 21, 5);
+      final kutu = SahteKutu()
+        ..kayitlar.add(
+          bekleyen('VP6201', okunma: DateTime.utc(2026, 10, 21, 20, 58)),
+        );
+      final servis = TahsilatServisi(
+        depo: DemoIslemDeposu(saat: () => simdi),
+        kullaniciId: 'u1',
+        kullaniciAdi: 'Örnek Satıcı',
+        kutu: kutu,
+        saat: () => simdi,
+      );
+      expect(
+        (await servis.kutuyuIsle()).single.mesaj,
+        endsWith(
+          'Sonuç 21.10.2026 23:58’de okunmuştu; 22.10.2026 gün sonuna yazıldı.',
+        ),
+      );
+    });
+
     test('İşlem sürerken gelen yeni sonuç aynı turda yazılır', () async {
       final kutu = SahteKutu()..kayitlar.add(bekleyen('VP7001'));
       final servis = TahsilatServisi(
@@ -249,9 +339,14 @@ void main() {
         'cariAd',
         'kimlikNo',
         'kartSonDort',
+        'an',
         'son',
       ]),
     );
+    expect(j['v'], 2);
+    expect(j['an'], simdi.millisecondsSinceEpoch);
+    // Yeni giriş öncekileri silmez (liste); sonuç sayfası doğru girişi seçer.
+    expect(acik.temizlenme, 0);
     expect(j['cariId'], 'demo-cari-0');
     expect(j['cariAd'], 'Örnek Kuzey Market');
     expect(j['kimlikNo'], '0000000001');

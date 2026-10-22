@@ -24,6 +24,8 @@ PosIslemi islem(
   String tutar = '4500',
   String aciklama = 'Ödeme Başarıyla Gerçekleştirildi',
   String cariAd = '',
+  CariEslesmesi eslesme = CariEslesmesi.tekGiris,
+  DateTime? okunma,
 }) => PosIslemi(
   posSiparisNo: no,
   kullaniciId: 'u1',
@@ -39,6 +41,8 @@ PosIslemi islem(
   aciklama: aciklama,
   tutarMetni: tutar,
   kaynak: IslemKaynagi.yerImi,
+  eslesme: eslesme,
+  okunma: okunma,
   zaman: zaman,
 );
 
@@ -113,6 +117,7 @@ void main() {
         aciklama: 'Tamam',
         tutarMetni: '1',
         kaynak: IslemKaynagi.elle,
+        eslesme: CariEslesmesi.elle,
       ),
       throwsA(isA<PosHatasi>()),
     );
@@ -128,6 +133,74 @@ void main() {
       ),
       throwsA(isA<PosHatasi>()),
     );
+  });
+
+  test('Cari eşleşmesi kaynakla tutarlı olmalı', () {
+    PosIslemi yap(IslemKaynagi k, CariEslesmesi e, {DateTime? okunma}) =>
+        PosIslemi(
+          posSiparisNo: 'VP1000',
+          kullaniciId: 'u1',
+          kullaniciAd: 'Örnek Kullanıcı',
+          cariId: 'c1',
+          cariAd: 'Örnek Zeytin Market',
+          kimlikNo: '0000000001',
+          sonuc: IslemSonucu.basarili,
+          aciklama: 'Tamam',
+          tutarMetni: '1',
+          kaynak: k,
+          eslesme: e,
+          okunma: okunma,
+        );
+    const yer = IslemKaynagi.yerImi, elle = IslemKaynagi.elle;
+    expect(() => yap(elle, CariEslesmesi.elle), returnsNormally);
+    expect(() => yap(yer, CariEslesmesi.secim), returnsNormally);
+    expect(() => yap(yer, CariEslesmesi.elle), throwsA(isA<PosHatasi>()));
+    expect(() => yap(elle, CariEslesmesi.tekGiris), throwsA(isA<PosHatasi>()));
+    expect(
+      () => yap(elle, CariEslesmesi.elle, okunma: tr(22, 9)),
+      throwsA(isA<PosHatasi>()),
+    );
+  });
+
+  test('Eşleşme kodları sunucu kuralı ve sonuç sayfasıyla aynı', () {
+    expect(CariEslesmesi.values.map((e) => e.kod), [
+      'sonuc_ekrani',
+      'kart_sayfasi',
+      'tek_giris',
+      'secim',
+      'son_giris',
+      'elle',
+    ]);
+    expect(CariEslesmesi.kodla('secim'), CariEslesmesi.secim);
+    expect(CariEslesmesi.kodla('yok'), isNull);
+    // Yeni sonuç sayfasının yazabileceği dördü: kural (artı 0.9.0'dan bekleyen
+    // 'son_giris'), sonuç kutusu ve eşleştirici aynı listeyi kullanır.
+    const yerImi = "'sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim'";
+    expect(
+      File('firestore.rules').readAsStringSync(),
+      contains("[$yerImi, 'son_giris']"),
+    );
+    expect(
+      File('web/sonuc_kutusu.js').readAsStringSync(),
+      contains('[$yerImi]'),
+    );
+    final eslestir = File('web/cari_eslestir.js').readAsStringSync();
+    for (final k in ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris']) {
+      expect(eslestir, contains("'$k'"));
+    }
+  });
+
+  test('Geç okunan sonuç (Sanal POS’a geç dönüş) ayrıca bilinir', () {
+    expect(islem('VP1000', 'c1', tr(22, 9)).gecOkunma, isNull);
+    expect(
+      islem('VP1000', 'c1', tr(22, 9), okunma: tr(22, 8, 55)).gecOkunma,
+      isNull,
+    );
+    expect(
+      islem('VP1000', 'c1', tr(23, 0, 5), okunma: tr(22, 23, 50)).gecOkunma,
+      tr(22, 23, 50),
+    );
+    expect(tarihSaatYaz(tr(22, 23, 50)), '22.10.2026 23:50');
   });
 
   group('Gün sonu', () {
@@ -215,6 +288,23 @@ void main() {
       );
       expect(satir, contains('"45678,90";"45678,90";"VP0009"'));
       expect(satir, contains('"Başarılı"'));
+      expect(
+        csv.split('\r\n').first,
+        endsWith('"Cari eşleşmesi";"Sonuç okunma (telefon saati)"'),
+      );
+      expect(satir, endsWith('"Telefondaki tek DenizPay girişiyle";""'));
+      final gec = gunSonuCsv(
+        GunSonu.hesapla(gun, [], [
+          islem(
+            'VP0010',
+            'c1',
+            tr(22, 0, 10),
+            eslesme: CariEslesmesi.secim,
+            okunma: tr(21, 23, 58),
+          ),
+        ]),
+      ).split('\r\n')[1];
+      expect(gec, endsWith('"Kaydeden kişinin seçimiyle";"21.10.2026 23:58"'));
       expect(csv.endsWith('\r\n'), isTrue);
     });
   });

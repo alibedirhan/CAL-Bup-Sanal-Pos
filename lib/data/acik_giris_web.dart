@@ -5,20 +5,20 @@ import '../domain/acik_giris.dart';
 
 @JS('bupAcikGiris')
 external JSObject? get _modul;
-@JS('bupAcikGiris.hazirla')
-external JSString _hazirla(JSString acik);
+@JS('bupAcikGiris.ekle')
+external JSString _ekle(JSString acik);
 @JS('bupAcikGiris.temizle')
 external JSString _temizle();
 
-/// `web/acik_giris.js` son girişi bu kökenin yerel deposuna yazar; DenizPay
-/// sonuç ekranındaki yer iminin açtığı `sonuc.html` okur.
+/// `web/acik_giris.js` girişi bu kökenin yerel deposundaki listeye ekler;
+/// DenizPay sonuç ekranındaki yer iminin açtığı `sonuc.html` okur.
 class CihazAcikGiris implements AcikGirisPortu {
   const CihazAcikGiris();
   @override
   bool get destekli => _modul != null;
   @override
-  void hazirla(AcikGiris acik) {
-    if (_hazirla(jsonEncode(acik.toJson()).toJS).toDart != 'ok') {
+  void ekle(AcikGiris acik) {
+    if (_ekle(jsonEncode(acik.toJson()).toJS).toDart != 'ok') {
       throw StateError('acik_giris');
     }
   }

@@ -36,6 +36,8 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium webkit
+      - name: Sonuç okuma ve cari eşleştirme (JS birim)
+        run: npm --prefix tools/tarayici run test:saf
       - name: Tarayıcı testleri (demo, kasa, kart doldurma)
         run: |
           python3 tools/sunucu.py --port 4195 --paket web &

@@ -20,10 +20,11 @@ abstract interface class IslemDeposu {
 
 typedef GunKayitlari = ({List<PosGirisi> girisler, List<PosIslemi> islemler});
 
-/// Sonuç ekranındaki yer iminin okuyacağı son giriş; eşzamanlıdır.
+/// Bu cihazda açılan DenizPay girişleri; sonuç ekranındaki yer iminin açtığı
+/// sayfa okur. Eşzamanlıdır (tıklamada, DenizPay açılmadan önce yazılır).
 abstract interface class AcikGirisPortu {
   bool get destekli;
-  void hazirla(AcikGiris acik);
+  void ekle(AcikGiris acik);
   void temizle();
 }
 
@@ -79,7 +80,7 @@ class KapaliAcikGiris implements AcikGirisPortu {
   @override
   bool get destekli => false;
   @override
-  void hazirla(AcikGiris acik) {}
+  void ekle(AcikGiris acik) {}
   @override
   void temizle() {}
 }
@@ -117,8 +118,9 @@ class TahsilatServisi {
 
   Gun get bugun => Gun.ani(saat());
 
-  /// Tıklamada eşzamanlı çağrılır: DenizPay açılmadan önce bu cihazdaki son
-  /// giriş işareti yazılır. Sunucu kaydı ayrıca [girisKaydet] ile tutulur.
+  /// Tıklamada eşzamanlı çağrılır: DenizPay açılmadan önce giriş bu cihazın
+  /// açık girişlerine eklenir (öncekiler silinmez; sonuç sayfası sonucu firma
+  /// numarasıyla doğru girişe bağlar). Sunucu kaydı ayrıca [girisKaydet] ile.
   PosGirisi girisHazirla(DenemeSonucu sonuc) {
     final giris = PosGirisi(
       id: _kimlik(),
@@ -129,10 +131,9 @@ class TahsilatServisi {
       kimlikNo: sonuc.kimlikNo,
       kartSonDort: sonuc.kart?.sonDort ?? '',
     );
-    acikGirisiTemizle();
     if (acikGiris.destekli) {
       try {
-        acikGiris.hazirla(AcikGiris(giris, saat().add(AcikGiris.sure)));
+        acikGiris.ekle(AcikGiris(giris, saat()));
       } catch (_) {
         // İşaret yazılamazsa DenizPay yine açılır; sonuç elle kaydedilebilir.
       }
@@ -142,7 +143,8 @@ class TahsilatServisi {
 
   Future<void> girisKaydet(PosGirisi giris) => depo.girisKaydet(giris);
 
-  /// Elle girilen DenizPay girişi başka cari olabilir; sonuç ona bağlanmasın.
+  /// Elle girilen DenizPay girişi hangi cari olduğu bilinmez; o andan sonra
+  /// okunan sonuç önceki girişlerin hiçbirine kendiliğinden bağlanmasın.
   void acikGirisiTemizle() {
     try {
       acikGiris.temizle();
@@ -189,6 +191,7 @@ class TahsilatServisi {
         aciklama: neden.isNotEmpty ? neden : 'Ödeme başarılı (elle kaydedildi)',
         tutarMetni: tutarMetni.trim(),
         kaynak: IslemKaynagi.elle,
+        eslesme: CariEslesmesi.elle,
         kartSonDort: kartSonDort,
       ),
     );
@@ -240,18 +243,7 @@ class TahsilatServisi {
     final no = b.islem.posSiparisNo;
     KutuSonucu sonuc;
     try {
-      final k = await depo.islemKaydet(b.islem);
-      final i = k.islem;
-      final tutar = i.tutarKurus == null
-          ? i.tutarMetni
-          : tutarYaz(i.tutarKurus!);
-      sonuc = KutuSonucu(
-        k.zatenVardi
-            ? 'Bu ödeme zaten kayıtlı: ${i.cariAd} · ${saatYaz(i.zaman!)}.'
-            : 'Kaydedildi: ${i.cariAd} · $tutar · '
-                  '${i.basarili ? 'başarılı' : 'başarısız'} · ${saatYaz(i.zaman!)}',
-        tamam: true,
-      );
+      sonuc = _kayitNotu(await depo.islemKaydet(b.islem), b);
     } on PosHatasi catch (e) {
       if (!const {'yetki', 'pos_no_baska', 'veri'}.contains(e.kod)) return null;
       sonuc = KutuSonucu(
@@ -264,6 +256,36 @@ class TahsilatServisi {
     kutu.sil(no);
     kutu.yanitla(no, tamam: sonuc.tamam, mesaj: sonuc.mesaj);
     return sonuc;
+  }
+
+  KutuSonucu _kayitNotu(IslemKaydi k, BekleyenSonuc b) {
+    final i = k.islem;
+    if (k.zatenVardi) {
+      // Aynı ödeme daha önce başka cariye yazıldıysa sessizce "tamam" denmez.
+      return i.cariId == b.islem.cariId
+          ? KutuSonucu(
+              'Bu ödeme zaten kayıtlı: ${i.cariAd} · ${saatYaz(i.zaman!)}.',
+              tamam: true,
+            )
+          : KutuSonucu(
+              'Bu ödeme (Pos No ${i.posSiparisNo}) zaten ${i.cariAd} carisine '
+              'kayıtlı (${saatYaz(i.zaman!)}). Seçtiğin ${b.islem.cariAd} '
+              'değil; yanlışsa yöneticine bildir.',
+              tamam: false,
+            );
+    }
+    final tutar = i.tutarKurus == null ? i.tutarMetni : tutarYaz(i.tutarKurus!);
+    // Gün sunucu saatidir: sonuç dün okunup bugün yazıldıysa açıkça söylenir.
+    final okunan = Gun.ani(b.okunma), yazilan = Gun.ani(i.zaman!);
+    final gunNotu = okunan == yazilan
+        ? ''
+        : ' Sonuç ${okunan.etiket} ${saatYaz(b.okunma)}’de okunmuştu; '
+              '${yazilan.etiket} gün sonuna yazıldı.';
+    return KutuSonucu(
+      'Kaydedildi: ${i.cariAd} · $tutar · '
+      '${i.basarili ? 'başarılı' : 'başarısız'} · ${saatYaz(i.zaman!)}.$gunNotu',
+      tamam: true,
+    );
   }
 
   /// Gelecek gün istenmez; geçmiş günler kayıtlar değişmediği için kesindir.

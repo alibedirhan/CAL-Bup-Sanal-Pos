@@ -13,9 +13,27 @@ class BekleyenSonuc {
   /// Sonucun DenizPay ekranından okunduğu an (telefon saati); yalnız bilgi.
   final DateTime okunma;
 
+  /// Yer iminin kurabileceği eşleşmeler; elle kayıt buradan gelmez.
+  static const _yerImi = {
+    CariEslesmesi.sonucEkrani,
+    CariEslesmesi.kartSayfasi,
+    CariEslesmesi.tekGiris,
+    CariEslesmesi.secim,
+  };
+
   static BekleyenSonuc? oku(Map<String, Object?> j, String kullaniciAd) {
     try {
       final uid = j['uid']! as String;
+      final okunma = DateTime.fromMillisecondsSinceEpoch(j['okunma']! as int);
+      // 1: 0.9.0 sonuç sayfası (cari = telefondaki son giriş); 2: eşleşmeli.
+      final eslesme = switch (j['v']) {
+        1 when !j.containsKey('eslesme') => CariEslesmesi.sonGiris,
+        2 => CariEslesmesi.kodla(j['eslesme']),
+        _ => null,
+      };
+      if (eslesme == null || (j['v'] == 2 && !_yerImi.contains(eslesme))) {
+        return null;
+      }
       return BekleyenSonuc._(
         uid,
         PosIslemi(
@@ -36,8 +54,10 @@ class BekleyenSonuc {
           uyeSiparisNo: j['uyeSiparisNo']! as String,
           tutarMetni: j['tutarMetni']! as String,
           kaynak: IslemKaynagi.yerImi,
+          eslesme: eslesme,
+          okunma: okunma,
         ),
-        DateTime.fromMillisecondsSinceEpoch(j['okunma']! as int),
+        okunma,
       );
     } catch (_) {
       return null;

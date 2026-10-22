@@ -72,13 +72,17 @@ yazmaz. CVV/tutar/düğmelere dokunmaz, formu göndermez, uzaktan kod yüklemez.
 Kart doldurma anında sunucu yeniden sorgulanmaz; yetki, işin kurulduğu andaki
 sunucu doğrulaması ve 10 dakikalık süredir (bilinçli ödünleşim).
 
-## Tahsilat kaydı ve gün sonu (0.9.0)
+## Tahsilat kaydı ve gün sonu (0.9.0, 0.10.0)
 
 Ayrıntı [TAHSILAT.md](TAHSILAT.md). `domain/tahsilat.dart` (tutar, Türkiye günü,
 giriş/işlem), `domain/gun_sonu.dart` (hesap, CSV), `application/tahsilat_servisi.dart`
 (`IslemDeposu`, `AcikGirisPortu`, `SonucKutusu`, `DosyaIndirici` portları).
 Sunucuya yalnız Sanal POS sekmesi yazar (SESSION oturumu); DenizPay'den açılan
 `sonuc.html` sonucu yalnız yerel kutuya bırakır. Kayıtlar yalnız eklenir.
+0.10.0: cari eşleştirme saf JS'tedir (`web/cari_eslestir.js`; telefondaki giriş
+listesi `web/acik_giris.js`, yer iminin DenizPay sekmesine düştüğü firma notu).
+Eşleşme türü (`CariEslesmesi`) kayda denetim izi olarak girer; kodlar Dart,
+JS ve kural arasında `test/tahsilat_test.dart` ile sınanır.
 
 ## Karttan okuma (0.8.0)
 

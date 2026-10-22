@@ -34,6 +34,7 @@ class DemoIslemDeposu implements IslemDeposu {
       aciklama: a,
       tutarMetni: tutar,
       kaynak: IslemKaynagi.yerImi,
+      eslesme: CariEslesmesi.kartSayfasi,
       kartSonDort: '00${(c + 1).toString().padLeft(2, '0')}',
       uyeSiparisNo: s == IslemSonucu.basarili ? '1000$c$dakika' : '',
       zaman: an(dakika),
@@ -109,9 +110,11 @@ class DemoIslemDeposu implements IslemDeposu {
       aciklama: i.aciklama,
       tutarMetni: i.tutarMetni,
       kaynak: i.kaynak,
+      eslesme: i.eslesme,
       kartSonDort: i.kartSonDort,
       girisId: i.girisId,
       uyeSiparisNo: i.uyeSiparisNo,
+      okunma: i.okunma,
       zaman: _saat(),
     );
     _islemler.add(yeni);

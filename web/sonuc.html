@@ -32,6 +32,14 @@
     button[hidden] { display: none; }
     button:disabled { opacity: .5; }
     .soluk { color: var(--soluk); font-size: 15px; }
+    #eslesme { margin: 12px 0 0; }
+    #secim { border: 2px solid var(--uyari); border-radius: 14px; padding: 12px 14px; margin: 0 0 16px; background: var(--kart); }
+    #secim[hidden] { display: none; }
+    #secim legend { font-weight: 700; padding: 0 4px; }
+    #adaylar label { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--cizgi); }
+    #adaylar label:first-child { border-top: 0; }
+    #adaylar input { grid-row: span 2; width: 24px; height: 24px; margin: 0; accent-color: var(--vurgu); }
+    #adaylar span { color: var(--soluk); font-size: 15px; }
   </style>
 </head>
 <body>
@@ -45,10 +53,16 @@
       <dt>Pos Sipariş No</dt><dd id="pos-no"></dd>
       <dt>Açıklama</dt><dd id="aciklama"></dd>
     </dl>
+    <p id="eslesme" class="soluk"></p>
   </section>
+  <fieldset id="secim" hidden>
+    <legend>Bu ödeme hangi cariye ait?</legend>
+    <p id="secim-neden"></p>
+    <div id="adaylar"></div>
+  </fieldset>
   <p id="durum" aria-live="polite">Hazırlanıyor…</p>
   <button id="kaydet" type="button" hidden disabled>Bu cariye kaydet</button>
-  <p class="soluk">Bu sayfa DenizPay sonuç ekranındaki “BUP Doldur” yer iminden açılır. Sonuç, Sanal POS’ta son girdiğin cariye kaydedilir; kayıt sonradan değiştirilemez. Kart bilgisi okunmaz.</p>
+  <p class="soluk">Bu sayfa DenizPay sonuç ekranındaki “BUP Doldur” yer iminden açılır. Sonuç, bu telefonda DenizPay’e girdiğin carilerden bu DenizPay sekmesine ait olana kaydedilir; emin olunamazsa sen seçersin. Kayıt sonradan değiştirilemez. Kart bilgisi okunmaz.</p>
 </main>
 <script type="module" src="sonuc_sayfasi.js"></script>
 </body>

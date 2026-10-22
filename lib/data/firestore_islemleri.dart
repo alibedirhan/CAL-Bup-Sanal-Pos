@@ -71,6 +71,8 @@ class FirestoreIslemDeposu implements IslemDeposu {
       'tutarMetni': i.tutarMetni,
       'tutarKurus': i.tutarKurus,
       'kaynak': i.kaynak == IslemKaynagi.elle ? 'elle' : 'yer_imi',
+      'eslesme': i.eslesme.kod,
+      'okunma': i.okunma == null ? null : Timestamp.fromDate(i.okunma!),
       'zaman': FieldValue.serverTimestamp(),
     });
     final yazilan = await ref.get(const GetOptions(source: Source.server));
@@ -130,19 +132,29 @@ PosGirisi girisOku(String id, Map<String, dynamic> d) => PosGirisi(
   zaman: _zaman(d['zaman']),
 );
 
-PosIslemi islemOku(String id, Map<String, dynamic> d) => PosIslemi(
-  posSiparisNo: id,
-  kullaniciId: d['kullaniciId'] as String,
-  kullaniciAd: d['kullaniciAd'] as String,
-  cariId: d['cariId'] as String,
-  cariAd: d['cariAd'] as String,
-  kimlikNo: d['kimlikNo'] as String,
-  kartSonDort: d['kartSonDort'] as String,
-  girisId: d['girisId'] as String,
-  sonuc: d['sonuc'] == 'basarili' ? IslemSonucu.basarili : IslemSonucu.hata,
-  aciklama: d['aciklama'] as String,
-  uyeSiparisNo: d['uyeSiparisNo'] as String,
-  tutarMetni: d['tutarMetni'] as String,
-  kaynak: d['kaynak'] == 'elle' ? IslemKaynagi.elle : IslemKaynagi.yerImi,
-  zaman: _zaman(d['zaman']),
-);
+/// 0.9.0 kayıtlarında `eslesme`/`okunma` yoktur: yer imi kaydı son girişe
+/// bağlanmıştı.
+PosIslemi islemOku(String id, Map<String, dynamic> d) {
+  final elle = d['kaynak'] == 'elle';
+  final okunma = d['okunma'];
+  return PosIslemi(
+    posSiparisNo: id,
+    kullaniciId: d['kullaniciId'] as String,
+    kullaniciAd: d['kullaniciAd'] as String,
+    cariId: d['cariId'] as String,
+    cariAd: d['cariAd'] as String,
+    kimlikNo: d['kimlikNo'] as String,
+    kartSonDort: d['kartSonDort'] as String,
+    girisId: d['girisId'] as String,
+    sonuc: d['sonuc'] == 'basarili' ? IslemSonucu.basarili : IslemSonucu.hata,
+    aciklama: d['aciklama'] as String,
+    uyeSiparisNo: d['uyeSiparisNo'] as String,
+    tutarMetni: d['tutarMetni'] as String,
+    kaynak: elle ? IslemKaynagi.elle : IslemKaynagi.yerImi,
+    eslesme:
+        CariEslesmesi.kodla(d['eslesme']) ??
+        (elle ? CariEslesmesi.elle : CariEslesmesi.sonGiris),
+    okunma: okunma is Timestamp ? okunma.toDate() : null,
+    zaman: _zaman(d['zaman']),
+  );
+}

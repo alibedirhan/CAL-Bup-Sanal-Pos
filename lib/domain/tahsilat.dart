@@ -7,6 +7,38 @@ enum IslemSonucu { basarili, hata }
 /// Sonuç ekranından "BUP Doldur" yer imiyle mi, profilde elle mi kaydedildi.
 enum IslemKaynagi { yerImi, elle }
 
+/// Ödemenin hangi cariye ait olduğunun nasıl belirlendiği (denetim izi).
+/// Kodlar sunucu kuralı ve `web/cari_eslestir.js` ile aynıdır.
+enum CariEslesmesi {
+  /// DenizPay sonuç ekranındaki firma numarası bir girişle aynı.
+  sonucEkrani('sonuc_ekrani', 'Sonuç ekranındaki firma numarasıyla'),
+
+  /// Aynı DenizPay sekmesinde kart sayfasında okunan firma numarasıyla.
+  kartSayfasi('kart_sayfasi', 'Kart sayfasındaki firma numarasıyla'),
+
+  /// Son 2 saatte bu telefonda yalnız bu cariyle giriş yapılmıştı.
+  tekGiris('tek_giris', 'Telefondaki tek DenizPay girişiyle'),
+
+  /// Birden fazla aday vardı; kaydeden kişi cariyi seçti.
+  secim('secim', 'Kaydeden kişinin seçimiyle'),
+
+  /// 0.9.0 yer imi: telefondaki son girişe bağlandı.
+  sonGiris('son_giris', 'Telefondaki son DenizPay girişiyle'),
+
+  /// Cari profilinden elle kaydedildi.
+  elle('elle', 'Cari profilinden elle');
+
+  const CariEslesmesi(this.kod, this.etiket);
+  final String kod, etiket;
+
+  static CariEslesmesi? kodla(Object? kod) {
+    for (final e in values) {
+      if (e.kod == kod) return e;
+    }
+    return null;
+  }
+}
+
 final _posNo = RegExp(r'^[A-Z0-9_-]{4,64}$');
 final _rakam4 = RegExp(r'^[0-9]{4}$');
 final _kimlik = RegExp(r'^[0-9]{10,11}$');
@@ -101,6 +133,9 @@ String saatYaz(DateTime an) {
   return '${_iki(y.hour)}:${_iki(y.minute)}';
 }
 
+/// Bir anın Türkiye saatiyle "22.10.2026 10:48" gösterimi.
+String tarihSaatYaz(DateTime an) => '${Gun.ani(an).etiket} ${saatYaz(an)}';
+
 /// "DenizPay'e giriş yap"a basıldığı an. Sonucu kaydedilmemiş girişler gün
 /// sonunda uyarı olarak görünür. Kart bilgisi yalnız son dört hanedir.
 class PosGirisi {
@@ -144,9 +179,11 @@ class PosIslemi {
     required String aciklama,
     required String tutarMetni,
     required this.kaynak,
+    required this.eslesme,
     this.kartSonDort = '',
     this.girisId = '',
     String uyeSiparisNo = '',
+    this.okunma,
     this.zaman,
   }) : posSiparisNo = posNoDuzelt(posSiparisNo),
        kullaniciAd = duzMetin(kullaniciAd, enAz: 2, enFazla: 80),
@@ -162,7 +199,10 @@ class PosIslemi {
         !_kimlik.hasMatch(kimlikNo) ||
         (kartSonDort.isNotEmpty && !_rakam4.hasMatch(kartSonDort)) ||
         (girisId.isNotEmpty &&
-            !RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(girisId))) {
+            !RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(girisId)) ||
+        // Elle kayıt cariyi profilden alır; yer imi kaydı bir eşleşmeyle gelir.
+        (kaynak == IslemKaynagi.elle) != (eslesme == CariEslesmesi.elle) ||
+        (kaynak == IslemKaynagi.elle && okunma != null)) {
       throw const PosHatasi('islem', 'İşlem kaydı hazırlanamadı.');
     }
   }
@@ -171,11 +211,24 @@ class PosIslemi {
   final String kartSonDort, girisId;
   final IslemSonucu sonuc;
   final IslemKaynagi kaynak;
+  final CariEslesmesi eslesme;
+
+  /// Sonucun DenizPay ekranından okunduğu an (telefon saati, yalnız bilgi);
+  /// elle kayıtta yoktur. Gün ve sıra her zaman sunucu saatiyle ([zaman]).
+  final DateTime? okunma;
 
   /// Tutar yazısı okunamazsa `null`; o işlem toplamda ayrıca uyarılır.
   final int? tutarKurus;
   final DateTime? zaman;
   bool get basarili => sonuc == IslemSonucu.basarili;
+
+  /// Sonuç, kaydedildiği andan belirgin biçimde önce okunduysa (Sanal POS
+  /// sekmesine geç dönüldü) okunma anı; gün sonunda ayrıca gösterilir.
+  DateTime? get gecOkunma {
+    final o = okunma, z = zaman;
+    if (o == null || z == null) return null;
+    return z.difference(o) > const Duration(minutes: 10) ? o : null;
+  }
 }
 
 /// Kaydın sonucu: yeni yazıldı mı, aynı Pos Sipariş Numarası zaten var mıydı.

@@ -173,6 +173,7 @@ class _IslemSatiri extends StatelessWidget {
       'Pos No ${i.posSiparisNo}',
       if (i.kartSonDort.isNotEmpty) '•••• ${i.kartSonDort}',
       if (i.kaynak == IslemKaynagi.elle) 'elle kaydedildi',
+      if (i.eslesme == CariEslesmesi.secim) 'cari seçilerek kaydedildi',
       if (kullaniciGoster) i.kullaniciAd,
     ].join(' · ');
     return Semantics(
@@ -202,6 +203,14 @@ class _IslemSatiri extends StatelessWidget {
                   ),
                   if (!i.basarili)
                     Text(i.aciklama, style: const TextStyle(fontSize: 13)),
+                  if (i.gecOkunma case final o?)
+                    Text(
+                      'DenizPay sonucu ${tarihSaatYaz(o)}’de okundu',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: PosRenk.uyari,
+                      ),
+                    ),
                   Text(
                     ayrinti,
                     style: const TextStyle(

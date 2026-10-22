@@ -8,7 +8,8 @@
     "test:yayin": "node yayin-kabul.mjs",
     "test:kasa": "node kasa-kabul.mjs",
     "test:doldur": "node doldur-kabul.mjs",
-    "test:tahsilat": "node tahsilat-kabul.mjs"
+    "test:tahsilat": "node tahsilat-kabul.mjs",
+    "test:saf": "node --test sonuc-saf.mjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"

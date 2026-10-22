@@ -29,7 +29,8 @@
       "sayfa": {
         "metin": "Bupiliç\nOnay Formu\nAçıklama\nÜye Sipariş Numarası\nPos Sipariş Numarası\nTutar\nTL\nAnasayfaya Dön",
         "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Üye Sipariş Numarası", "600001"], ["Pos Sipariş Numarası", "VP10000000000000001"], ["Tutar", "4500"]],
-        "firma": null
+        "firma": null,
+        "sekme": null
       },
       "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "Ödeme Başarıyla Gerçekleştirildi", "posSiparisNo": "VP10000000000000001", "uyeSiparisNo": "600001", "tutarMetni": "4500", "tutarKurus": 450000}
     },
@@ -38,7 +39,8 @@
       "sayfa": {
         "metin": "Hata Formu\nAçıklama\nPos Sipariş Numarası\nTutar\nAnasayfaya Dön",
         "alanlar": [["Açıklama", "3D Şifresi Yanlış."], ["Pos Sipariş Numarası", "VP1000000000000002"], ["Tutar", "45678,90"]],
-        "firma": null
+        "firma": null,
+        "sekme": null
       },
       "beklenen": {"ok": true, "sonuc": "hata", "aciklama": "3D Şifresi Yanlış.", "posSiparisNo": "VP1000000000000002", "uyeSiparisNo": "", "tutarMetni": "45678,90", "tutarKurus": 4567890}
     },
@@ -47,20 +49,158 @@
       "sayfa": {
         "metin": "ONAY FORMU\nAçıklama:\nÖdeme Başarıyla Gerçekleştirildi\nÜye Sipariş Numarası:\n600002\nPos Sipariş Numarası:\nVP 1000 0000 0000 00003\nTutar:\n12.750,50 TL",
         "alanlar": [],
-        "firma": "0000000001"
+        "firma": "0000000001",
+        "sekme": null
       },
       "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "Ödeme Başarıyla Gerçekleştirildi", "posSiparisNo": "VP10000000000000003", "uyeSiparisNo": "600002", "tutarMetni": "12.750,50 TL", "tutarKurus": 1275050}
     },
     {
       "ad": "Okunamayan tutar yazısı kaydı engellemez, toplamda ayrıca uyarılır",
-      "sayfa": {"metin": "Onay Formu", "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP100"], ["Tutar", "4,500.00"]], "firma": null},
+      "sayfa": {
+        "metin": "Onay Formu",
+        "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP100"], ["Tutar", "4,500.00"]],
+        "firma": null,
+        "sekme": null
+      },
       "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "Ödeme Başarıyla Gerçekleştirildi", "posSiparisNo": "VP100", "uyeSiparisNo": "", "tutarMetni": "4,500.00", "tutarKurus": null}
     },
-    {"ad": "Kart sayfası: sonuç ekranı değil", "sayfa": {"metin": "Firma İsmi : ÖRNEK (0000000001)\nKart Numarası", "alanlar": [["Tutar", "100"]], "firma": "0000000001"}, "beklenen": {"ok": false}},
-    {"ad": "Onay Formu ama açıklama başarı demiyor", "sayfa": {"metin": "Onay Formu", "alanlar": [["Açıklama", "İşlem beklemede"], ["Pos Sipariş Numarası", "VP101"], ["Tutar", "100"]], "firma": null}, "beklenen": {"ok": false}},
-    {"ad": "Pos Sipariş Numarası yok", "sayfa": {"metin": "Hata Formu", "alanlar": [["Açıklama", "Kart limiti yetersiz"], ["Tutar", "100"]], "firma": null}, "beklenen": {"ok": false}},
-    {"ad": "Aynı etiket iki kez: belirsiz", "sayfa": {"metin": "Hata Formu", "alanlar": [["Açıklama", "Hata"], ["Pos Sipariş Numarası", "VP102"], ["Pos Sipariş Numarası", "VP103"], ["Tutar", "100"]], "firma": null}, "beklenen": {"ok": false}},
-    {"ad": "Hem onay hem hata yazısı: belirsiz", "sayfa": {"metin": "Onay Formu\nHata Formu", "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP104"], ["Tutar", "100"]], "firma": null}, "beklenen": {"ok": false}},
-    {"ad": "Biçimsiz özet", "sayfa": {"metin": 5, "alanlar": [], "firma": null}, "beklenen": {"ok": false}}
+    {
+      "ad": "Kart sayfası: sonuç ekranı değil",
+      "sayfa": {
+        "metin": "Firma İsmi : ÖRNEK (0000000001)\nKart Numarası",
+        "alanlar": [["Tutar", "100"]],
+        "firma": "0000000001",
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Onay Formu ama açıklama başarı demiyor",
+      "sayfa": {
+        "metin": "Onay Formu",
+        "alanlar": [["Açıklama", "İşlem beklemede"], ["Pos Sipariş Numarası", "VP101"], ["Tutar", "100"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Pos Sipariş Numarası yok",
+      "sayfa": {
+        "metin": "Hata Formu",
+        "alanlar": [["Açıklama", "Kart limiti yetersiz"], ["Tutar", "100"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Aynı etiket iki kez: belirsiz",
+      "sayfa": {
+        "metin": "Hata Formu",
+        "alanlar": [["Açıklama", "Hata"], ["Pos Sipariş Numarası", "VP102"], ["Pos Sipariş Numarası", "VP103"], ["Tutar", "100"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Hem onay hem hata yazısı: belirsiz",
+      "sayfa": {
+        "metin": "Onay Formu\nHata Formu",
+        "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP104"], ["Tutar", "100"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Biçimsiz özet",
+      "sayfa": {
+        "metin": 5,
+        "alanlar": [],
+        "firma": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Aynı satırda 'Etiket: değer' (yedek okuma)",
+      "sayfa": {
+        "metin": "Onay Formu\nAçıklama: Ödeme Başarıyla Gerçekleştirildi\nÜye Sipariş Numarası : 600003\nPos Sipariş Numarası: VP10000000000000004\nTutar: 1.250,00 TL\nAnasayfaya Dön",
+        "alanlar": [],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "Ödeme Başarıyla Gerçekleştirildi", "posSiparisNo": "VP10000000000000004", "uyeSiparisNo": "600003", "tutarMetni": "1.250,00 TL", "tutarKurus": 125000}
+    },
+    {
+      "ad": "Tablo: etiket ve değer sekmeyle ayrılmış",
+      "sayfa": {
+        "metin": "Hata Formu\nAçıklama\tKart limiti yetersiz.\nPos Sipariş Numarası\tVP10000000000000005\nTutar\t300",
+        "alanlar": [],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": true, "sonuc": "hata", "aciklama": "Kart limiti yetersiz.", "posSiparisNo": "VP10000000000000005", "uyeSiparisNo": "", "tutarMetni": "300", "tutarKurus": 30000}
+    },
+    {
+      "ad": "Büyük harf (İ/Ş) etiketler ve yıldızlı etiket",
+      "sayfa": {
+        "metin": "ONAY FORMU",
+        "alanlar": [["AÇIKLAMA", "ÖDEME BAŞARIYLA GERÇEKLEŞTİRİLDİ"], ["POS SİPARİŞ NUMARASI *", "VP10000000000000006"], ["TUTAR:", "99,90"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "ÖDEME BAŞARIYLA GERÇEKLEŞTİRİLDİ", "posSiparisNo": "VP10000000000000006", "uyeSiparisNo": "", "tutarMetni": "99,90", "tutarKurus": 9990}
+    },
+    {
+      "ad": "Açıklamada iki nokta üst üste: değer bozulmaz",
+      "sayfa": {
+        "metin": "Hata Formu\nAçıklama\nHata: 3D doğrulama zaman aşımı\nPos Sipariş Numarası\nVP10000000000000007\nTutar\n500",
+        "alanlar": [],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": true, "sonuc": "hata", "aciklama": "Hata: 3D doğrulama zaman aşımı", "posSiparisNo": "VP10000000000000007", "uyeSiparisNo": "", "tutarMetni": "500", "tutarKurus": 50000}
+    },
+    {
+      "ad": "Etiket hem alt satırda hem aynı satırda farklı değerle: belirsiz",
+      "sayfa": {
+        "metin": "Onay Formu\nAçıklama\nÖdeme Başarıyla Gerçekleştirildi\nPos Sipariş Numarası\nVP10000000000000008\nPos Sipariş Numarası: VP10000000000000009\nTutar\n100",
+        "alanlar": [],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Tutar kutusunda rakam yok (yalnız TL)",
+      "sayfa": {
+        "metin": "Onay Formu\nAçıklama\nÖdeme Başarıyla Gerçekleştirildi\nPos Sipariş Numarası\nVP10000000000000010\nTutar\nTL",
+        "alanlar": [],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Sekme notu biçimsiz: reddedilir",
+      "sayfa": {
+        "metin": "Onay Formu",
+        "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP10000000000000011"], ["Tutar", "100"]],
+        "firma": null,
+        "sekme": {"vkn": "12", "an": 1}
+      },
+      "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Eski yer imi özeti (sekme alanı yok): reddedilir",
+      "sayfa": {
+        "metin": "Onay Formu",
+        "alanlar": [["Açıklama", "Ödeme Başarıyla Gerçekleştirildi"], ["Pos Sipariş Numarası", "VP10000000000000012"], ["Tutar", "100"]],
+        "firma": null
+      },
+      "beklenen": {"ok": false}
+    }
   ]
 }

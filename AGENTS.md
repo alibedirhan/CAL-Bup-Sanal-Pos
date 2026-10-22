@@ -30,6 +30,12 @@
   Sanal POS sekmesi `posIslemleri`'ne yazar. Kayıtlar yalnız eklenir; gün Türkiye
   saatiyle 00:00'da kapanır. SESSION oturum kararını değiştirmeyin; ayrıntı
   `docs/TAHSILAT.md`. Testi `npm run test:tahsilat` (emülatör).
+- 0.10.0 (22 Ekim) cari eşleştirme: telefonda son 10 giriş tutulur; yer imi 3
+  kart sayfasındaki firma VKN'sini DenizPay sekmesine not eder; sonuç sayfası
+  cariyi firma numarasıyla belirler, kesin değilse kişiye seçtirir. Eşleşme
+  türü (`eslesme`) ve telefon okunma anı (`okunma`) kayda denetim izi olarak
+  girer. Sonuç ekranında aynı satır/tablo düzenleri de okunur. JS birim testi
+  `npm run test:saf`. Kayıtlar yine değiştirilemez.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

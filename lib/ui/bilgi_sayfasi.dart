@@ -31,7 +31,7 @@ class BilgiSayfasi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineLarge,
             ),
             const SizedBox(height: 10),
-            const Text('BUP Sanal POS · 0.9.0'),
+            const Text('BUP Sanal POS · 0.10.0'),
             const SizedBox(height: 24),
             DurumNotu(
               kullanici == null
@@ -47,7 +47,7 @@ class BilgiSayfasi extends StatelessWidget {
             const _Bilgi(
               Icons.credit_card_outlined,
               'Kart özetleri',
-              'Tam kart bilgileri bu tarayıcıda şifreli tutulur. Diğer cihazlarda yalnız maskeli özet görünür. CVV kaydedilmez.',
+              'Tam kart bilgileri bu tarayıcıda şifreli tutulur. Diğer cihazlarda yalnız maskeli özet görünür. CVV kaydedilmez. Safari, Sanal POS’u uzun süre (yaklaşık 7 gün) hiç açmazsan bu bilgileri silebilir; o zaman kartı yeniden eklersin.',
             ),
             _Bilgi(
               Icons.sync_disabled,
@@ -103,7 +103,7 @@ class BilgiSayfasi extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Telefona bir kez “BUP Doldur” yer imi kurulur. DenizPay kart sayfasında dokununca seçili kartın numarası, adı ve son kullanma tarihi yazılır; ödeme bitince sonuç ekranında dokununca sonuç cariye kaydedilir. 0.9.0’dan önce kurduysan bir kez yeniden kur.',
+                'Telefona bir kez “BUP Doldur” yer imi kurulur. DenizPay kart sayfasında dokununca seçili kartın numarası, adı ve son kullanma tarihi yazılır; ödeme bitince sonuç ekranında dokununca sonuç doğru cariye kaydedilir. Kart sayfasında da dokunursan sonuç o DenizPay sekmesinin carisine kesin bağlanır; emin olunamazsa cariyi sen seçersin. 0.10.0’dan önce kurduysan bir kez yeniden kur.',
               ),
               const SizedBox(height: 12),
               Link(

@@ -69,8 +69,11 @@ async function key(uid,create=false) {
   r.onsuccess=()=>{chosen=r.result??generated;if(!r.result)s.put(chosen,uid);};
   await finish;return chosen;
 }
+// Tarayıcıdan kalıcı depo istenir (yer azalınca silinmesin). Safari'nin 7 gün
+// açılmayan sitenin deposunu silmesini garanti engellemez; kart o zaman yeniden eklenir.
+const kaliciIste=()=>{try{globalThis.navigator?.storage?.persist?.()?.catch?.(()=>{});}catch{/* desteklenmiyor */}};
 async function prepare(uid,metaJson,text) {
-  const meta=JSON.parse(metaJson);scope(uid,meta);payload(text,meta);
+  const meta=JSON.parse(metaJson);scope(uid,meta);payload(text,meta);kaliciIste();
   const d=await db(),k=await key(uid,true),stamp=crypto.randomUUID();
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const plain=enc.encode(text);

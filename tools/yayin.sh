@@ -5,6 +5,8 @@ node tools/sunucu-test/yayin_oncesi.mjs
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze --no-pub
 flutter test --no-pub
+# Sonuç okuma ve cari eşleştirme (tarayıcısız JS birim testleri).
+(cd tools/tarayici && node --test sonuc-saf.mjs)
 bash tools/derle.sh canli
 # Kart doldurma: kurulum yer imi ve doldur sayfası yalnız gerçek kökenleri taşır.
 python3 - <<'KONTROL'
@@ -18,6 +20,9 @@ assert "const POS = 'https://denizpay.bupilic.com.tr';" in d, 'Doldur sayfasınd
 r = Path('build/canli/sonuc_sayfasi.js').read_text()
 assert "const POS = 'https://denizpay.bupilic.com.tr';" in r, 'Sonuç sayfasında canlı POS kökeni yok'
 assert "import('./sonuc_kutusu.js')" in Path('build/canli/firebase_baslat.js').read_text(), 'Sonuç kutusu yüklenmiyor'
+assert "from './cari_eslestir.js'" in r and Path('build/canli/cari_eslestir.js').exists(), 'Cari eşleştirme paketlenmedi'
+y = Path('tools/yer_imi/doldur.js').read_text()
+assert 'SURUM_NO = 3' in y and 'const EN_AZ_YER_IMI = 3;' in r, 'Yer imi ve sonuç sayfası sürümü uyuşmuyor'
 k = Path('build/canli/kurulum.js').read_text()
 assert 'denizpay.bupilic.com.tr' in k and 'bup-sanal-pos-izmir.web.app' in k, 'Kurulum yer iminde canlı kökenler yok'
 KONTROL

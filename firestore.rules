@@ -101,7 +101,7 @@ service cloud.firestore {
         && erisim(getAfter(/databases/$(database)/documents/cariler/$(request.resource.data.cariId)).data.sahipId);
       allow update, delete: if false;
     }
-    // Tahsilat kayıtları (0.9.0): yalnız eklenir, değiştirilemez/silinemez. Zaman sunucu
+    // Tahsilat kayıtları (0.9.0, 0.10.0 eşleşme izi): yalnız eklenir, değiştirilemez/silinemez. Zaman sunucu
     // saatidir; gün Türkiye saatiyle 00:00'da biter, o günün gün sonu kendiliğinden kesinleşir.
     // Cari erişimi ve VKN/TC sunucudaki cari kaydıyla aynı olmalıdır.
     function tahsilatOrtak(d) {
@@ -128,12 +128,21 @@ service cloud.firestore {
       allow list: if erisim(resource.data.kullaniciId);
       allow create: if uye() && id.matches('^[A-Z0-9_-]{4,64}$')
         && request.resource.data.keys().hasOnly(['kullaniciId', 'kullaniciAd', 'cariId', 'cariAd', 'kimlikNo', 'kartSonDort',
-          'girisId', 'sonuc', 'aciklama', 'posSiparisNo', 'uyeSiparisNo', 'tutarMetni', 'tutarKurus', 'kaynak', 'zaman'])
-        && request.resource.data.keys().size() == 15
+          'girisId', 'sonuc', 'aciklama', 'posSiparisNo', 'uyeSiparisNo', 'tutarMetni', 'tutarKurus', 'kaynak',
+          'eslesme', 'okunma', 'zaman'])
+        && request.resource.data.keys().size() == 17
         && islemBicim(id, request.resource.data) && tahsilatOrtak(request.resource.data);
       allow update, delete: if false;
+      // eslesme: cari nasıl belirlendi (denetim izi; lib/domain/tahsilat.dart CariEslesmesi).
+      // 'son_giris': 0.9.0 sonuç sayfasının telefonda bekleyen sonucu (yeni sayfa yazmaz). okunma: sonucun
+      // telefonda okunduğu an (yalnız bilgi; gün ve sıra sunucu saatidir). Elle kayıtta yok.
+      // Telefon saati kayık olabilir: 1 günden ileri veya 31 günden eski olamaz.
       function islemBicim(id, d) {
         return d.posSiparisNo == id && d.sonuc in ['basarili', 'hata'] && d.kaynak in ['yer_imi', 'elle']
+          && ((d.kaynak == 'elle' && d.eslesme == 'elle' && d.okunma == null)
+            || (d.kaynak == 'yer_imi' && d.eslesme in ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim', 'son_giris']
+              && d.okunma is timestamp && d.okunma <= request.time + duration.value(1, 'd')
+              && d.okunma > request.time - duration.value(31, 'd')))
           && metin(d.aciklama, 1, 200) && metin(d.tutarMetni, 1, 40)
           && (d.uyeSiparisNo == '' || metin(d.uyeSiparisNo, 1, 40))
           && d.girisId is string && d.girisId.matches('^([A-Za-z0-9]{20})?$')

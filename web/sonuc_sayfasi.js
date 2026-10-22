@@ -1,13 +1,18 @@
-// DenizPay sonuç ekranındaki "BUP Doldur" yer iminin açtığı sayfa (yer imi 2+).
+// DenizPay sonuç ekranındaki "BUP Doldur" yer iminin açtığı sayfa (yer imi 3+).
 // Açan DenizPay sekmesinden sayfa özetini ister, sonucu okur (sonuc_coz.js),
-// bu cihazdaki son girişin carisine bağlar (acik_giris.js) ve kişi onaylayınca
-// sonuç kutusuna bırakır (sonuc_kutusu.js). Sunucuya Sanal POS sekmesi yazar:
-// oturum yalnız o sekmededir. Ağ isteği yapmaz. Derlemede uret.py POS kökenini yazar.
+// bu telefondaki girişlerden doğru cariyi belirler (cari_eslestir.js) ve kişi
+// onaylayınca sonuç kutusuna bırakır (sonuc_kutusu.js). Cari kesin değilse
+// adaylar gösterilir, kişi seçmeden kaydedilmez. Sunucuya Sanal POS sekmesi
+// yazar: oturum yalnız o sekmededir. Ağ isteği yapmaz. Derlemede uret.py POS
+// kökenini yazar.
 import { sonucCoz, tutarYaz } from './sonuc_coz.js';
+import { cariEslestir } from './cari_eslestir.js';
 import './acik_giris.js';
 import './sonuc_kutusu.js';
 
 const POS = '__POS_KOKENI__';
+// Sekme notu ve sayfa özeti biçimi 3. sürümde geldi; eski yer imi yeniden kurulur.
+const EN_AZ_YER_IMI = 3;
 const $ = id => document.getElementById(id);
 const b = /^#b=([0-9a-f]{24})&s=([0-9]{1,3})$/.exec(location.hash);
 history.replaceState(null, '', location.pathname);
@@ -18,39 +23,77 @@ const durum = (mesaj, tur = '') => { $('durum').textContent = mesaj; $('durum').
 // DenizPay sekmesindeki yer imi kutusu da aynı sonucu gösterir (yalnız DenizPay kökenine).
 const bildir = (mesaj, hata) => { try { acan?.postMessage({ tur: 'bup-sonuc-durum', id: b[1], mesaj, hata }, POS); } catch { /* sekme kapandı */ } };
 const dur = mesaj => { durum(mesaj, 'hata'); bildir(mesaj, true); };
+const saat = an => new Date(an).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+const ESLESME = {
+  sonuc_ekrani: 'Cari, DenizPay sonuç ekranındaki firma numarasıyla doğrulandı.',
+  kart_sayfasi: 'Cari, bu DenizPay sekmesinin kart sayfasındaki firma numarasıyla doğrulandı.',
+  tek_giris: 'Son 2 saatte bu telefonda yalnız bu cariyle DenizPay’e girildi.',
+};
+
+// Seçim: her aday için bir seçenek; hiçbiri önceden seçili değildir.
+function adaylariGoster(adaylar, neden, secilince) {
+  $('secim-neden').textContent = neden;
+  const kutu = $('adaylar');
+  kutu.replaceChildren(...adaylar.map((g, i) => {
+    const etiket = document.createElement('label');
+    const secenek = document.createElement('input');
+    secenek.type = 'radio';
+    secenek.name = 'cari';
+    secenek.value = String(i);
+    secenek.addEventListener('change', () => secilince(g));
+    const ad = document.createElement('strong');
+    ad.textContent = g.cariAd;
+    const ek = document.createElement('span');
+    ek.textContent = `VKN / TC ${g.kimlikNo} · giriş ${saat(g.an)}${i === 0 ? ' (son giriş)' : ''}`;
+    etiket.append(secenek, ad, ek);
+    return etiket;
+  }));
+  $('secim').hidden = false;
+}
 
 function isle(sayfa) {
   const r = sonucCoz(sayfa);
   if (!r.ok) { dur(r.hata); return; }
-  const g = globalThis.bupAcikGiris.oku();
-  if (!g) {
-    dur('Bu telefonda son 2 saatte açılmış bir DenizPay girişi yok. Sanal POS’ta cariyi açıp “Ödeme sonucunu elle kaydet” ile kaydet.');
-    return;
-  }
-  if (sayfa.firma && sayfa.firma !== g.kimlikNo) {
-    dur(`Bu DenizPay oturumu ${g.cariAd} carisine ait değil. Kaydedilmedi; doğru cariyi Sanal POS’ta açıp elle kaydet.`);
-    return;
-  }
+  const e = cariEslestir(globalThis.bupAcikGiris.oku(), sayfa.firma, sayfa.sekme);
+  if (e.durum === 'yok') { dur(e.hata); return; }
   const tutar = r.tutarKurus === null ? `${r.tutarMetni} (okunamadı)` : tutarYaz(r.tutarKurus);
   $('sonuc').textContent = r.sonuc === 'basarili' ? '✓ Ödeme başarılı' : '✗ Ödeme başarısız';
   $('sonuc').className = r.sonuc;
-  $('cari').textContent = `${g.cariAd} · ${g.kimlikNo}`;
   $('tutar').textContent = tutar;
   $('pos-no').textContent = r.posSiparisNo;
   $('aciklama').textContent = r.aciklama;
   $('ozet').hidden = false;
-  durum('Cari ve tutar doğruysa kaydet.');
   const dugme = $('kaydet');
+  let secilen = null;
+  if (e.durum === 'kesin') {
+    secilen = e.giris;
+    $('cari').textContent = `${secilen.cariAd} · ${secilen.kimlikNo}`;
+    $('eslesme').textContent = ESLESME[e.eslesme];
+    durum('Cari ve tutar doğruysa kaydet.');
+    dugme.disabled = false;
+  } else {
+    $('cari').textContent = 'Seçilmedi';
+    adaylariGoster(e.adaylar, e.neden, g => {
+      secilen = g;
+      $('cari').textContent = `${g.cariAd} · ${g.kimlikNo}`;
+      dugme.disabled = false;
+    });
+    dugme.textContent = 'Seçili cariye kaydet';
+    durum('Cariyi seç, tutarı kontrol et, sonra kaydet.');
+    bildir('Sonuç sayfasında ödemenin ait olduğu cariyi seç.', false);
+  }
   dugme.hidden = false;
-  dugme.disabled = false;
   dugme.addEventListener('click', () => {
+    if (!secilen) return;
+    const g = secilen, eslesme = e.durum === 'kesin' ? e.eslesme : 'secim';
     dugme.hidden = true;
+    $('secim').hidden = true;
     let eklendi;
     try {
       eklendi = globalThis.bupSonucKutusu.ekle(JSON.stringify({
-        v: 1, uid: g.uid, girisId: g.girisId, cariId: g.cariId, cariAd: g.cariAd, kimlikNo: g.kimlikNo,
+        v: 2, uid: g.uid, girisId: g.girisId, cariId: g.cariId, cariAd: g.cariAd, kimlikNo: g.kimlikNo,
         kartSonDort: g.kartSonDort, sonuc: r.sonuc, aciklama: r.aciklama, posSiparisNo: r.posSiparisNo,
-        uyeSiparisNo: r.uyeSiparisNo, tutarMetni: r.tutarMetni, okunma: Date.now(),
+        uyeSiparisNo: r.uyeSiparisNo, tutarMetni: r.tutarMetni, eslesme, okunma: Date.now(),
       }));
     } catch {
       dugme.hidden = false;
@@ -58,9 +101,19 @@ function isle(sayfa) {
       return;
     }
     const ozet = `${g.cariAd} · ${tutar}`;
-    const bekliyor = `Sonuç alındı: ${ozet}. Sanal POS sekmesine dönünce kendiliğinden kaydedilir.`;
-    durum(eklendi === 'zaten' ? `Bu sonuç zaten alınmıştı: ${ozet}.` : bekliyor, 'tamam');
-    bildir(bekliyor, false);
+    const bekliyor = `Sonuç alındı: ${ozet}. Sanal POS sekmesine dön (şifre sorarsa gir); kayıt kendiliğinden yapılır.`;
+    if (eklendi === 'zaten') {
+      // Sunucuya yazılmamış ilk seçim değiştirilmez; farklıysa açıkça söylenir.
+      const once = globalThis.bupSonucKutusu.bul(r.posSiparisNo);
+      if (once && once.cariId !== g.cariId) {
+        dur(`Bu sonuç daha önce ${once.cariAd} carisi için alındı ve değiştirilemez. Yanlışsa kaydı yöneticine bildir.`);
+        return;
+      }
+      durum(`Bu sonuç zaten alınmıştı: ${ozet}. Sanal POS’a dönünce kaydedilir.`, 'tamam');
+    } else {
+      durum(bekliyor, 'tamam');
+    }
+    bildir(eklendi === 'zaten' ? `Bu sonuç zaten alınmıştı: ${ozet}.` : bekliyor, false);
     // Sanal POS sekmesi açık ve çalışıyorsa hemen yazar ve yanıtlar.
     globalThis.bupSonucKutusu.yanitDinle(json => {
       let y = null;
@@ -75,7 +128,7 @@ function isle(sayfa) {
 
 if (!b || !acan) {
   durum('Bu sayfayı DenizPay sonuç ekranında “BUP Doldur” yer imine dokunarak aç.', 'hata');
-} else if (Number(b[2]) < 2) {
+} else if (Number(b[2]) < EN_AZ_YER_IMI) {
   dur('Yer imin eski. Sanal POS → Çalışma alanı → “BUP Doldur yer imini kur” ile yeniden kur.');
 } else {
   let alindi = false;

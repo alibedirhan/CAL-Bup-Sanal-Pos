@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bup_sanal_pos/app.dart';
+import 'package:bup_sanal_pos/domain/gun_sonu.dart';
+import 'package:bup_sanal_pos/domain/tahsilat.dart';
+import 'package:bup_sanal_pos/ui/gun_sonu_parcalari.dart';
+import 'package:bup_sanal_pos/ui/tema.dart';
 import 'arayuz_test.dart' show tikla;
+import 'tahsilat_test.dart' show islem, tr;
 
 Future<void> baslat(WidgetTester tester, Size boyut) async {
   tester.view.physicalSize = boyut;
@@ -23,6 +28,32 @@ Future<void> gunSonunuAc(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('İşlem satırı: seçimle eşleşme ve geç okunma görünür', (
+    tester,
+  ) async {
+    final g = GunSonu.hesapla(const Gun(2026, 10, 22), [], [
+      islem(
+        'VP0101',
+        'c1',
+        tr(22, 0, 20),
+        eslesme: CariEslesmesi.secim,
+        okunma: tr(21, 23, 58),
+      ),
+      islem('VP0102', 'c1', tr(22, 9), okunma: tr(22, 8, 59)),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: posTemasi(),
+        home: Scaffold(body: CariGunKarti(ozet: g.cariler.single)),
+      ),
+    );
+    expect(find.textContaining('cari seçilerek kaydedildi'), findsOneWidget);
+    expect(
+      find.text('DenizPay sonucu 21.10.2026 23:58’de okundu'),
+      findsOneWidget,
+    );
+  });
+
   for (final boyut in const [Size(375, 548), Size(320, 640), Size(1024, 800)]) {
     testWidgets('Gün sonu ${boyut.width.toInt()} px: toplam ve cariler', (
       tester,

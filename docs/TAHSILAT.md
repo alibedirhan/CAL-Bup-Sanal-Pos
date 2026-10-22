@@ -1,8 +1,9 @@
-# Tahsilat kaydı ve gün sonu (0.9.0)
+# Tahsilat kaydı ve gün sonu (0.9.0, 0.10.0)
 
 Kullanıcı isteği (22 Ekim 2026): bir cariyle DenizPay'e girilip alınan ödeme
 kesin olarak o cariye yazılsın; 24 saatteki bütün işlemler tarih, saat ve cari
-adıyla kaydedilsin; gün bitince gün sonu kendiliğinden oluşsun.
+adıyla kaydedilsin; gün bitince gün sonu kendiliğinden oluşsun. Proje
+yöneticilere sunulacak: güvenli, sağlam, denetlenebilir olmalı.
 
 ## Bilinen gerçekler
 
@@ -12,39 +13,68 @@ adıyla kaydedilsin; gün bitince gün sonu kendiliğinden oluşsun.
   ("Ödeme Başarıyla Gerçekleştirildi"), Üye Sipariş Numarası, Pos Sipariş
   Numarası ("VP…"), Tutar. Başarısızda **Hata Formu** — Açıklama ("3D Şifresi
   Yanlış."), Pos Sipariş Numarası, Tutar. Tutar biçimi değişken: "4500",
-  "45678,90". Sayfa HTML'i görülmedi; okuma etiket metnine dayanır.
+  "45678,90". Sayfa HTML'i görülmedi.
+- DenizPay kart sayfasında "Firma İsmi : … (VKN)" yazar (yer imi okur).
+  Sonuç ekranında firma numarası olup olmadığı bilinmiyor (☰ görüntüsü bekleniyor).
+- DenizPay oturumu çerezle tarayıcı genelinde tutuluyor olabilir (son giriş
+  geçerli); doğrulanmadı. Bu yüzden eski sekmedeki ödeme belirsiz sayılır.
 - Sanal POS oturumu yalnız açık olduğu sekmededir (`Persistence.SESSION`,
   güvenlik kararı). DenizPay'den açılan sekme sunucuya yazamaz.
 
 ## Akış
 
-1. "DenizPay'e giriş yap": DenizPay açılmadan önce bu cihaza **son giriş
-   işareti** yazılır (`web/acik_giris.js`, 2 saat: cari id/ad/VKN, kartın son
-   dört hanesi, giriş kimliği). Sunucuya `posGirisleri` kaydı gider.
-2. DenizPay sonuç ekranında "BUP Doldur" (yer imi 2. sürüm) sayfadaki etiketli
-   kutuların yazısını `sonuc.html`'e verir; kart numarasına benzeyen yazı atılır.
-3. `sonuc.html` sonucu okur (`web/sonuc_coz.js`), son giriş işaretinin carisini
-   gösterir; sayfada firma VKN'si varsa ve farklıysa reddeder. Kişi **"Bu
-   cariye kaydet"**e basınca sonuç telefondaki **sonuç kutusuna** bırakılır
-   (`web/sonuc_kutusu.js`). Ağ isteği yoktur.
-4. Oturumu açık Sanal POS sekmesi kutuyu okur (açılışta, başka sekmede sonuç
-   eklenince, sekmeye dönüşte), `posIslemleri`'ne yazar, kutudan siler ve
-   sonuç sayfasına/DenizPay kutusuna "Kaydedildi: …" yanıtı verir. Sekme
-   kapalıysa kayıt yeniden girişte yapılır. Bağlantı yoksa kutuda kalır.
-5. Yer imi kullanılamazsa cari profilinde "Ödeme sonucunu elle kaydet".
-6. "Gün sonu" sekmesi: Türkiye saatiyle (UTC+3) seçilen günün kayıtları
+1. "DenizPay'e giriş yap": DenizPay açılmadan önce giriş bu telefonun **açık
+   girişler** listesine eklenir (`web/acik_giris.js`; son 10, her biri 2 saat:
+   cari id/ad/VKN, kartın son dört hanesi, giriş kimliği, an). Sunucuya
+   `posGirisleri` kaydı gider. "Boş giriş sayfasını aç", çıkış ve hesap
+   değişimi listeyi siler (elle girilen carinin kim olduğu bilinmez).
+2. Kart sayfasında "BUP Doldur" (yer imi 3): kartı yazmanın yanında sayfadaki
+   firma VKN'sini **o DenizPay sekmesinin** `sessionStorage`'ına not eder
+   (`bup-sekme-firma` {vkn, an}; sekmeye özel, başka sekmeye geçmez).
+3. Sonuç ekranında "BUP Doldur": etiketli kutuların yazısı, sayfa metni, sayfadaki
+   firma numarası ve sekme notu `sonuc.html`'e verilir (yalnız postMessage,
+   köken ve istek kimliği denetimli); kart numarasına benzeyen yazı atılır.
+4. `sonuc.html` sonucu okur (`web/sonuc_coz.js`: etiketli kutu, etiket + alt
+   satır, aynı satırda "Etiket: değer" veya tabloda sekmeyle ayrılmış değer;
+   belirsizse okumaz) ve cariyi belirler (`web/cari_eslestir.js`):
+   - Sonuç ekranında firma numarası varsa: o VKN'li giriş → **sonuc_ekrani**.
+   - Yoksa sekme notu varsa: o VKN'li giriş; not alındıktan sonra başka
+     cariyle girilmediyse → **kart_sayfasi**, girildiyse seçim.
+   - Hiçbiri yoksa: son 2 saatte tek cariyle girildiyse → **tek_giris**,
+     birden fazlaysa seçim.
+   - Seçim (**secim**): adaylar (son giriş başta) gösterilir, hiçbiri önceden
+     seçili değildir; kişi seçmeden kaydedilmez.
+   - Tanınmayan firma veya giriş yoksa kaydedilmez, elle kayıt istenir.
+5. "Bu cariye kaydet": sonuç telefondaki **sonuç kutusuna** bırakılır
+   (`web/sonuc_kutusu.js`, 2. biçim, 30 gün bekler). Ağ isteği yoktur. Aynı
+   numara kutuda başka cariyle bekliyorsa değiştirilmez, kişiye söylenir.
+6. Oturumu açık Sanal POS sekmesi kutuyu okur (açılışta, başka sekmede sonuç
+   eklenince, sekmeye dönüşte; kilitliyse şifre girilince), `posIslemleri`'ne
+   yazar, kutudan siler, sonuç sayfasına "Kaydedildi: …" yanıtı verir. Bağlantı
+   yoksa kutuda kalır. Aynı ödeme sunucuda başka cariye kayıtlıysa "tamam"
+   denmez, uyarılır. Sonuç önceki gün okunup bugün yazıldıysa mesaj söyler.
+7. Yer imi kullanılamazsa cari profilinde "Ödeme sonucunu elle kaydet"
+   (eşleşme **elle**).
+8. "Gün sonu" sekmesi: Türkiye saatiyle (UTC+3) seçilen günün kayıtları
    carilere göre; başarılı toplam, başarısız denemeler, "son girişin sonucu
-   kaydedilmedi" uyarısı, Excel'e aktarma (CSV; `;`, virgüllü kuruş, BOM).
-   Yönetici "Herkes" ile tüm kullanıcıları görür.
+   kaydedilmedi" uyarısı, seçimle bağlanan ve geç okunan işlem notları,
+   yönetici "Herkes", Excel'e aktarma (CSV; `;`, virgüllü kuruş, BOM; eşleşme
+   ve telefon okunma saati sütunları).
 
-## Kurallar (firestore.rules)
+## Kayıt alanları ve kurallar (firestore.rules)
 
 - `posGirisleri/{20 harf}`, `posIslemleri/{Pos Sipariş No}`: yalnız `create`;
-  `update`/`delete` kapalı. `zaman == request.time`.
+  `update`/`delete` kapalı. `zaman == request.time` (gün ve sıra sunucu saati).
 - Yazan kendisidir (`kullaniciId`, `kullaniciAd` kullanıcı kaydıyla aynı);
   cariye erişimi olmalı, cari silinmemiş ve **VKN/TC sunucudaki cariyle aynı**.
 - Belge kimliği Pos Sipariş Numarası: aynı ödeme ikinci kez yazılamaz.
   Olmayan numarayı sorgulamak serbest (çift kayıt denetimi için).
+- `eslesme` (0.10.0, denetim izi): elle kayıtta `elle` ve `okunma` yok; yer imi
+  kaydında `sonuc_ekrani`/`kart_sayfasi`/`tek_giris`/`secim` (ve 0.9.0
+  sayfasından telefonda kalmış sonuç için `son_giris`). `okunma`: sonucun
+  telefonda okunduğu an; yalnız bilgi, telefon saati kayık olabileceği için
+  1 gün ileri / 31 gün geri sınırı. 0.9.0 belgelerinde iki alan yoktur; okurken
+  `son_giris` / yok sayılır.
 - Okuma: sahibi ve yönetici. Satıcı yalnız `kullaniciId == uid` süzgeciyle listeler.
 - İndeksler: (`kullaniciId`, `zaman`) iki koleksiyon için.
 
@@ -54,19 +84,29 @@ Kayıtlar değiştirilemez/silinemez ve gün sunucu saatiyle belirlenir. Gün
 00:00'da bittiğinde o güne yeni kayıt eklenemez; gün sonu her açılışta aynı
 kayıtlardan aynı sonucu verir. Sunucu işlevi (Cloud Functions) yoktur — billing
 kapalı kalır. Ödünleşim: sonuç Sanal POS sekmesine gece yarısından sonra
-ulaşırsa (sekme kapalıydı) ertesi güne yazılır; kayıt `zaman`ı sunucu saatidir.
+ulaşırsa ertesi güne yazılır; mesaj ve gün sonu bunu (telefon okunma saatiyle)
+açıkça gösterir.
 
 ## Testler
 
-- `test/tahsilat_test.dart`, `test/tahsilat_servisi_test.dart`, `test/gun_sonu_test.dart`.
+- Dart: `test/tahsilat_test.dart` (eşleşme tutarlılığı, kodların kural/JS ile
+  aynılığı, geç okunma, CSV), `test/tahsilat_servisi_test.dart`, `test/gun_sonu_test.dart`.
 - Tutar ve ekran örnekleri `test/veri/tahsilat_ornekleri.json` — Dart ve JS aynı dosyayla.
-- `tools/sunucu-test/kurallar.test.mjs` (emülatör): yalnız ekleme, VKN, sahiplik, okuma.
-- `npm run test:doldur` (taklit sonuç ekranları, köken ve kutu), `npm run test:tahsilat`
-  (emülatör paketi 4197 + emülatörler: giriş → sonuç → kayıt → kapalı sekme → gün sonu → CSV).
+- `npm run test:saf` (`tools/tarayici/sonuc-saf.mjs`, tarayıcısız): okuma
+  örnekleri, cari eşleştirme, giriş listesi, sonuç kutusu biçimi.
+- `tools/sunucu-test/kurallar.test.mjs` (emülatör): yalnız ekleme, VKN,
+  sahiplik, okuma, eşleşme/okunma alanları.
+- `npm run test:doldur` (taklit DenizPay: kutu/tablo/büyük harf düzeni, tek
+  giriş, seçim, kart sayfası notu, sonuç ekranı firması, eski yer imi, köken),
+  `npm run test:tahsilat` (emülatör paketi 4197 + emülatörler: giriş → sonuç →
+  kayıt → kapalı sekme → 0.9.0'dan bekleyen sonuç → gün sonu → CSV).
 
 ## Açık kalanlar
 
-- Gerçek DenizPay sonuç sayfasının HTML'i görülmedi; etiketler farklıysa sonuç
-  sayfası "elle kaydet" der. İlk gerçek ödemede denenmeli.
-- ☰ menüsünde firma VKN'si varsa ek karşılaştırma kendiliğinden devrede.
-- Kayıt düzeltme/iptal yok (bilinçli: değiştirilemez kayıt).
+- Gerçek DenizPay sonuç sayfasının HTML'i görülmedi; tanınmayan düzende sayfa
+  "elle kaydet" der. İlk gerçek ödemede denenmeli.
+- ☰ menüsünde/sonuç ekranında firma VKN'si varsa kesin eşleşme kendiliğinden devrede.
+- Kayıt düzeltme/iptal yok (bilinçli: değiştirilemez kayıt). Gerekirse ekleme
+  biçiminde "iptal kaydı" (yönetici, gerekçeli) önerildi; karar kullanıcıda.
+- Safari, 7 gün açılmayan sitenin cihaz deposunu silebilir: cihazdaki tam kart
+  gider (tahsilat sunucuda). `navigator.storage.persist()` istenir; garanti değil.

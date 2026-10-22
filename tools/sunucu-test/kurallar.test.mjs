@@ -1,7 +1,7 @@
 import { before, after, beforeEach, test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, query, where, setDoc, updateDoc, writeBatch, serverTimestamp, Timestamp } from 'firebase/firestore';
 let env;
 const uid = 'satici-a', other = 'satici-b';
 before(async () => {
@@ -147,7 +147,7 @@ test('Eski istemci yerel kart referansını düşüremez; eski özetler okunur v
   await assertFails(change(db,'kendi',uid,{surum:4,kartlar:[old]}));
 });
 
-// 0.9.0 tahsilat kayıtları: yalnız eklenir, sunucu saatiyle; cari erişimi ve VKN eşleşmeli.
+// 0.9.0 tahsilat kayıtları (0.10.0 eşleşme izi): yalnız eklenir, sunucu saatiyle; cari erişimi ve VKN eşleşmeli.
 const KIMLIK='0000000001';
 const tahsilatCari=async()=>{
   await env.withSecurityRulesDisabled(async ctx=>{
@@ -158,7 +158,7 @@ const girisVerisi=(patch={})=>({kullaniciId:uid,kullaniciAd:'Örnek Kullanıcı'
   kimlikNo:KIMLIK,kartSonDort:'1111',zaman:serverTimestamp(),...patch});
 const islemVerisi=(no='VP10000000000000001',patch={})=>({...girisVerisi(),girisId:'A'.repeat(20),sonuc:'basarili',
   aciklama:'Ödeme Başarıyla Gerçekleştirildi',posSiparisNo:no,uyeSiparisNo:'600001',tutarMetni:'4500',tutarKurus:450000,
-  kaynak:'yer_imi',...patch});
+  kaynak:'yer_imi',eslesme:'tek_giris',okunma:Timestamp.fromMillis(Date.now()-60000),...patch});
 test('Giriş ve işlem kaydı kendi carisi için eklenir, sonra değiştirilemez/silinemez',async()=>{
   await tahsilatCari();const db=dbFor(uid);
   await assertSucceeds(setDoc(doc(db,'posGirisleri','A'.repeat(20)),girisVerisi()));
@@ -174,7 +174,25 @@ test('Giriş ve işlem kaydı kendi carisi için eklenir, sonra değiştirilemez
   await assertFails(deleteDoc(doc(db,'posGirisleri','A'.repeat(20))));
   // Hata sonucu, okunamayan tutar ve kartsız/girişsiz elle kayıt da kabul edilir.
   await assertSucceeds(setDoc(doc(db,'posIslemleri','VP0002'),islemVerisi('VP0002',{sonuc:'hata',aciklama:'3D Şifresi Yanlış.',
-    uyeSiparisNo:'',tutarMetni:'4,500.00',tutarKurus:null,kartSonDort:'',girisId:'',kaynak:'elle'})));
+    uyeSiparisNo:'',tutarMetni:'4,500.00',tutarKurus:null,kartSonDort:'',girisId:'',kaynak:'elle',eslesme:'elle',okunma:null})));
+});
+test('Cari eşleşmesi ve okunma anı (0.10.0) kurala uymalı',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  const yaz=(no,patch)=>setDoc(doc(db,'posIslemleri',no),islemVerisi(no,patch));
+  for (const [i,e] of ['sonuc_ekrani','kart_sayfasi','tek_giris','secim'].entries()) await assertSucceeds(yaz(`VP006${i}`,{eslesme:e}));
+  await assertSucceeds(yaz('VP0070',{okunma:Timestamp.fromMillis(Date.now()-30*86400000)})); // 30 gün bekleyen sonuç
+  await assertSucceeds(yaz('VP0071',{eslesme:'son_giris'})); // 0.9.0'dan telefonda bekleyen sonuç
+  await assertFails(yaz('VP0072',{eslesme:'elle'})); // yer imi kaydı elle eşleşme diyemez
+  await assertFails(yaz('VP0073',{kaynak:'elle'})); // elle kayıt eşleşme taşımaz
+  await assertFails(yaz('VP0074',{kaynak:'elle',eslesme:'elle'})); // elle kayıtta okunma yok
+  await assertFails(yaz('VP0075',{okunma:null}));
+  await assertSucceeds(yaz('VP0081',{okunma:Timestamp.fromMillis(Date.now()+3600000)})); // telefon saati ileri
+  await assertFails(yaz('VP0076',{okunma:Timestamp.fromMillis(Date.now()+2*86400000)}));
+  await assertFails(yaz('VP0077',{okunma:Timestamp.fromMillis(Date.now()-32*86400000)}));
+  await assertFails(yaz('VP0078',{okunma:Date.now()}));
+  await assertFails(yaz('VP0079',{eslesme:'bilinmiyor'}));
+  const {eslesme,...eksik}=islemVerisi('VP0080');
+  await assertFails(setDoc(doc(db,'posIslemleri','VP0080'),eksik));
 });
 test('Yanlış VKN, başka kullanıcının carisi, başkası adına ve istemci saatiyle kayıt reddedilir',async()=>{
   await tahsilatCari();const db=dbFor(uid);

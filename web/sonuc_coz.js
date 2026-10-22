@@ -3,6 +3,8 @@
 // ikisi de test/veri/tahsilat_ornekleri.json örnekleriyle sınanır.
 // Ekran (kullanıcı görüntüleri, 22 Ekim): Açıklama, Üye Sipariş Numarası (yalnız
 // başarılıda), Pos Sipariş Numarası ("VP…"), Tutar ("4500", "45678,90").
+// Sayfa HTML'i görülmedi; üç düzen tanınır: etiketli kutu, etiket ve alt satırda
+// değer, aynı satırda "Etiket: değer" veya tabloda sekmeyle ayrılmış değer.
 
 // Virgül kuruş, nokta binlik ayracı; tek nokta + 1–2 hane kuruş sayılır. Emin değilse null.
 export function tutarCoz(metin) {
@@ -37,30 +39,49 @@ export function tutarYaz(kurus) {
 export const duz = v => String(v ?? '').replace(/\s+/g, ' ').trim();
 // Türkçe büyük/küçük harf ve klavye farkını yok sayan karşılaştırma anahtarı.
 const anahtar = v => duz(v).replace(/[İIı]/g, 'i').toLowerCase().replace(/ş/g, 's').replace(/ğ/g, 'g')
-  .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/\s*:$/, '');
+  .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[\s:*]+$/, '');
 const ETIKET = { aciklama: 'aciklama', uye: 'uye siparis numarasi', pos: 'pos siparis numarasi', tutar: 'tutar' };
 const ETIKETLER = new Set(Object.values(ETIKET));
 const KONTROL = /[\x00-\x1f\x7f]/;
 
 // Yer iminin gönderdiği sayfa özeti biçimce geçerli mi (başka bir şey işlenmez).
+// sekme: yer iminin aynı DenizPay sekmesinde kart sayfasında okuduğu firma (yer imi 3).
 export function sayfaGecerli(s) {
-  return !!s && typeof s === 'object' && typeof s.metin === 'string' && s.metin.length <= 5000 &&
+  return !!s && typeof s === 'object' && Object.keys(s).sort().join(',') === 'alanlar,firma,metin,sekme' &&
+    typeof s.metin === 'string' && s.metin.length <= 5000 &&
     Array.isArray(s.alanlar) && s.alanlar.length <= 40 &&
     s.alanlar.every(a => Array.isArray(a) && a.length === 2 && typeof a[0] === 'string' && a[0].length <= 80 &&
       typeof a[1] === 'string' && a[1].length <= 200) &&
-    (s.firma === null || (typeof s.firma === 'string' && /^[0-9]{10,11}$/.test(s.firma)));
+    (s.firma === null || (typeof s.firma === 'string' && /^[0-9]{10,11}$/.test(s.firma))) &&
+    (s.sekme === null || (!!s.sekme && typeof s.sekme === 'object' && Object.keys(s.sekme).sort().join(',') === 'an,vkn' &&
+      typeof s.sekme.vkn === 'string' && /^[0-9]{10,11}$/.test(s.sekme.vkn) && Number.isInteger(s.sekme.an)));
 }
 
-// Önce etiketli kutular; kutu yoksa sayfa yazısında etiketten sonraki satır.
+// "Etiket: değer" ya da tablo hücreleri ("Etiket<sekme>değer") tek satırda.
+function ayniSatir(satir) {
+  const m = /^([^:\t]{1,80}?)\s*(?::|\t)\s*(\S.*)$/.exec(satir);
+  return m ? [anahtar(m[1]), duz(m[2])] : null;
+}
+
+// Önce etiketli kutular; kutu yoksa sayfa yazısı: etiket satırı + alt satır veya
+// aynı satırda değer. Etiket birden fazla yerde geçiyorsa belirsizdir (null).
 function alan(sayfa, etiket) {
   const bulunan = sayfa.alanlar.filter(([e]) => anahtar(e) === etiket).map(([, d]) => duz(d)).filter(Boolean);
   if (bulunan.length === 1) return bulunan[0];
   if (bulunan.length > 1) return null;
-  const satirlar = sayfa.metin.split('\n').map(duz).filter(Boolean);
-  const i = satirlar.findIndex(s => anahtar(s) === etiket);
-  if (i < 0 || satirlar.findIndex((s, j) => j > i && anahtar(s) === etiket) >= 0) return null;
-  const sonraki = satirlar[i + 1];
-  return sonraki && !ETIKETLER.has(anahtar(sonraki)) ? sonraki : null;
+  const satirlar = sayfa.metin.split(/\r?\n/).filter(s => duz(s));
+  const aday = [];
+  satirlar.forEach((s, i) => {
+    if (anahtar(s) === etiket) {
+      const sonraki = satirlar[i + 1];
+      const ad = sonraki === undefined ? '' : anahtar(sonraki);
+      aday.push(ad && !ETIKETLER.has(ad) && !ETIKETLER.has(ayniSatir(sonraki)?.[0]) ? duz(sonraki) : null);
+      return;
+    }
+    const a = ayniSatir(s);
+    if (a && a[0] === etiket) aday.push(a[1]);
+  });
+  return aday.length === 1 ? aday[0] : null;
 }
 
 const hata = mesaj => ({ ok: false, hata: mesaj });
@@ -78,7 +99,9 @@ export function sonucCoz(sayfa) {
   const tutarMetni = alan(sayfa, ETIKET.tutar);
   const uye = onay ? alan(sayfa, ETIKET.uye) ?? '' : '';
   if (!/^[A-Z0-9_-]{4,64}$/.test(pos)) return hata('Pos Sipariş Numarası okunamadı. Sonucu elle kaydet.');
-  if (!tutarMetni || tutarMetni.length > 40 || KONTROL.test(tutarMetni)) return hata('Tutar okunamadı. Sonucu elle kaydet.');
+  if (!tutarMetni || tutarMetni.length > 40 || KONTROL.test(tutarMetni) || !/[0-9]/.test(tutarMetni)) {
+    return hata('Tutar okunamadı. Sonucu elle kaydet.');
+  }
   if (!aciklama || aciklama.length > 200 || KONTROL.test(aciklama)) return hata('Açıklama okunamadı. Sonucu elle kaydet.');
   if (uye.length > 40) return hata('Üye Sipariş Numarası okunamadı. Sonucu elle kaydet.');
   // "Onay Formu" yalnız açıklama da başarıyı söylüyorsa başarılı sayılır.

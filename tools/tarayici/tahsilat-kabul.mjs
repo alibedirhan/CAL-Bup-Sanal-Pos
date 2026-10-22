@@ -19,7 +19,7 @@ const KIMLIK = '0000000007', CARI = 'Örnek Tahsilat Market';
 const sayfa = (govde, baslik) => `<!doctype html><meta charset="utf-8"><title>${baslik}</title><body>${govde}</body>`;
 const sonucSayfasi = (baslik, satirlar) => sayfa(`<div class="card"><div class="card-header">${baslik}</div>${satirlar.map(([e, d]) =>
   `<label>${e}</label><input class="form-control" readonly value="${d}">`).join('')}<a>Anasayfaya Dön</a></div>`, 'Sonuç');
-const ONAY_NO = 'VP10000000000000001', HATA_NO = 'VP1000000000000002';
+const ONAY_NO = 'VP10000000000000001', HATA_NO = 'VP1000000000000002', ESKI_NO = 'VP10000000000000090';
 const sunucu = createServer((istek, cevap) => {
   const yol = new URL(istek.url, 'http://x').pathname;
   const govde = { '/onay.aspx': sonucSayfasi('Onay Formu', [['Açıklama', 'Ödeme Başarıyla Gerçekleştirildi'],
@@ -77,8 +77,11 @@ try {
       await page.getByText(/sonuç bu cariye kaydedilir/).waitFor();
       await denizpay.close();
 
-      // Son giriş işareti: cari ve kartın son dört hanesi; sır yok.
-      const acik = JSON.parse(await page.evaluate(() => localStorage.getItem('bup-acik-giris')));
+      // Telefondaki giriş listesi: cari ve kartın son dört hanesi; sır yok.
+      const girisler = JSON.parse(await page.evaluate(() => localStorage.getItem('bup-acik-giris')));
+      assert.equal(girisler.length, 1);
+      const [acik] = girisler;
+      assert.equal(acik.v, 2); assert.equal(acik.son - acik.an, 2 * 60 * 60 * 1000);
       assert.equal(acik.cariId, 'cari-t'); assert.equal(acik.cariAd, CARI); assert.equal(acik.kimlikNo, KIMLIK);
       assert.equal(acik.uid, 'satici-a'); assert.match(acik.girisId, /^[A-Za-z0-9]{20}$/);
       let giris;
@@ -104,10 +107,11 @@ try {
       await s1.screenshot({ path: `/tmp/bup-pos-tahsilat/${ad}-kaydedildi.png` });
       await pos.getByText(/BUP Doldur: Kaydedildi: Örnek Tahsilat Market · 4\.500,00 TL/).waitFor();
       const onay = (await db.collection('posIslemleri').doc(ONAY_NO).get()).data();
-      assert.deepEqual({ ...onay, zaman: undefined }, { kullaniciId: 'satici-a', kullaniciAd: 'Örnek satici-a', cariId: 'cari-t',
+      assert.ok(Math.abs(onay.okunma.toMillis() - Date.now()) < 120000, 'okunma telefon saatiyle yazılır');
+      assert.deepEqual({ ...onay, zaman: undefined, okunma: undefined }, { kullaniciId: 'satici-a', kullaniciAd: 'Örnek satici-a', cariId: 'cari-t',
         cariAd: CARI, kimlikNo: KIMLIK, kartSonDort: '', girisId: acik.girisId, sonuc: 'basarili',
         aciklama: 'Ödeme Başarıyla Gerçekleştirildi', posSiparisNo: ONAY_NO, uyeSiparisNo: '600001', tutarMetni: '4500',
-        tutarKurus: 450000, kaynak: 'yer_imi', zaman: undefined });
+        tutarKurus: 450000, kaynak: 'yer_imi', eslesme: 'tek_giris', okunma: undefined, zaman: undefined });
       await s1.waitForEvent('close', { timeout: 8000 });
       // Aynı ekrana yeniden dokunmak ikinci kayıt oluşturmaz.
       s1 = await sonuc('/onay.aspx', true);
@@ -121,21 +125,32 @@ try {
       await s1.getByText(/Sonuç alındı: Örnek Tahsilat Market · 45\.678,90 TL/).waitFor();
       await new Promise(r => setTimeout(r, 1500));
       assert.equal((await db.collection('posIslemleri').doc(HATA_NO).get()).exists, false);
+      // 0.9.0 sonuç sayfasından telefonda kalmış (1. biçim, eşleşmesiz) sonuç da gerçek kurallarla yazılır.
+      await s1.evaluate(({ acik, ESKI_NO }) => {
+        const l = JSON.parse(localStorage.getItem('bup-sonuc-kutusu') ?? '[]');
+        l.push({ v: 1, uid: acik.uid, girisId: acik.girisId, cariId: acik.cariId, cariAd: acik.cariAd, kimlikNo: acik.kimlikNo,
+          kartSonDort: '', sonuc: 'basarili', aciklama: 'Ödeme Başarıyla Gerçekleştirildi', posSiparisNo: ESKI_NO,
+          uyeSiparisNo: '', tutarMetni: '250', okunma: Date.now() });
+        localStorage.setItem('bup-sonuc-kutusu', JSON.stringify(l));
+      }, { acik, ESKI_NO });
       page = await baglam.newPage(); page.setDefaultTimeout(20000);
       await page.goto(UYGULAMA); await page.locator('#acilis').waitFor({ state: 'detached' });
       const s2 = page.locator('flt-semantics-placeholder'); if (await s2.count()) await s2.evaluate(e => e.click());
       await yaz('E-posta', 'satici-a@example.test'); await yaz('Şifre', parola); await dugme('Giriş yap').click();
-      await page.getByText(/Kaydedildi: Örnek Tahsilat Market · 45\.678,90 TL · başarısız/).waitFor();
+      await page.getByText(/2 DenizPay sonucu kaydedildi\. Son: Kaydedildi: Örnek Tahsilat Market · 250,00 TL/).waitFor();
       await s1.getByText(/Kaydedildi: /).waitFor(); // açık kalan sonuç sayfası da yanıtı alır
       assert.equal((await db.collection('posIslemleri').doc(HATA_NO).get()).data().sonuc, 'hata');
-      assert.equal((await db.collection('posIslemleri').get()).size, 2);
+      let eski;
+      for (let i = 0; i < 40 && !(eski = await db.collection('posIslemleri').doc(ESKI_NO).get()).exists; i++) await new Promise(r => setTimeout(r, 250));
+      assert.deepEqual([eski.data().eslesme, eski.data().cariId], ['son_giris', 'cari-t']);
+      assert.equal((await db.collection('posIslemleri').get()).size, 3);
       assert.equal(await page.evaluate(() => localStorage.getItem('bup-sonuc-kutusu')), '[]');
 
       // Gün sonu: cari, toplam, başarısız deneme; Excel dosyası.
       await page.getByRole('tab', { name: 'Gün sonu', exact: true }).click();
       // Toplam kutusu ekran okuyucuya tek cümle olarak okunur.
-      await page.getByText(/Gün toplamı 4\.500,00 TL, 1 başarılı, 1 başarısız işlem/).waitFor();
-      await page.getByRole('group', { name: `${CARI} VKN / TC ${KIMLIK} 4.500,00 TL`, exact: true }).waitFor();
+      await page.getByText(/Gün toplamı 4\.750,00 TL, 2 başarılı, 1 başarısız işlem/).waitFor();
+      await page.getByRole('group', { name: `${CARI} VKN / TC ${KIMLIK} 4.750,00 TL`, exact: true }).waitFor();
       await page.getByText(/3D Şifresi Yanlış\./).waitFor();
       await page.screenshot({ path: `/tmp/bup-pos-tahsilat/${ad}-gun-sonu.png`, fullPage: true });
       const [indirme] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Excel’e aktar (CSV)' }).click()]);
@@ -144,11 +159,13 @@ try {
       assert.ok(csv.startsWith('﻿"Tarih";"Saat";"Cari"'));
       assert.match(csv, new RegExp(`"${CARI}";"${KIMLIK}";"Başarılı";"4500,00";"4500";"${ONAY_NO}";"600001"`));
       assert.match(csv, /"Başarısız";"45678,90";"45678,90";"VP1000000000000002"/);
+      assert.match(csv, /"Telefondaki son DenizPay girişiyle";/);
+      assert.match(csv, /"Telefondaki tek DenizPay girişiyle";"\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}"/);
 
       assert.deepEqual(harici, []);
       assert.deepEqual(hatalar, []);
       await baglam.close();
-      console.log(`PASS ${ad}: giriş kaydı, son giriş işareti, sonuç ekranından kayıt, çift kayıt reddi, kapalı sekmede bekleyen sonuç, gün sonu, Excel dosyası`);
+      console.log(`PASS ${ad}: giriş kaydı, son giriş işareti, sonuç ekranından kayıt, çift kayıt reddi, kapalı sekmede bekleyen sonuç, gün sonu, Excel dosyası, 0.9.0’dan bekleyen sonuç (gerçek kurallar)`);
     } catch (e) {
       if (page) {
         await page.screenshot({ path: `/tmp/bup-pos-tahsilat/${ad}-hata.png` }).catch(() => {});

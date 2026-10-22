@@ -5,6 +5,10 @@
 // etiketli kutuların yazısını Sanal POS'un sonuc.html sayfasına verir; sayfa
 // sonucu okur, kişi onaylayınca son girilen cariye kaydeder (docs/TAHSILAT.md).
 // Kart sayfasında hiçbir şey gönderilmez; kart numarasına benzeyen yazı atılır.
+// 3. sürüm (0.10.0): kart sayfasında okunan "Firma İsmi" numarası bu DenizPay
+// sekmesinin sessionStorage'ına not edilir (sekmeye özel; yalnız VKN ve an).
+// Sonuç ekranında bu not da gönderilir: ödeme, sekmenin açık olduğu firmanın
+// carisine bağlanır; önceki cari için açık kalmış sekme karışmaz.
 // Kart bilgisi yer iminde durmaz: Sanal POS'un doldur.html sayfası bu cihazdaki
 // bekleyen işten okur ve yalnız DenizPay kökenine postMessage ile gönderir.
 // Sayfadaki "Firma İsmi" numarası seçili carinin VKN/TC'si değilse hiçbir şey yazılmaz.
@@ -13,7 +17,8 @@
 (() => {
 // SURUM_NO doldur sayfasına iletilir; sayfa eski yer imini görünce yeniden kurulum ister.
 // 1. sürüm (21 Ekim) numara göndermiyordu; sayfa numarasız isteği 1 sayar.
-const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-2', SURUM_NO = 2;
+const UYGULAMA = '__UYGULAMA_KOKENI__', POS = '__POS_KOKENI__', SURUM = 'doldur-3', SURUM_NO = 3;
+const NOT = 'bup-sekme-firma';
 if (window.__bupDoldur) { window.__bupDoldur.kapat(); }
 const kutu = document.createElement('div');
 kutu.setAttribute('style', 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483647;background:#fff;color:#111;border:3px solid #16343e;border-radius:12px;padding:12px;font:16px/1.4 -apple-system,system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.35)');
@@ -55,9 +60,15 @@ const luhn = n => {
   for (let i = n.length - 1; i >= 0; i--, cift = !cift) { let r = Number(n[i]); if (cift) { r *= 2; if (r > 9) { r -= 9; } } t += r; }
   return t > 0 && t / 10 === Math.floor(t / 10);
 };
+const sekmeNotu = () => {
+  try {
+    const n = JSON.parse(sessionStorage.getItem(NOT) || 'null');
+    return n && typeof n.vkn === 'string' && /^[0-9]{10,11}$/.test(n.vkn) && Number.isInteger(n.an) ? { vkn: n.vkn, an: n.an } : null;
+  } catch (e) { return null; }
+};
 const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join('');
 const metin = document.body.innerText;
-if ((!k.numara || !k.skt) && /(Onay|Hata)\s+Formu/i.test(metin) && /Sipari[şs]\s+Numaras/i.test(metin)) {
+if ((!k.numara || !k.skt) && /(Onay|Hata)\s+Formu/i.test(metin) && /s[iİIı]par[iİIı][şsŞS]\s+numaras/i.test(metin)) {
   const alanlar = [];
   let son = '';
   const gez = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
@@ -78,7 +89,7 @@ if ((!k.numara || !k.skt) && /(Onay|Hata)\s+Formu/i.test(metin) && /Sipari[şs]\
     if (e.source !== pencere || e.origin !== UYGULAMA || !e.data || e.data.id !== id) { return; }
     if (e.data.tur === 'bup-sonuc-iste') {
       clearTimeout(zaman);
-      pencere.postMessage({ tur: 'bup-sonuc-paket', id: id, sayfa: { metin: metin.slice(0, 5000), alanlar: alanlar, firma: firma() } }, UYGULAMA);
+      pencere.postMessage({ tur: 'bup-sonuc-paket', id: id, sayfa: { metin: metin.slice(0, 5000), alanlar: alanlar, firma: firma(), sekme: sekmeNotu() } }, UYGULAMA);
     } else if (e.data.tur === 'bup-sonuc-durum' && typeof e.data.mesaj === 'string') {
       goster(e.data.mesaj.slice(0, 300), e.data.hata === true);
     }
@@ -89,6 +100,7 @@ if ((!k.numara || !k.skt) && /(Onay|Hata)\s+Formu/i.test(metin) && /Sipari[şs]\
 }
 if (!k.numara || !k.skt) { goster('Kart kutuları bulunamadı. Kart numarasını yazdığın ödeme sayfasında, ödeme bitince sonuç ekranında dokun.', true); return; }
 if (!firma()) { goster('Sayfada firma numarası bulunamadı; güvenlik için kart yazılmadı.', true); return; }
+try { sessionStorage.setItem(NOT, JSON.stringify({ vkn: firma(), an: Date.now() })); } catch (e) { /* not tutulamazsa sonuçta seçim istenir */ }
 const pencere = window.open(UYGULAMA + '/doldur.html#b=' + id + '&s=' + SURUM_NO, '_blank');
 if (!pencere) { goster('Açılır pencere engellendi. Tarayıcı ayarında açılır pencerelere izin ver.', true); return; }
 goster('Sanal POS’tan kart bekleniyor. Açılan sekme kapanmazsa bu sekmeye dön.', false);
