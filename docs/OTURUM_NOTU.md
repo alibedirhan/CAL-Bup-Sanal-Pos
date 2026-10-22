@@ -24,6 +24,8 @@ sınar; telefon saati ileri ise kayıt reddedilecekti → okunma sınırı +1 g�
 Testler: 122 Dart; kurallar 25; `test:saf` (yeni, CI'da); demo, kasa, doldur
 (yeni eşleştirme senaryoları), hesap, tahsilat — Chromium + WebKit geçti.
 Kullanıcı yer imini 0.10.0 için bir kez yeniden kurmalı (sonuç sayfası 3 ister).
+**Yayında:** `yayin.sh`, kod özeti `058ac06685a396bf` (kurallar + hosting); CI
+39826335041 ve `test:yayin` geçti. Sonraki yayınlar için yine kullanıcıya sorulur.
 
 ---
 
