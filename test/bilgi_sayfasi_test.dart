@@ -36,7 +36,7 @@ void main() {
     expect(link.uri!.hasFragment, isFalse);
     expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
     expect(find.text('Telefon denemesini aç'), findsNothing);
-    expect(find.text('BUP Sanal POS · 0.8.0'), findsOneWidget);
+    expect(find.text('BUP Sanal POS · 0.8.1'), findsOneWidget);
   });
 
   testWidgets('Deneme kipinde kurulum bağlantısı gösterilmez', (tester) async {

@@ -1,7 +1,10 @@
 # Arayüz ve kullanım taraması — 22 Ekim 2026 (0.8.0)
 
 Kullanıcı isteği: "Arayüzle ilgili kullanıcı deneyimini etkileyen sorunları bul,
-raporla; sonra rapora göre ilerleyeceğiz." Hiçbiri henüz düzeltilmedi.
+raporla; sonra rapora göre ilerleyeceğiz."
+
+**0.8.1'de yapıldı:** 1 (✕ düğmesi yerine üstte boşluk — kullanıcı kararı), 2, 3,
+4, 11, 16; 15 kısmen ("Cariyi sil" yazılı ve kırmızı). Kalanlar bekliyor.
 
 Nasıl tarandı: bütün ekran kodu okundu; emülatör paketi (yapay hesaplar) üç
 boyutta gezilip ekran görüntüsü alındı: 390×844 (yeni iPhone), 375×548

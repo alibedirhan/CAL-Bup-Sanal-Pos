@@ -7,13 +7,7 @@ import 'tema.dart';
 import 'package:url_launcher/link.dart';
 
 Future<void> posOnayiniAc(BuildContext context, OturumModeli model) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (_) => PosOnayi(model: model),
-    );
+    altPencereAc<void>(context, (_) => PosOnayi(model: model));
 
 class PosOnayi extends StatefulWidget {
   const PosOnayi({super.key, required this.model});

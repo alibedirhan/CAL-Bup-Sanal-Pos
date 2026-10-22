@@ -13,12 +13,9 @@ Future<void> kartFormunuAc(
   KartOzeti? kart,
 }) {
   final cari = model.profil!.cari;
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
-    builder: (_) => _KartFormu(model: model, cari: cari, kart: kart),
+  return altPencereAc<void>(
+    context,
+    (_) => _KartFormu(model: model, cari: cari, kart: kart),
   );
 }
 
@@ -39,7 +36,8 @@ class _KartFormuState extends State<_KartFormu> {
       _telefon = TextEditingController();
   late final _ay = TextEditingController(text: widget.kart?.ay.toString());
   late final _yil = TextEditingController(text: widget.kart?.yil.toString());
-  bool _mesgul = false, _yukleniyor = false, _onay = false;
+  // _denendi: ilk kayıt denemesinden sonra uyarılar yazdıkça güncellenir.
+  bool _mesgul = false, _yukleniyor = false, _onay = false, _denendi = false;
   // Yeni kartta numara açık başlar: gizli (parola türü) kutuda telefonun kart
   // tarama/önerme özelliği çıkmaz. Kayıtlı kart açılırken gizli kalır.
   late bool _goster = widget.kart == null;
@@ -96,7 +94,9 @@ class _KartFormuState extends State<_KartFormu> {
   }
 
   Future<void> _kaydet() async {
-    if (_mesgul || _yukleniyor || !_form.currentState!.validate()) return;
+    if (_mesgul || _yukleniyor) return;
+    setState(() => _denendi = true);
+    if (!_form.currentState!.validate()) return;
     if (!_onay) {
       setState(
         () => _hata = 'Kartı ve bağlı cariyi kontrol edip kutuyu işaretle.',
@@ -209,6 +209,9 @@ class _KartFormuState extends State<_KartFormu> {
               onDisposeAction: AutofillContextAction.cancel,
               child: Form(
                 key: _form,
+                autovalidateMode: _denendi
+                    ? AutovalidateMode.always
+                    : AutovalidateMode.disabled,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -366,7 +369,10 @@ class _KartFormuState extends State<_KartFormu> {
                         'Kartı ve bu cari altında saklamayı kontrol ettim.',
                       ),
                       onChanged: aktif
-                          ? (v) => setState(() => _onay = v ?? false)
+                          ? (v) => setState(() {
+                              _onay = v ?? false;
+                              if (_onay) _hata = null;
+                            })
                           : null,
                     ),
                     if (_hata != null) ...[

@@ -1,5 +1,29 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'tema.dart';
+
+/// Alttan açılan pencere. Üstte boşluk bırakılır: küçük ekranda (iPhone SE)
+/// tutma çizgisi ekranın tepesine yapışmaz, aşağı çekerek kapatılabilir.
+/// Klavye açılınca yükseklik görünen alana göre yeniden hesaplanır.
+Future<T?> altPencereAc<T>(BuildContext context, WidgetBuilder builder) =>
+    showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (context) {
+        final mq = MediaQuery.of(context);
+        final klavye = mq.viewInsets.bottom;
+        final yukseklik = (mq.size.height - klavye) * 0.88 + klavye;
+        return ConstrainedBox(
+          // Tutma çizgisi alanı içerikten ayrı yer kaplar.
+          constraints: BoxConstraints(
+            maxHeight: math.max(0, yukseklik - kMinInteractiveDimension),
+          ),
+          child: builder(context),
+        );
+      },
+    );
 
 class SinirliIcerik extends StatelessWidget {
   const SinirliIcerik({

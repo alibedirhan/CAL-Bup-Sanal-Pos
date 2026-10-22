@@ -32,15 +32,8 @@ class _CariListesiState extends State<CariListesi> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Cariyi bul,\nkartını seç.',
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-                const SizedBox(height: 10),
-                const Text('Sanal POS işlemlerine tek yerden hazırlan.'),
-                const SizedBox(height: 22),
-                _Ozet(cariSayisi: m.cariler.length, kartSayisi: m.kartSayisi),
-                const SizedBox(height: 22),
+                // Küçük ekranda (iPhone SE) ilk bakışta cariler görünsün diye
+                // büyük başlık ve sayı kutusu yok; arama en üstte.
                 TextField(
                   controller: _arama,
                   onChanged: m.ara,
@@ -64,23 +57,29 @@ class _CariListesiState extends State<CariListesi> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final f in CariFiltresi.values)
-                      ChoiceChip(
-                        selected: m.filtre == f,
-                        label: Text(switch (f) {
-                          CariFiltresi.tumu => 'Tümü',
-                          CariFiltresi.yildizli => 'Yıldızlılar',
-                          CariFiltresi.kartli => 'Kartı olanlar',
-                        }),
-                        onSelected: (_) => m.suz(f),
-                      ),
-                  ],
+                // Tek satır: dar ekranda iki satıra bölünüp listeyi aşağı itmez.
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final f in CariFiltresi.values)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            selected: m.filtre == f,
+                            visualDensity: VisualDensity.compact,
+                            label: Text(switch (f) {
+                              CariFiltresi.tumu => 'Tümü',
+                              CariFiltresi.yildizli => 'Yıldızlılar',
+                              CariFiltresi.kartli => 'Kartı olanlar',
+                            }),
+                            onSelected: (_) => m.suz(f),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -125,7 +124,9 @@ class _CariListesiState extends State<CariListesi> {
                     ? 'İlk carini ekle'
                     : 'Cari bulunamadı',
                 aciklama: m.cariler.isEmpty
-                    ? 'Yeni cari düğmesiyle bir deneme kaydı oluşturabilirsin.'
+                    ? m.deneme
+                          ? 'Yeni cari düğmesiyle bir deneme kaydı oluşturabilirsin.'
+                          : 'Yeni cari düğmesiyle ilk carini ekleyebilirsin.'
                     : 'Farklı bir ad veya kimlik numarası deneyebilirsin.',
                 eylem: m.cariler.isEmpty
                     ? FilledButton(
@@ -159,58 +160,6 @@ class _CariListesiState extends State<CariListesi> {
       ],
     );
   }
-}
-
-class _Ozet extends StatelessWidget {
-  const _Ozet({required this.cariSayisi, required this.kartSayisi});
-  final int cariSayisi, kartSayisi;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      color: PosRenk.koyu,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    padding: const EdgeInsets.all(22),
-    child: Row(
-      children: [
-        Expanded(child: _Deger('$cariSayisi', 'Cari')),
-        const SizedBox(width: 20),
-        Expanded(child: _Deger('$kartSayisi', 'Kart özeti')),
-        const ExcludeSemantics(
-          child: Icon(
-            Icons.credit_card_rounded,
-            color: Color(0xFF83C6B7),
-            size: 40,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _Deger extends StatelessWidget {
-  const _Deger(this.deger, this.baslik);
-  final String deger, baslik;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        deger,
-        style: const TextStyle(
-          color: PosRenk.beyaz,
-          fontSize: 30,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        baslik,
-        style: const TextStyle(color: Color(0xFFC4D9DD), fontSize: 13),
-      ),
-    ],
-  );
 }
 
 class _CariSatiri extends StatelessWidget {

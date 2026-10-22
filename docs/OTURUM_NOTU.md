@@ -1,3 +1,23 @@
+# 22 Ekim 2026 — 0.8.1: arayüz taraması, ilk paket
+
+Kullanıcı arayüz taraması istedi → `docs/ARAYUZ_TARAMASI.md` (18 madde). Kullanıcı
+iPhone SE 2020 kullanıyor (Safari'de görünen alan ~375×548): kart penceresi tepeye
+kadar çıkıyor, aşağı çekme çizgisine ulaşamıyordu. Kullanıcı kararı: kapatma (✕)
+düğmesi İSTENMİYOR; pencerenin üstünde boşluk bırakılsın (estetik). Yapılanlar
+(madde 1, 2, 3, 4, 11, 16 + 15'in bir kısmı):
+`ortak.dart` `altPencereAc` (yükseklik görünen alanın %88'i, klavyeye göre
+yeniden hesaplanır; cari/kart/POS pencereleri); kart/cari/giriş formlarında ilk
+denemeden sonra uyarılar yazdıkça güncellenir (girişte yanlış şifre sonrası boş
+şifre uyarısı çıkmaz); cari listesinde büyük başlık ve koyu sayı kutusu
+kaldırıldı, süzgeçler tek satır; profilde kartlar üstte, "Cari bilgileri"
+(kopyala, Düzenle, Kullanıcıya ata, kırmızı "Cariyi sil") altta, yıldız ad
+yanında simge; canlıda boş liste yazısı düzeltildi. Testler: 92 Dart (yeni
+`test/kucuk_ekran_test.dart`, SE boyutu); demo, kasa, doldur, hesap (Chromium +
+WebKit) geçti. Madde 5 (DenizPay'e 2 dokunuş) kullanıcı onayı bekliyor.
+**Yayın bekliyor** (kullanıcı izni).
+
+---
+
 # 22 Ekim 2026 — 0.8.0: karttan okuma
 
 Kullanıcı "kartı tarayıp doğru bilgileri doğru yerlere, en doğru şekilde

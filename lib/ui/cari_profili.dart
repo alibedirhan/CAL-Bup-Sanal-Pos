@@ -41,6 +41,8 @@ class CariProfiliEkrani extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = model.profil!;
+    // Sıra kullanım sıklığına göre: kart seçimi en üstte (küçük ekranda da
+    // ilk bakışta görünsün), seyrek kullanılan cari işlemleri en altta.
     return ListView(
       children: [
         SinirliIcerik(
@@ -48,35 +50,28 @@ class CariProfiliEkrani extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CariAvatar(p.cari.ad, buyuk: true),
-                  const SizedBox(width: 16),
+                  CariAvatar(p.cari.ad),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           p.cari.ad,
-                          style: Theme.of(context).textTheme.headlineSmall,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                        const SizedBox(height: 6),
-                        Text('${p.kartlar.length} kart'),
+                        const SizedBox(height: 2),
+                        Text(
+                          p.cari.kimlikNo.isEmpty
+                              ? 'VKN / TC eklenmemiş'
+                              : 'VKN / TC ${p.cari.kimlikNo}',
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (p.cari.kimlikNo.isNotEmpty) ...[
-                PosGirisBilgileri(kimlikNo: p.cari.kimlikNo),
-                const SizedBox(height: 16),
-              ],
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  OutlinedButton.icon(
+                  IconButton(
+                    tooltip: p.cari.yildizli ? 'Yıldızı kaldır' : 'Yıldızla',
                     onPressed: model.mesgul
                         ? null
                         : () => model.yildizla(p.cari),
@@ -84,64 +79,19 @@ class CariProfiliEkrani extends StatelessWidget {
                       p.cari.yildizli
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded,
-                      size: 20,
-                    ),
-                    label: Text(p.cari.yildizli ? 'Yıldızlı' : 'Yıldızla'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: model.mesgul
-                        ? null
-                        : () => cariFormunuAc(context, model, cari: p.cari),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Düzenle'),
-                  ),
-                  IconButton(
-                    tooltip: 'Cariyi sil',
-                    onPressed: model.mesgul ? null : () => _sil(context),
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: PosRenk.ikincil,
+                      color: p.cari.yildizli ? PosRenk.uyari : PosRenk.ikincil,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
-              if (yonetim != null) ...[
-                OutlinedButton.icon(
-                  onPressed: model.mesgul
-                      ? null
-                      : () => cariAta(context, model, yonetim!),
-                  icon: const Icon(Icons.person_add_alt),
-                  label: const Text('Kullanıcıya ata'),
-                ),
-                const SizedBox(height: 20),
-              ],
+              const SizedBox(height: 20),
               Text(
                 'Kayıtlı kartlar (${p.kartlar.length})',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Bu kartlar yalnız bu cariye aittir. İşlem için bir kart seç.',
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: model.mesgul || p.kartlar.length >= 10
-                      ? null
-                      : model.deneme
-                      ? model.kartEkle
-                      : () => kartFormunuAc(context, model),
-                  icon: const Icon(Icons.add_card_outlined, size: 20),
-                  label: Text(model.deneme ? 'Deneme kartı ekle' : 'Kart ekle'),
-                ),
-              ),
-              if (p.kartlar.length >= 10)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: Text('Bu cariye en fazla 10 kart eklenebilir.'),
-                ),
+              const SizedBox(height: 4),
+              const Text('İşlem için bir kart seç.'),
+              const SizedBox(height: 14),
               if (model.hata != null) ...[
                 DurumNotu(model.hata!, hata: true),
                 const SizedBox(height: 16),
@@ -190,8 +140,63 @@ class CariProfiliEkrani extends StatelessWidget {
                     ],
                   ),
                 ),
-              const SizedBox(height: 6),
-              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: model.mesgul || p.kartlar.length >= 10
+                      ? null
+                      : model.deneme
+                      ? model.kartEkle
+                      : () => kartFormunuAc(context, model),
+                  icon: const Icon(Icons.add_card_outlined, size: 20),
+                  label: Text(model.deneme ? 'Deneme kartı ekle' : 'Kart ekle'),
+                ),
+              ),
+              if (p.kartlar.length >= 10)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text('Bu cariye en fazla 10 kart eklenebilir.'),
+                ),
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 20),
+              Text(
+                'Cari bilgileri',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              if (p.cari.kimlikNo.isNotEmpty) ...[
+                PosGirisBilgileri(kimlikNo: p.cari.kimlikNo),
+                const SizedBox(height: 16),
+              ],
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: model.mesgul
+                        ? null
+                        : () => cariFormunuAc(context, model, cari: p.cari),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('Düzenle'),
+                  ),
+                  if (yonetim != null)
+                    OutlinedButton.icon(
+                      onPressed: model.mesgul
+                          ? null
+                          : () => cariAta(context, model, yonetim!),
+                      icon: const Icon(Icons.person_add_alt, size: 18),
+                      label: const Text('Kullanıcıya ata'),
+                    ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(foregroundColor: PosRenk.hata),
+                    onPressed: model.mesgul ? null : () => _sil(context),
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    label: const Text('Cariyi sil'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
               DurumNotu(
                 model.deneme
                     ? 'Burada yalnız örnek kartların son dört hanesi bulunur. Gerçek kart bilgisi girilmez.'

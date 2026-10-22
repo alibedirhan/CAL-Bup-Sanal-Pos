@@ -24,7 +24,8 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
   final _form = GlobalKey<FormState>();
   late final _eposta = TextEditingController(text: widget.eposta);
   final _parola = TextEditingController();
-  bool _mesgul = false, _goster = false;
+  // _denendi: ilk girişten sonra uyarılar yazdıkça güncellenir/kalkar.
+  bool _mesgul = false, _goster = false, _denendi = false;
   String? _mesaj;
   bool _hata = false;
   @override
@@ -35,7 +36,11 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
   }
 
   Future<void> _islem(bool sifirla) async {
-    if (_mesgul || (!sifirla && !_form.currentState!.validate())) return;
+    if (_mesgul) return;
+    if (!sifirla) {
+      setState(() => _denendi = true);
+      if (!_form.currentState!.validate()) return;
+    }
     final eposta = _eposta.text.trim();
     if (sifirla && !eposta.contains('@')) {
       setState(() {
@@ -74,8 +79,12 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
       }
     } finally {
       if (mounted) {
+        // Şifre kutusu güvenlik için boşalır; boş kutu ayrıca uyarı vermesin.
         _parola.clear();
-        setState(() => _mesgul = false);
+        setState(() {
+          _mesgul = false;
+          _denendi = false;
+        });
       }
     }
   }
@@ -89,6 +98,9 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
             child: AutofillGroup(
               child: Form(
                 key: _form,
+                autovalidateMode: _denendi
+                    ? AutovalidateMode.always
+                    : AutovalidateMode.disabled,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

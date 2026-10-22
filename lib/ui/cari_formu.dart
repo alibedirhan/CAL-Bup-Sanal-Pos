@@ -7,13 +7,7 @@ Future<void> cariFormunuAc(
   BuildContext context,
   OturumModeli model, {
   Cari? cari,
-}) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: true,
-  builder: (_) => CariFormu(model: model, cari: cari),
-);
+}) => altPencereAc<void>(context, (_) => CariFormu(model: model, cari: cari));
 
 class CariFormu extends StatefulWidget {
   const CariFormu({super.key, required this.model, this.cari});
@@ -28,7 +22,8 @@ class _CariFormuState extends State<CariFormu> {
   late final _ad = TextEditingController(text: widget.cari?.ad);
   late final _kimlik = TextEditingController(text: widget.cari?.kimlikNo);
   String? _hata;
-  bool _kaydediliyor = false;
+  // İlk kayıt denemesinden sonra uyarılar yazdıkça güncellenir/kalkar.
+  bool _kaydediliyor = false, _denendi = false;
   @override
   void dispose() {
     _ad.dispose();
@@ -37,7 +32,9 @@ class _CariFormuState extends State<CariFormu> {
   }
 
   Future<void> _kaydet() async {
-    if (_kaydediliyor || !_form.currentState!.validate()) return;
+    if (_kaydediliyor) return;
+    setState(() => _denendi = true);
+    if (!_form.currentState!.validate()) return;
     setState(() {
       _kaydediliyor = true;
       _hata = null;
@@ -65,6 +62,9 @@ class _CariFormuState extends State<CariFormu> {
       child: SinirliIcerik(
         child: Form(
           key: _form,
+          autovalidateMode: _denendi
+              ? AutovalidateMode.always
+              : AutovalidateMode.disabled,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -77,7 +77,6 @@ class OturumModeli extends ChangeNotifier {
             },
       )
       .toList(growable: false);
-  int get kartSayisi => cariler.fold(0, (toplam, c) => toplam + c.kartSayisi);
   KartOzeti? get seciliKart {
     for (final kart in profil?.kartlar ?? <KartOzeti>[]) {
       if (kart.id == seciliKartId) return kart;
