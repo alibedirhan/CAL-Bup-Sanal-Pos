@@ -27,8 +27,10 @@ görünmez işaretler, internet kesikken sonuç telefonda kalır ve bağlantı g
 sayfa yenilenmeden yazılır, iki Sanal POS sekmesi aynı anda (tek kayıt, yanlış
 uyarı yok), yeni sekme girişi silmez. `test:tahsilat` ~12 çalıştırmada bir kez
 zaman aşımına düştü (yer bilinmiyor; sonraki 11 tur geçti). Yer imi değişmedi,
-yeniden kurulum gerekmez. **Yayınlanmadı**; kullanıcıya sorulacak (kurallar +
-hosting birlikte yayınlanmalı: kimlik kuralı ikisinde birlikte değişti).
+yeniden kurulum gerekmez. CI geçti. **Yayında** (kullanıcı onayıyla `yayin.sh`,
+kod özeti `0e14f10b70042217`; kurallar + indeksler + hosting birlikte;
+`test:yayin` Chromium/WebKit geçti; yeni `sonuc_kutusu.js`/`cari_eslestir.js`
+canlıda). Kullanıcı açık Sanal POS sekmesini bir kez kapatıp yeniden açmalı.
 
 ---
 
