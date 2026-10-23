@@ -66,6 +66,14 @@ void main() {
     }
   });
 
+  test('Kayıt kimliği JS ve kuralla aynı: başarısız deneme ayrı tutulur', () {
+    for (final o in ornekler['kimlikler'] as List) {
+      final sonuc = o[1] == 'hata' ? IslemSonucu.hata : IslemSonucu.basarili;
+      expect(belgeKimligi(o[0] as String, sonuc), o[2]);
+    }
+    expect(posNoDuzelt('\u200eVP\u200b 100\u2060-a'), 'VP100-A');
+  });
+
   test('Tutar Türkçe biçimde yazılır', () {
     expect(tutarYaz(450000), '4.500,00 TL');
     expect(tutarYaz(4567890), '45.678,90 TL');

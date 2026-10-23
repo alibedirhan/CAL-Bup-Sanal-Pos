@@ -74,7 +74,20 @@ class _IslemFormuState extends State<IslemFormu> {
         aciklama: _aciklama.text,
         kartSonDort: _kart,
       );
-      if (mounted) Navigator.pop(context, kayit);
+      if (!mounted) return;
+      if (kayit.farkli) {
+        // Aynı numarada başka cari/tutar kayıtlı: form açık kalır, yazılan kaydedilmedi.
+        final i = kayit.islem;
+        setState(() {
+          _kaydediliyor = false;
+          _hata =
+              'Bu numara (${i.basarili ? 'başarılı' : 'başarısız'}) zaten '
+              '${i.cariAd} · ${i.tutarKurus == null ? i.tutarMetni : tutarYaz(i.tutarKurus!)} '
+              'olarak kayıtlı. Yazdığın kaydedilmedi; DenizPay ekranındaki numarayı kontrol et.';
+        });
+        return;
+      }
+      Navigator.pop(context, kayit);
     } catch (e) {
       if (!mounted) return;
       setState(() {

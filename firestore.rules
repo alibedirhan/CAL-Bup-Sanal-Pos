@@ -123,10 +123,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /posIslemleri/{id} {
-      // Olmayan kaydı sorgulamak serbesttir: aynı Pos Sipariş Numarası ikinci kez yazılmaz.
+      // Belge kimliği: başarılıda Pos Sipariş Numarası, başarısızda sonuna "-h" (0.10.1; numara büyük
+      // harftir, karışmaz). DenizPay başarısız denemeden sonraki ödemeye aynı numarayı verse de ikisi
+      // ayrı yazılır; aynı sonuç ikinci kez yazılmaz. 0.10.1 öncesi başarısız kayıtlar "-h" eksizdir.
+      // Olmayan kaydı sorgulamak serbesttir (çift kayıt denetimi için).
       allow get: if uye() && (resource == null || erisim(resource.data.kullaniciId));
       allow list: if erisim(resource.data.kullaniciId);
-      allow create: if uye() && id.matches('^[A-Z0-9_-]{4,64}$')
+      allow create: if uye() && id.matches('^[A-Z0-9_-]{4,64}(-h)?$')
         && request.resource.data.keys().hasOnly(['kullaniciId', 'kullaniciAd', 'cariId', 'cariAd', 'kimlikNo', 'kartSonDort',
           'girisId', 'sonuc', 'aciklama', 'posSiparisNo', 'uyeSiparisNo', 'tutarMetni', 'tutarKurus', 'kaynak',
           'eslesme', 'okunma', 'zaman'])
@@ -138,7 +141,9 @@ service cloud.firestore {
       // telefonda okunduğu an (yalnız bilgi; gün ve sıra sunucu saatidir). Elle kayıtta yok.
       // Telefon saati kayık olabilir: 1 günden ileri veya 31 günden eski olamaz.
       function islemBicim(id, d) {
-        return d.posSiparisNo == id && d.sonuc in ['basarili', 'hata'] && d.kaynak in ['yer_imi', 'elle']
+        return d.posSiparisNo is string && d.posSiparisNo.matches('^[A-Z0-9_-]{4,64}$')
+          && ((d.sonuc == 'basarili' && id == d.posSiparisNo) || (d.sonuc == 'hata' && id == d.posSiparisNo + '-h'))
+          && d.kaynak in ['yer_imi', 'elle']
           && ((d.kaynak == 'elle' && d.eslesme == 'elle' && d.okunma == null)
             || (d.kaynak == 'yer_imi' && d.eslesme in ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim', 'son_giris']
               && d.okunma is timestamp && d.okunma <= request.time + duration.value(1, 'd')

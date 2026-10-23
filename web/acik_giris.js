@@ -32,6 +32,11 @@ globalThis.bupAcikGiris = Object.freeze({
     try { localStorage.removeItem(ANAHTAR); } catch { /* depo kapalıysa işaret zaten yok */ }
     return 'ok';
   },
+  // Bu telefonda başka hesapla giriş yapıldı: o hesabın girişleri atılır, bu hesabınkiler kalır.
+  yalniz(uid) {
+    try { localStorage.setItem(ANAHTAR, JSON.stringify(liste().filter(g => g.uid === uid))); } catch { /* yok */ }
+    return 'ok';
+  },
   // sonuc.html kullanır; süresi geçmiş veya bozuk kayıtlar okunurken atılır.
   oku() {
     const l = liste();

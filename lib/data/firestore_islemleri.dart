@@ -5,8 +5,8 @@ import '../domain/tahsilat.dart';
 import 'firestore_esleme.dart';
 
 /// `posGirisleri` ve `posIslemleri`: yalnız eklenir (firestore.rules). Zaman
-/// sunucu saatidir; işlem belge kimliği Pos Sipariş Numarasıdır.
-/// `web/sonuc_sayfasi.js` aynı alanlarla yazar.
+/// sunucu saatidir; işlem belge kimliği [PosIslemi.kimlik]'tir (Pos Sipariş
+/// Numarası, başarısız denemede "-h" ekli).
 class FirestoreIslemDeposu implements IslemDeposu {
   FirestoreIslemDeposu(this.db);
   final FirebaseFirestore db;
@@ -39,45 +39,61 @@ class FirestoreIslemDeposu implements IslemDeposu {
 
   @override
   Future<IslemKaydi> islemKaydet(PosIslemi i) => _dene(() async {
-    final ref = _islemler.doc(i.posSiparisNo);
-    final DocumentSnapshot<Map<String, dynamic>> mevcut;
-    try {
-      mevcut = await ref.get(const GetOptions(source: Source.server));
-    } on FirebaseException catch (e) {
-      // Kural, olmayan veya kendi kaydını okumaya izin verir; red başkasınındır.
-      if (e.code == 'permission-denied') {
-        throw const PosHatasi(
-          'pos_no_baska',
-          'Bu Pos Sipariş Numarası başka bir kullanıcı adına kayıtlı. Numarayı kontrol et.',
-        );
+    final ref = _islemler.doc(i.kimlik);
+    Future<DocumentSnapshot<Map<String, dynamic>>> oku() async {
+      try {
+        return await ref.get(const GetOptions(source: Source.server));
+      } on FirebaseException catch (e) {
+        // Kural, olmayan veya kendi kaydını okumaya izin verir; red başkasınındır.
+        if (e.code == 'permission-denied') {
+          throw const PosHatasi(
+            'pos_no_baska',
+            'Bu Pos Sipariş Numarası başka bir kullanıcı adına kayıtlı. Numarayı kontrol et.',
+          );
+        }
+        rethrow;
       }
-      rethrow;
     }
+
+    final mevcut = await oku();
     if (mevcut.exists) {
       return IslemKaydi(islemOku(mevcut.id, mevcut.data()!), zatenVardi: true);
     }
-    await ref.set({
-      'kullaniciId': i.kullaniciId,
-      'kullaniciAd': i.kullaniciAd,
-      'cariId': i.cariId,
-      'cariAd': i.cariAd,
-      'kimlikNo': i.kimlikNo,
-      'kartSonDort': i.kartSonDort,
-      'girisId': i.girisId,
-      'sonuc': i.basarili ? 'basarili' : 'hata',
-      'aciklama': i.aciklama,
-      'posSiparisNo': i.posSiparisNo,
-      'uyeSiparisNo': i.uyeSiparisNo,
-      'tutarMetni': i.tutarMetni,
-      'tutarKurus': i.tutarKurus,
-      'kaynak': i.kaynak == IslemKaynagi.elle ? 'elle' : 'yer_imi',
-      'eslesme': i.eslesme.kod,
-      'okunma': i.okunma == null ? null : Timestamp.fromDate(i.okunma!),
-      'zaman': FieldValue.serverTimestamp(),
-    });
+    try {
+      await _yaz(ref, i);
+    } on FirebaseException catch (_) {
+      // Kayıt yalnız eklenir: aynı kayıt o arada başka sekmeden yazıldıysa
+      // ikinci yazma reddedilir. Hata ancak kayıt gerçekten yoksa iletilir.
+      final sonra = await oku();
+      if (sonra.exists) {
+        return IslemKaydi(islemOku(sonra.id, sonra.data()!), zatenVardi: true);
+      }
+      rethrow;
+    }
     final yazilan = await ref.get(const GetOptions(source: Source.server));
     return IslemKaydi(islemOku(yazilan.id, yazilan.data()!), zatenVardi: false);
   });
+
+  Future<void> _yaz(DocumentReference<Map<String, dynamic>> ref, PosIslemi i) =>
+      ref.set({
+        'kullaniciId': i.kullaniciId,
+        'kullaniciAd': i.kullaniciAd,
+        'cariId': i.cariId,
+        'cariAd': i.cariAd,
+        'kimlikNo': i.kimlikNo,
+        'kartSonDort': i.kartSonDort,
+        'girisId': i.girisId,
+        'sonuc': i.basarili ? 'basarili' : 'hata',
+        'aciklama': i.aciklama,
+        'posSiparisNo': i.posSiparisNo,
+        'uyeSiparisNo': i.uyeSiparisNo,
+        'tutarMetni': i.tutarMetni,
+        'tutarKurus': i.tutarKurus,
+        'kaynak': i.kaynak == IslemKaynagi.elle ? 'elle' : 'yer_imi',
+        'eslesme': i.eslesme.kod,
+        'okunma': i.okunma == null ? null : Timestamp.fromDate(i.okunma!),
+        'zaman': FieldValue.serverTimestamp(),
+      });
 
   Query<Map<String, dynamic>> _gun(
     CollectionReference<Map<String, dynamic>> c,
@@ -133,12 +149,13 @@ PosGirisi girisOku(String id, Map<String, dynamic> d) => PosGirisi(
 );
 
 /// 0.9.0 kayıtlarında `eslesme`/`okunma` yoktur: yer imi kaydı son girişe
-/// bağlanmıştı.
+/// bağlanmıştı. 0.10.1'den önceki başarısız kayıtların kimliği "-h" eksiz
+/// numaradır; numara her zaman alandan okunur.
 PosIslemi islemOku(String id, Map<String, dynamic> d) {
   final elle = d['kaynak'] == 'elle';
   final okunma = d['okunma'];
   return PosIslemi(
-    posSiparisNo: id,
+    posSiparisNo: d['posSiparisNo'] as String,
     kullaniciId: d['kullaniciId'] as String,
     kullaniciAd: d['kullaniciAd'] as String,
     cariId: d['cariId'] as String,

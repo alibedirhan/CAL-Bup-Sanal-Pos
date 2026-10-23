@@ -43,10 +43,19 @@ final _posNo = RegExp(r'^[A-Z0-9_-]{4,64}$');
 final _rakam4 = RegExp(r'^[0-9]{4}$');
 final _kimlik = RegExp(r'^[0-9]{10,11}$');
 
+/// Ekranda görünmeyen biçim işaretleri (yön, sıfır genişlik, yumuşak tire).
+/// Banka sayfalarının yazısında bulunabilir; okunan değerden atılır.
+/// `web/sonuc_coz.js` ve `web/sonuc_kutusu.js` aynı kümeyi kullanır.
+final gorunmez = RegExp(
+  r'[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]',
+);
+
 /// DenizPay'in yazdığı işlem numarası; boşluklar atılır, büyük harfe çevrilir.
-/// Belge kimliği olarak kullanılır: aynı ödeme iki kez kaydedilemez.
 String posNoDuzelt(String deger) {
-  final no = deger.replaceAll(RegExp(r'\s'), '').toUpperCase();
+  final no = deger
+      .replaceAll(gorunmez, '')
+      .replaceAll(RegExp(r'\s'), '')
+      .toUpperCase();
   if (!_posNo.hasMatch(no)) {
     throw const PosHatasi(
       'pos_no',
@@ -61,6 +70,7 @@ String posNoDuzelt(String deger) {
 /// Virgül kuruş, nokta binlik ayracıdır; tek nokta ve 1–2 hane kuruş sayılır.
 int? tutarCoz(String metin) {
   final t = metin
+      .replaceAll(gorunmez, '')
       .replaceAll(RegExp(r'(TL|TRY|₺)', caseSensitive: false), '')
       .replaceAll(RegExp(r'[\s ]'), '');
   final binlik = RegExp(r'^[0-9]{1,3}(\.[0-9]{3})+$');
@@ -222,6 +232,9 @@ class PosIslemi {
   final DateTime? zaman;
   bool get basarili => sonuc == IslemSonucu.basarili;
 
+  /// Sunucudaki belge kimliği, bkz. [belgeKimligi].
+  String get kimlik => belgeKimligi(posSiparisNo, sonuc);
+
   /// Sonuç, kaydedildiği andan belirgin biçimde önce okunduysa (Sanal POS
   /// sekmesine geç dönüldü) okunma anı; gün sonunda ayrıca gösterilir.
   DateTime? get gecOkunma {
@@ -231,9 +244,27 @@ class PosIslemi {
   }
 }
 
-/// Kaydın sonucu: yeni yazıldı mı, aynı Pos Sipariş Numarası zaten var mıydı.
+/// Bir ödeme denemesinin kimliği: başarılıda Pos Sipariş Numarası, başarısızda
+/// sonuna "-h" eklenmiş hali (numara büyük harf olduğu için karışmaz). DenizPay
+/// başarısız denemeden sonraki başarılı ödemeye aynı numarayı verse de ikisi
+/// ayrı kaydedilir; aynı sonucun ikinci kez yazılması yine engellenir.
+/// `web/sonuc_kutusu.js` ve `firestore.rules` aynı kuralı uygular.
+String belgeKimligi(String posSiparisNo, IslemSonucu sonuc) =>
+    sonuc == IslemSonucu.hata ? '$posSiparisNo-h' : posSiparisNo;
+
+/// Aynı ödeme mi: aynı kimlik, cari ve tutar. Aynı kimlikte farklı cari veya
+/// tutar sessizce "kayıtlı" sayılmaz.
+bool ayniOdeme(PosIslemi a, PosIslemi b) =>
+    a.kimlik == b.kimlik &&
+    a.cariId == b.cariId &&
+    (a.tutarKurus != null && b.tutarKurus != null
+        ? a.tutarKurus == b.tutarKurus
+        : a.tutarMetni == b.tutarMetni);
+
+/// Kaydın sonucu: yeni yazıldı mı, aynı kimlikte kayıt zaten var mıydı.
+/// [farkli]: var olan kayıt istenenle aynı ödeme değil (cari veya tutar farklı).
 class IslemKaydi {
-  const IslemKaydi(this.islem, {required this.zatenVardi});
+  const IslemKaydi(this.islem, {required this.zatenVardi, this.farkli = false});
   final PosIslemi islem;
-  final bool zatenVardi;
+  final bool zatenVardi, farkli;
 }

@@ -34,6 +34,8 @@ class BekleyenSonuc {
       if (eslesme == null || (j['v'] == 2 && !_yerImi.contains(eslesme))) {
         return null;
       }
+      // Banka ekranından gelen yazılar; görünmez işaretler eski sayfadan da gelebilir.
+      String ekran(String ad) => (j[ad]! as String).replaceAll(gorunmez, '');
       return BekleyenSonuc._(
         uid,
         PosIslemi(
@@ -50,9 +52,9 @@ class BekleyenSonuc {
             'hata' => IslemSonucu.hata,
             _ => throw const FormatException('sonuc'),
           },
-          aciklama: j['aciklama']! as String,
-          uyeSiparisNo: j['uyeSiparisNo']! as String,
-          tutarMetni: j['tutarMetni']! as String,
+          aciklama: ekran('aciklama'),
+          uyeSiparisNo: ekran('uyeSiparisNo'),
+          tutarMetni: ekran('tutarMetni'),
           kaynak: IslemKaynagi.yerImi,
           eslesme: eslesme,
           okunma: okunma,

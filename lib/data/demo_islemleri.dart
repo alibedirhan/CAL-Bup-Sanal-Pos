@@ -90,7 +90,7 @@ class DemoIslemDeposu implements IslemDeposu {
   @override
   Future<IslemKaydi> islemKaydet(PosIslemi i) async {
     for (final m in _islemler) {
-      if (m.posSiparisNo != i.posSiparisNo) continue;
+      if (m.kimlik != i.kimlik) continue;
       if (m.kullaniciId != i.kullaniciId) {
         throw const PosHatasi(
           'pos_no_baska',

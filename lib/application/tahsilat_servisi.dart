@@ -11,7 +11,8 @@ import '../domain/tahsilat.dart';
 abstract interface class IslemDeposu {
   Future<void> girisKaydet(PosGirisi giris);
 
-  /// Aynı Pos Sipariş Numarası varsa yazmaz, mevcut kaydı döndürür.
+  /// Aynı kimlikte ([PosIslemi.kimlik]) kayıt varsa yazmaz, mevcut kaydı
+  /// döndürür (`zatenVardi`). Yazma reddedilip kayıt o arada oluştuysa da öyle.
   Future<IslemKaydi> islemKaydet(PosIslemi islem);
 
   /// `kullaniciId` yoksa herkesin kayıtları (yalnız yönetici okuyabilir).
@@ -36,15 +37,12 @@ abstract interface class DosyaIndirici {
 
 /// DenizPay sonuç ekranından okunup bu cihazda bekleyen sonuçlar. Ham kayıtlar
 /// döner; doğrulama domain'dedir. `yanitla` sonucu açık sonuç sayfasına bildirir.
+/// Kayıtlar [PosIslemi.kimlik] ile anılır (başarısız denemede "-h" ekli).
 abstract interface class SonucKutusu {
   bool get destekli;
   List<Map<String, Object?>> oku();
-  void sil(String posSiparisNo);
-  void yanitla(
-    String posSiparisNo, {
-    required bool tamam,
-    required String mesaj,
-  });
+  void sil(String kimlik);
+  void yanitla(String kimlik, {required bool tamam, required String mesaj});
 
   /// Başka sekmede sonuç eklendiğinde tetiklenir.
   Stream<void> get degisimler;
@@ -57,13 +55,9 @@ class KapaliSonucKutusu implements SonucKutusu {
   @override
   List<Map<String, Object?>> oku() => const [];
   @override
-  void sil(String posSiparisNo) {}
+  void sil(String kimlik) {}
   @override
-  void yanitla(
-    String posSiparisNo, {
-    required bool tamam,
-    required String mesaj,
-  }) {}
+  void yanitla(String kimlik, {required bool tamam, required String mesaj}) {}
   @override
   Stream<void> get degisimler => const Stream.empty();
 }
@@ -179,7 +173,7 @@ class TahsilatServisi {
         'Hata ekranındaki açıklamayı yaz (ör. 3D Şifresi Yanlış).',
       );
     }
-    return depo.islemKaydet(
+    return _kaydet(
       PosIslemi(
         posSiparisNo: posNoDuzelt(posSiparisNo),
         kullaniciId: kullaniciId,
@@ -197,9 +191,18 @@ class TahsilatServisi {
     );
   }
 
-  /// Bu cihazda bekleyen sonuçları yazar. Bağlantı yoksa sonuç kutuda kalır ve
-  /// sonra yeniden denenir; kalıcı red (yetki, başkasının numarası) kutudan
-  /// çıkarılır ve elle kontrol istenir. Başka hesabın sonucuna dokunulmaz.
+  /// Var olan kayıt istenenle aynı ödeme değilse [IslemKaydi.farkli].
+  Future<IslemKaydi> _kaydet(PosIslemi i) async {
+    final k = await depo.islemKaydet(i);
+    return k.zatenVardi && !ayniOdeme(k.islem, i)
+        ? IslemKaydi(k.islem, zatenVardi: true, farkli: true)
+        : k;
+  }
+
+  /// Bu cihazda bekleyen sonuçları yazar. Sonuç kutudan yalnız sunucuda kaydı
+  /// olduğu görülünce çıkar: bağlantı, oturum veya yetki sorununda telefonda
+  /// kalır, her açılışta yeniden denenir ve kişiye söylenir. Başka hesabın
+  /// sonucuna dokunulmaz.
   Future<List<KutuSonucu>> kutuyuIsle() async {
     if (!kutu.destekli) return const [];
     if (_isleniyor) {
@@ -212,24 +215,16 @@ class TahsilatServisi {
       do {
         _tekrar = false;
         for (final j in kutu.oku()) {
-          final no = j['posSiparisNo'];
           final b = BekleyenSonuc.oku(j, kullaniciAdi);
           if (b == null) {
-            if (no is String) kutu.sil(no);
+            // JS ve Dart aynı biçimi denetler; buraya düşmemeli. Yine de silinmez.
+            if (j['uid'] == kullaniciId) sonuclar.add(_okunamadi(j));
             continue;
           }
           if (b.kullaniciId != kullaniciId) continue;
           final s = await _yaz(b);
-          if (s == null) {
-            sonuclar.add(
-              const KutuSonucu(
-                'DenizPay sonucu bu telefonda bekliyor; bağlantı gelince kaydedilecek.',
-                tamam: false,
-              ),
-            );
-            return sonuclar;
-          }
-          sonuclar.add(s);
+          sonuclar.add(s.$1);
+          if (!s.$2) return sonuclar; // bağlantı yok: sonrakiler de bekler
         }
       } while (_tekrar);
       return sonuclar;
@@ -238,43 +233,64 @@ class TahsilatServisi {
     }
   }
 
-  /// `null`: geçici hata, kutuda kalır.
-  Future<KutuSonucu?> _yaz(BekleyenSonuc b) async {
-    final no = b.islem.posSiparisNo;
-    KutuSonucu sonuc;
+  KutuSonucu _okunamadi(Map<String, Object?> j) {
+    final no = j['posSiparisNo'], ad = j['cariAd'];
+    return KutuSonucu(
+      'Bu telefonda bekleyen bir DenizPay sonucu okunamadı'
+      '${ad is String ? ' ($ad${no is String ? ' · Pos No $no' : ''})' : ''}. '
+      'Telefonda tutuluyor; cari profilinden elle kaydet ve yöneticine bildir.',
+      tamam: false,
+    );
+  }
+
+  /// Sonuç notu ve devam edilip edilmeyeceği (bağlantı yoksa `false`).
+  Future<(KutuSonucu, bool)> _yaz(BekleyenSonuc b) async {
+    final no = b.islem.posSiparisNo, kimlik = b.islem.kimlik;
+    final IslemKaydi k;
     try {
-      sonuc = _kayitNotu(await depo.islemKaydet(b.islem), b);
-    } on PosHatasi catch (e) {
-      if (!const {'yetki', 'pos_no_baska', 'veri'}.contains(e.kod)) return null;
-      sonuc = KutuSonucu(
-        'Kaydedilemedi: ${b.islem.cariAd} · Pos No $no. '
-        '${e.kod == 'yetki' ? 'Cari sana atanmamış ya da VKN değişmiş.' : e.mesaj} '
-        'Cari profilinden elle kaydet.',
+      k = await _kaydet(b.islem);
+    } catch (e) {
+      // Beklenmeyen hata da geçici sayılır: sonuç silinmez.
+      final kod = e is PosHatasi ? e.kod : '';
+      final kalici = const {'yetki', 'pos_no_baska'}.contains(kod);
+      final s = KutuSonucu(
+        kalici
+            ? 'Kaydedilemedi: ${b.islem.cariAd} · Pos No $no. '
+                  '${kod == 'yetki' ? 'Cari sana atanmamış, VKN değişmiş ya da oturum yenilenmeli.' : (e as PosHatasi).mesaj} '
+                  'Sonuç bu telefonda tutuluyor; sorun giderilince kendiliğinden kaydedilir. Yöneticine bildir.'
+            : 'DenizPay sonucu (${b.islem.cariAd} · Pos No $no) bu telefonda '
+                  'bekliyor; kaydedilemedi, bağlantı gelince yeniden denenecek.',
         tamam: false,
       );
+      kutu.yanitla(kimlik, tamam: false, mesaj: s.mesaj);
+      return (s, kalici);
     }
-    kutu.sil(no);
-    kutu.yanitla(no, tamam: sonuc.tamam, mesaj: sonuc.mesaj);
-    return sonuc;
+    // Sunucuda kayıt var (yeni veya önceden): telefondaki kopya artık gereksiz.
+    final s = _kayitNotu(k, b);
+    kutu.sil(kimlik);
+    kutu.yanitla(kimlik, tamam: s.tamam, mesaj: s.mesaj);
+    return (s, true);
   }
 
   KutuSonucu _kayitNotu(IslemKaydi k, BekleyenSonuc b) {
     final i = k.islem;
     if (k.zatenVardi) {
-      // Aynı ödeme daha önce başka cariye yazıldıysa sessizce "tamam" denmez.
-      return i.cariId == b.islem.cariId
-          ? KutuSonucu(
-              'Bu ödeme zaten kayıtlı: ${i.cariAd} · ${saatYaz(i.zaman!)}.',
-              tamam: true,
-            )
-          : KutuSonucu(
-              'Bu ödeme (Pos No ${i.posSiparisNo}) zaten ${i.cariAd} carisine '
-              'kayıtlı (${saatYaz(i.zaman!)}). Seçtiğin ${b.islem.cariAd} '
-              'değil; yanlışsa yöneticine bildir.',
-              tamam: false,
-            );
+      // Aynı numarada başka cari veya tutar varsa sessizce "tamam" denmez.
+      if (!k.farkli) {
+        return KutuSonucu(
+          'Bu ödeme zaten kayıtlı: ${i.cariAd} · ${saatYaz(i.zaman!)}.',
+          tamam: true,
+        );
+      }
+      final yeni = b.islem;
+      return KutuSonucu(
+        'Dikkat: Pos No ${i.posSiparisNo} (${i.basarili ? 'başarılı' : 'başarısız'}) '
+        'zaten ${i.cariAd} · ${_tutar(i)} olarak kayıtlı (${saatYaz(i.zaman!)}). '
+        'Okunan sonuç farklı: ${yeni.cariAd} · ${_tutar(yeni)}. Kaydedilmedi; '
+        'DenizPay ekranını kontrol edip yöneticine bildir.',
+        tamam: false,
+      );
     }
-    final tutar = i.tutarKurus == null ? i.tutarMetni : tutarYaz(i.tutarKurus!);
     // Gün sunucu saatidir: sonuç dün okunup bugün yazıldıysa açıkça söylenir.
     final okunan = Gun.ani(b.okunma), yazilan = Gun.ani(i.zaman!);
     final gunNotu = okunan == yazilan
@@ -282,11 +298,14 @@ class TahsilatServisi {
         : ' Sonuç ${okunan.etiket} ${saatYaz(b.okunma)}’de okunmuştu; '
               '${yazilan.etiket} gün sonuna yazıldı.';
     return KutuSonucu(
-      'Kaydedildi: ${i.cariAd} · $tutar · '
+      'Kaydedildi: ${i.cariAd} · ${_tutar(i)} · '
       '${i.basarili ? 'başarılı' : 'başarısız'} · ${saatYaz(i.zaman!)}.$gunNotu',
       tamam: true,
     );
   }
+
+  static String _tutar(PosIslemi i) =>
+      i.tutarKurus == null ? i.tutarMetni : tutarYaz(i.tutarKurus!);
 
   /// Gelecek gün istenmez; geçmiş günler kayıtlar değişmediği için kesindir.
   Future<GunSonu> gunSonu(Gun gun, {bool herkes = false}) async {

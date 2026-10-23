@@ -53,11 +53,15 @@ class SahteKutu implements SonucKutusu {
   bool get destekli => true;
   @override
   List<Map<String, Object?>> oku() => List.of(kayitlar);
+
+  /// Kayıtlar `web/sonuc_kutusu.js` gibi numara + sonuç kimliğiyle silinir.
   @override
-  void sil(String no) => kayitlar.removeWhere((k) => k['posSiparisNo'] == no);
+  void sil(String kimlik) => kayitlar.removeWhere(
+    (k) => '${k['posSiparisNo']}${k['sonuc'] == 'hata' ? '-h' : ''}' == kimlik,
+  );
   @override
-  void yanitla(String no, {required bool tamam, required String mesaj}) =>
-      yanitlar.add((no, tamam, mesaj));
+  void yanitla(String kimlik, {required bool tamam, required String mesaj}) =>
+      yanitlar.add((kimlik, tamam, mesaj));
   @override
   Stream<void> get degisimler => _olay.stream;
 }
@@ -71,6 +75,8 @@ Map<String, Object?> bekleyen(
   String eslesme = 'kart_sayfasi',
   String cariId = 'demo-cari-0',
   String cariAd = 'Örnek Kuzey Market',
+  String tutarMetni = '4500',
+  String aciklama = 'Ödeme Başarıyla Gerçekleştirildi',
   DateTime? okunma,
 }) => {
   'v': v,
@@ -82,10 +88,10 @@ Map<String, Object?> bekleyen(
   'kimlikNo': '0000000001',
   'kartSonDort': '1111',
   'sonuc': sonuc ?? 'basarili',
-  'aciklama': 'Ödeme Başarıyla Gerçekleştirildi',
+  'aciklama': aciklama,
   'posSiparisNo': no,
   'uyeSiparisNo': '600001',
-  'tutarMetni': '4500',
+  'tutarMetni': tutarMetni,
   'okunma': (okunma ?? DateTime.now()).millisecondsSinceEpoch,
 };
 
@@ -121,16 +127,22 @@ void main() {
           kutu: kutu,
         );
         final sonuclar = await servis.kutuyuIsle();
-        expect(sonuclar.map((s) => s.tamam), [true, true]);
+        expect(sonuclar.map((s) => s.tamam), [true, true, false]);
         expect(
           sonuclar.first.mesaj,
           startsWith('Kaydedildi: Örnek Kuzey Market · 4.500,00 TL · başarılı'),
         );
-        // Başka hesabın sonucu kalır; bozuk kayıt atılır.
-        expect(kutu.kayitlar.map((k) => k['posSiparisNo']), ['VP9003']);
+        // Başka hesabın sonucu kalır. Okunamayan kayıt da silinmez, söylenir
+        // (telefondaki JS bozuk kaydı zaten vermez; Dart ile ayrışma güvencesi).
+        expect(kutu.kayitlar.map((k) => k['posSiparisNo']), [
+          'VP9003',
+          'VP9004',
+        ]);
+        expect(sonuclar.last.mesaj, contains('okunamadı'));
+        expect(sonuclar.last.mesaj, contains('VP9004'));
         expect(kutu.yanitlar.map((y) => (y.$1, y.$2)), [
           ('VP9001', true),
-          ('VP9002', true),
+          ('VP9002-h', true),
         ]);
         final gun = await depo.gun(servis.bugun, kullaniciId: 'u1');
         final i = gun.islemler.singleWhere((x) => x.posSiparisNo == 'VP9001');
@@ -141,7 +153,9 @@ void main() {
         // Aynı sonuç yeniden bırakılırsa ikinci kayıt oluşmaz.
         kutu.kayitlar.add(bekleyen('VP9001'));
         final ikinci = await servis.kutuyuIsle();
-        expect(ikinci.single.mesaj, startsWith('Bu ödeme zaten kayıtlı'));
+        // Okunamayan VP9004 her turda yeniden söylenir.
+        expect(ikinci.map((s) => s.tamam), [false, true]);
+        expect(ikinci.last.mesaj, startsWith('Bu ödeme zaten kayıtlı'));
         expect(
           (await depo.gun(
             servis.bugun,
@@ -153,7 +167,7 @@ void main() {
     );
 
     test(
-      'Bağlantı yoksa kutuda kalır; kalıcı red elle kontrol ister',
+      'Kaydedilemeyen sonuç hiçbir hatada silinmez; sorun geçince yazılır',
       () async {
         final kutu = SahteKutu()
           ..kayitlar.addAll([bekleyen('VP8001'), bekleyen('VP8002')]);
@@ -169,15 +183,25 @@ void main() {
         );
         final s = await servis.kutuyuIsle();
         expect(s.map((x) => x.tamam), [false, false]);
-        expect(
-          s.first.mesaj,
-          contains('Cari sana atanmamış ya da VKN değişmiş'),
-        );
+        expect(s.first.mesaj, contains('Cari sana atanmamış, VKN değişmiş'));
+        expect(s.first.mesaj, contains('telefonda tutuluyor'));
         expect(s.last.mesaj, contains('bağlantı gelince'));
-        expect(kutu.kayitlar.map((k) => k['posSiparisNo']), ['VP8002']);
-        expect(kutu.yanitlar.single.$1, 'VP8001');
+        expect(kutu.kayitlar.map((k) => k['posSiparisNo']), [
+          'VP8001',
+          'VP8002',
+        ]);
+        expect(kutu.yanitlar.map((y) => (y.$1, y.$2)), [
+          ('VP8001', false),
+          ('VP8002', false),
+        ]);
+        // Oturum/bağlantı sorunu (eskiden kalıcı sayılıyordu) ve beklenmeyen hata.
+        hatalar
+          ..['VP8001'] = const PosHatasi('veri', 'okunamadı')
+          ..remove('VP8002');
+        expect((await servis.kutuyuIsle()).map((x) => x.tamam), [false]);
+        expect(kutu.kayitlar, hasLength(2));
         hatalar.clear();
-        expect((await servis.kutuyuIsle()).single.tamam, isTrue);
+        expect((await servis.kutuyuIsle()).map((x) => x.tamam), [true, true]);
         expect(kutu.kayitlar, isEmpty);
       },
     );
@@ -201,8 +225,15 @@ void main() {
           kullaniciAdi: 'Örnek Satıcı',
           kutu: kutu,
         );
-        expect((await servis.kutuyuIsle()).map((s) => s.tamam), [true, true]);
-        expect(kutu.kayitlar, isEmpty);
+        expect((await servis.kutuyuIsle()).map((s) => s.tamam), [
+          true,
+          true,
+          false,
+          false,
+          false,
+        ]);
+        // Kuralca geçersiz olanlar yazılmaz ama silinmez de.
+        expect(kutu.kayitlar, hasLength(3));
         final l = (await depo.gun(servis.bugun, kullaniciId: 'u1')).islemler;
         PosIslemi no(String n) => l.singleWhere((x) => x.posSiparisNo == n);
         expect(no('VP6001').eslesme, CariEslesmesi.secim);
@@ -234,9 +265,103 @@ void main() {
       );
       final s = (await servis.kutuyuIsle()).single;
       expect(s.tamam, isFalse);
-      expect(s.mesaj, contains('zaten Örnek Kuzey Market carisine kayıtlı'));
-      expect(s.mesaj, contains('Seçtiğin Örnek Sahil Gıda değil'));
+      expect(
+        s.mesaj,
+        contains('zaten Örnek Kuzey Market · 4.500,00 TL olarak kayıtlı'),
+      );
+      expect(
+        s.mesaj,
+        contains('Okunan sonuç farklı: Örnek Sahil Gıda · 4.500,00 TL'),
+      );
       expect(kutu.yanitlar.last.$2, isFalse);
+      expect(kutu.kayitlar, isEmpty);
+      // Aynı cari, farklı tutar da "tamam" sayılmaz.
+      kutu.kayitlar.add(bekleyen('VP6101', tutarMetni: '450'));
+      final t = (await servis.kutuyuIsle()).single;
+      expect(t.tamam, isFalse);
+      expect(
+        t.mesaj,
+        contains('Okunan sonuç farklı: Örnek Kuzey Market · 450,00 TL'),
+      );
+      // Aynı tutarın başka yazılışı aynı ödemedir.
+      kutu.kayitlar.add(bekleyen('VP6101', tutarMetni: '4.500,00 TL'));
+      expect(
+        (await servis.kutuyuIsle()).single.mesaj,
+        startsWith('Bu ödeme zaten kayıtlı'),
+      );
+    });
+
+    test(
+      'Başarısız denemeden sonra aynı numarayla gelen başarılı ödeme ayrı yazılır',
+      () async {
+        final kutu = SahteKutu()
+          ..kayitlar.add(
+            bekleyen('VP6301', sonuc: 'hata', aciklama: 'İşlem onaylanmadı.'),
+          );
+        final depo = DemoIslemDeposu();
+        final servis = TahsilatServisi(
+          depo: depo,
+          kullaniciId: 'u1',
+          kullaniciAdi: 'Örnek Satıcı',
+          kutu: kutu,
+        );
+        expect((await servis.kutuyuIsle()).single.tamam, isTrue);
+        // Başarısız sonuç kutuda dururken başarılı da gelebilir; ikisi ayrıdır.
+        kutu.kayitlar.addAll([
+          bekleyen('VP6301'),
+          bekleyen('VP6301', sonuc: 'hata', aciklama: 'İşlem onaylanmadı.'),
+        ]);
+        final s = await servis.kutuyuIsle();
+        expect(s.map((x) => x.tamam), [true, true]);
+        expect(
+          s.first.mesaj,
+          startsWith('Kaydedildi: Örnek Kuzey Market · 4.500,00 TL · başarılı'),
+        );
+        expect(s.last.mesaj, startsWith('Bu ödeme zaten kayıtlı'));
+        expect(kutu.kayitlar, isEmpty);
+        final gun = await servis.gunSonu(servis.bugun);
+        final l = gun.islemler.where((i) => i.posSiparisNo == 'VP6301');
+        expect(l.map((i) => (i.kimlik, i.basarili)), [
+          ('VP6301-h', false),
+          ('VP6301', true),
+        ]);
+        final cari = gun.cariler.singleWhere((c) => c.cariId == 'demo-cari-0');
+        // Toplama yalnız başarılı ödeme girer.
+        expect(
+          (cari.toplamKurus, cari.basariliAdet, cari.hataAdet),
+          (450000, 1, 1),
+        );
+      },
+    );
+
+    test('Banka yazısındaki görünmez işaretler kaydı engellemez', () async {
+      final kutu = SahteKutu()
+        ..kayitlar.add(
+          bekleyen(
+            'VP6401',
+            aciklama: '\u200eÖdeme Başarıyla Gerçekleştirildi\u200f',
+            tutarMetni: '4.500,00\u2060 TL\ufeff',
+          ),
+        );
+      final depo = DemoIslemDeposu();
+      final servis = TahsilatServisi(
+        depo: depo,
+        kullaniciId: 'u1',
+        kullaniciAdi: 'Örnek Satıcı',
+        kutu: kutu,
+      );
+      final s = (await servis.kutuyuIsle()).single;
+      expect(s.tamam, isTrue);
+      expect(
+        s.mesaj,
+        startsWith('Kaydedildi: Örnek Kuzey Market · 4.500,00 TL'),
+      );
+      final i = (await depo.gun(
+        servis.bugun,
+        kullaniciId: 'u1',
+      )).islemler.singleWhere((x) => x.posSiparisNo == 'VP6401');
+      expect(i.aciklama, 'Ödeme Başarıyla Gerçekleştirildi');
+      expect(i.tutarKurus, 450000);
       expect(kutu.kayitlar, isEmpty);
     });
 
@@ -403,13 +528,22 @@ void main() {
       expect(ilk.islem.cariAd, 'Örnek Ada Market');
       expect(ilk.islem.tutarKurus, 450000);
       expect(ilk.islem.kullaniciAd, 'Örnek Satıcı');
+      // Aynı numara farklı tutarla: yazılmaz ve "farklı" diye işaretlenir.
       final ikinci = await kaydet(no: ' vp 555', tutar: '1');
-      expect(ikinci.zatenVardi, isTrue);
+      expect((ikinci.zatenVardi, ikinci.farkli), (true, true));
       expect(ikinci.islem.tutarKurus, 450000);
+      final ucuncu = await kaydet(no: 'VP555', tutar: '4.500,00');
+      expect((ucuncu.zatenVardi, ucuncu.farkli), (true, false));
+      // Aynı numaranın başarısız denemesi ayrı kayıttır.
+      final hata = await kaydet(
+        sonuc: IslemSonucu.hata,
+        aciklama: 'İşlem onaylanmadı.',
+      );
+      expect((hata.zatenVardi, hata.islem.kimlik), (false, 'VP555-h'));
       final g = await servis.gunSonu(servis.bugun);
       expect(
         g.cariler.singleWhere((c) => c.cariId == 'demo-cari-3').islemler,
-        hasLength(1),
+        hasLength(2),
       );
     });
 

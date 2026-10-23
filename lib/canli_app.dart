@@ -114,8 +114,12 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       // aynı hesabın sayfa yenilemesi işi silmez.
       if (uid == null || (_sonUid != null && uid != _sonUid)) {
         const CihazDoldurmaHazirligi().temizle();
-        const CihazAcikGiris().temizle();
       }
+      // DenizPay girişleri (sır yok) yalnız bu sekmede çıkışta silinir. Yeni açılan
+      // sekme de önce oturumsuz başlar; o an silinirse DenizPay'de süren ödemenin
+      // sonucu cariye bağlanamaz. Giriş yapılınca başka hesabın girişleri atılır.
+      if (uid == null && _sonUid != null) const CihazAcikGiris().temizle();
+      if (uid != null) const CihazAcikGiris().yalniz(uid);
       _sonUid = uid;
       _nesil++;
       unawaited(_profil?.cancel().catchError((Object _) {}));

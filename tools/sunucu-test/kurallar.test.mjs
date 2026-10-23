@@ -173,8 +173,22 @@ test('Giriş ve işlem kaydı kendi carisi için eklenir, sonra değiştirilemez
   await assertFails(updateDoc(doc(db,'posGirisleri','A'.repeat(20)),{cariAd:'Başka'}));
   await assertFails(deleteDoc(doc(db,'posGirisleri','A'.repeat(20))));
   // Hata sonucu, okunamayan tutar ve kartsız/girişsiz elle kayıt da kabul edilir.
-  await assertSucceeds(setDoc(doc(db,'posIslemleri','VP0002'),islemVerisi('VP0002',{sonuc:'hata',aciklama:'3D Şifresi Yanlış.',
+  await assertSucceeds(setDoc(doc(db,'posIslemleri','VP0002-h'),islemVerisi('VP0002',{sonuc:'hata',aciklama:'3D Şifresi Yanlış.',
     uyeSiparisNo:'',tutarMetni:'4,500.00',tutarKurus:null,kartSonDort:'',girisId:'',kaynak:'elle',eslesme:'elle',okunma:null})));
+});
+test('Başarısız deneme "-h" kimlikle ayrı yazılır; aynı numaralı başarılı ödeme engellenmez (0.10.1)',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  const hata={sonuc:'hata',aciklama:'İşlem onaylanmadı.',uyeSiparisNo:''};
+  const no='VP10000000000000090';
+  await assertFails(setDoc(doc(db,'posIslemleri',no),islemVerisi(no,hata))); // başarısız "-h" eksiz yazılamaz
+  await assertFails(setDoc(doc(db,'posIslemleri',`${no}-h`),islemVerisi(no))); // başarılı "-h" ile yazılamaz
+  await assertSucceeds(setDoc(doc(db,'posIslemleri',`${no}-h`),islemVerisi(no,hata)));
+  await assertSucceeds(setDoc(doc(db,'posIslemleri',no),islemVerisi(no))); // sonra gelen başarılı ödeme
+  await assertFails(setDoc(doc(db,'posIslemleri',`${no}-h`),islemVerisi(no,hata))); // aynı sonuç ikinci kez
+  await assertFails(setDoc(doc(db,'posIslemleri',no),islemVerisi(no,{tutarMetni:'1',tutarKurus:100})));
+  await assertFails(setDoc(doc(db,'posIslemleri','VP91-H'),islemVerisi('VP91',hata))); // büyük harf ek yok
+  await assertFails(setDoc(doc(db,'posIslemleri','VP92-h-h'),islemVerisi('VP92-h',hata))); // numara küçük harf olamaz
+  await assertSucceeds(getDoc(doc(db,'posIslemleri',`${no}-h`)));
 });
 test('Cari eşleşmesi ve okunma anı (0.10.0) kurala uymalı',async()=>{
   await tahsilatCari();const db=dbFor(uid);

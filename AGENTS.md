@@ -36,6 +36,11 @@
   türü (`eslesme`) ve telefon okunma anı (`okunma`) kayda denetim izi olarak
   girer. Sonuç ekranında aynı satır/tablo düzenleri de okunur. JS birim testi
   `npm run test:saf`. Kayıtlar yine değiştirilemez.
+- 0.10.1 (23 Ekim): işlem kimliği başarılıda Pos Sipariş No, başarısızda
+  sonuna `-h` (Dart `belgeKimligi`, JS `sonuc_kutusu.js kimlik`, kural aynı;
+  kural ve hosting birlikte yayınlanır). Sonuç kutudan yalnız sunucuda kayıt
+  görülünce çıkar; görünmez işaretler okunan değerden atılır. İptal/düzeltme
+  düzeni kullanıcı kararıyla yoktur. Ayrıntı `docs/TAHSILAT.md`.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

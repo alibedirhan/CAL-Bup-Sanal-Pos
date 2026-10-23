@@ -8,7 +8,7 @@ external JSObject? get _modul;
 @JS('bupSonucKutusu.oku')
 external JSString _oku();
 @JS('bupSonucKutusu.sil')
-external JSString _sil(JSString posSiparisNo);
+external JSString _sil(JSString kimlik);
 @JS('bupSonucKutusu.yanitla')
 external JSString _yanitla(JSString yanit);
 @JS('bupSonucKutusu.dinle')
@@ -39,23 +39,19 @@ class CihazSonucKutusu implements SonucKutusu {
   }
 
   @override
-  void sil(String posSiparisNo) {
+  void sil(String kimlik) {
     try {
-      if (destekli) _sil(posSiparisNo.toJS);
+      if (destekli) _sil(kimlik.toJS);
     } catch (_) {}
   }
 
   @override
-  void yanitla(
-    String posSiparisNo, {
-    required bool tamam,
-    required String mesaj,
-  }) {
+  void yanitla(String kimlik, {required bool tamam, required String mesaj}) {
     try {
       if (destekli) {
         _yanitla(
           jsonEncode({
-            'posSiparisNo': posSiparisNo,
+            'kimlik': kimlik,
             'tamam': tamam,
             'mesaj': mesaj,
             // Aynı yanıt ikinci kez yazılınca da depo olayı oluşsun.

@@ -9,7 +9,14 @@ const KUTU = 'bup-sonuc-kutusu', YANIT = 'bup-sonuc-yanit';
 const SURE = 30 * 24 * 60 * 60 * 1000, EN_FAZLA = 20;
 const ALANLAR = 'aciklama,cariAd,cariId,girisId,kartSonDort,kimlikNo,okunma,posSiparisNo,sonuc,tutarMetni,uid,uyeSiparisNo,v';
 const ESLESME = ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim'];
-const metin = (v, en, bos = false) => typeof v === 'string' && (bos || v.length > 0) && v.length <= en && !/[\x00-\x1f\x7f]/.test(v);
+// Denetim Dart'taki (lib/domain/modeller.dart duzMetin) kadar sıkıdır: burada kabul edilen
+// sonuç Sanal POS'ta okunamayıp beklemede kalmasın. Görünmez işaretleri sonuc_coz.js atar.
+const metin = (v, en, bos = false) => typeof v === 'string' && (bos || v.length > 0) && v.length <= en &&
+  !/[\x00-\x1f\x7f\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/.test(v) && (bos || v.trim().length > 0);
+// Bir ödeme denemesinin kimliği (lib/domain/tahsilat.dart belgeKimligi, firestore.rules): başarılıda
+// Pos Sipariş No, başarısızda sonuna "-h". Başarısız denemeden sonra aynı numarayla gelen başarılı
+// sonuç ayrı tutulur; aynı sonucun ikinci kez eklenmesi engellenir.
+export const kimlik = s => s.posSiparisNo + (s.sonuc === 'hata' ? '-h' : '');
 export function gecerli(s) {
   const surum = s?.v === 1 ? Object.keys(s).sort().join(',') === ALANLAR
     : s?.v === 2 && Object.keys(s).filter(k => k !== 'eslesme').sort().join(',') === ALANLAR && ESLESME.includes(s.eslesme);
@@ -26,20 +33,20 @@ function liste() {
 }
 const yaz = l => localStorage.setItem(KUTU, JSON.stringify(l.slice(-EN_FAZLA)));
 globalThis.bupSonucKutusu = Object.freeze({
-  // Aynı Pos Sipariş Numarası ikinci kez eklenmez.
+  // Aynı kimlik (numara + sonuç) ikinci kez eklenmez.
   ekle(json) {
     const s = JSON.parse(json);
     if (!gecerli(s)) throw new Error('sonuc');
     const l = liste();
-    if (l.some(x => x.posSiparisNo === s.posSiparisNo)) return 'zaten';
+    if (l.some(x => kimlik(x) === kimlik(s))) return 'zaten';
     yaz([...l, s]);
     return 'ok';
   },
   oku() { return JSON.stringify(liste()); },
-  // Sonuç sayfası: aynı numara daha önce hangi cari için alındı.
-  bul(posSiparisNo) { return liste().find(x => x.posSiparisNo === posSiparisNo) ?? null; },
-  sil(posSiparisNo) {
-    try { yaz(liste().filter(x => x.posSiparisNo !== posSiparisNo)); } catch { /* depo kapalı */ }
+  // Sonuç sayfası: bu kimlik daha önce hangi cari ve tutarla alındı.
+  bul(k) { return liste().find(x => kimlik(x) === k) ?? null; },
+  sil(k) {
+    try { yaz(liste().filter(x => kimlik(x) !== k)); } catch { /* depo kapalı */ }
     return 'ok';
   },
   yanitla(json) { localStorage.setItem(YANIT, json); return 'ok'; },

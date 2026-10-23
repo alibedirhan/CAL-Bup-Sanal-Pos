@@ -1,3 +1,37 @@
+# 23 Ekim 2026 — 0.10.1: ödeme öncesi tarama düzeltmeleri
+
+Kullanıcı ilk gerçek ödemeden önce titiz tarama istedi; iptal düzenini reddetti
+(hata sonradan düzeltilmez, baştan önlenir). Sorumluluk sınırı: yanlış cari/
+tutar/kart kişinin, DenizPay hataları DenizPay'in; yazılımın işi DenizPay'in
+gösterdiğini birebir, doğru cariye, kaybetmeden, çift yazmadan kaydetmek.
+Taramada bulunan, geçici testle doğrulanan ve düzeltilenler:
+1. **Görünmez işaret → başarılı ödeme sessizce kayboluyordu.** JS sonucu kabul
+   ediyor, Dart `duzMetin` reddediyor, `kutuyuIsle` mesajsız siliyordu. Artık
+   okunan değerden atılır (`GORUNMEZ`/`gorunmez`), kutu denetimi Dart kadar sıkı.
+2. **Aynı numarada başarısız + başarılı:** başarılı "zaten kayıtlı" diye
+   yutuluyordu. Kimlik: başarılıda numara, başarısızda `-h` (Dart, JS, kural
+   aynı). Aynı kimlikte farklı cari/tutar "tamam" sayılmaz (`ayniOdeme`, `farkli`).
+3. **Eski DenizPay sekmesi:** not anına göre bakıldığı için eski sekmede yer
+   imine yeniden dokununca "kesin" deniyordu; artık o carinin son girişine göre.
+4. **Kalıcı sayılan hatalar sonucu siliyordu** ('yetki', 'veri',
+   'unauthenticated'). Artık kutudan yalnız sunucuda kayıt görülünce çıkar.
+   Yazma reddinde kayıt yeniden okunur (iki sekme yarışı → "zaten kayıtlı").
+5. **Testte bulundu:** yeni Sanal POS sekmesi oturumsuz açılışta telefondaki
+   DenizPay girişlerini siliyordu (süren ödeme cariye bağlanamazdı). Artık
+   yalnız bu sekmede çıkışta silinir; girişte başka hesabınkiler atılır.
+Elle kayıtta aynı numara farklı tutarla gelirse form açık kalır, uyarır.
+Testler (yapay veri, taklit DenizPay, gerçek kart yok): 125 Dart; kurallar 26;
+`test:saf` 6; demo/kasa/doldur/hesap/tahsilat Chromium + WebKit geçti.
+`test:tahsilat` yeni uçtan uca senaryolar: aynı numarada başarısız+başarılı,
+görünmez işaretler, internet kesikken sonuç telefonda kalır ve bağlantı gelince
+sayfa yenilenmeden yazılır, iki Sanal POS sekmesi aynı anda (tek kayıt, yanlış
+uyarı yok), yeni sekme girişi silmez. `test:tahsilat` ~12 çalıştırmada bir kez
+zaman aşımına düştü (yer bilinmiyor; sonraki 11 tur geçti). Yer imi değişmedi,
+yeniden kurulum gerekmez. **Yayınlanmadı**; kullanıcıya sorulacak (kurallar +
+hosting birlikte yayınlanmalı: kimlik kuralı ikisinde birlikte değişti).
+
+---
+
 # 22 Ekim 2026 — 0.10.0: cari eşleştirme, okuma sağlamlığı, denetim izi
 
 Kullanıcı 0.9.0 yayınını onayladı (yayında `dc286f0bf720da32`) ve risk raporundan

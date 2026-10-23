@@ -37,6 +37,11 @@ const ONAY = [['Açıklama', 'Ödeme Başarıyla Gerçekleştirildi'], ['Üye Si
 const HATA = [['Açıklama', '3D Şifresi Yanlış.'], ['Pos Sipariş Numarası', 'VP1000000000000002'], ['Tutar', '45678,90']];
 const onay = no => [ONAY[0], ['Üye Sipariş Numarası', '600009'], ['Pos Sipariş Numarası', no], ['Tutar', '100']];
 // Görülmemiş düzen: tablo hücreleri (innerText'te sekmeyle ayrılır) ve CSS ile büyük harf.
+// Banka sayfalarında rastlanan görünmez işaretler (yön, sıfır genişlik, kelime birleştirici).
+const gorunmezSayfasi = sonucSayfasi('Onay Formu', [['Açıklama', '&lrm;Ödeme Başarıyla Gerçekleştirildi&rlm;'],
+  ['Üye Sipariş Numarası', '600&#8203;061'], ['Pos Sipariş Numarası', 'VP&#8203;10000000000000060&lrm;'], ['Tutar', '4.500,00&#8288;']]);
+// Başarısız denemeden sonra aynı numarayla başarılı ödeme (DenizPay numarayı yeniden kullanırsa).
+const AYNI = 'VP10000000000000080';
 const tabloSayfasi = sayfa(`<h2 style="text-transform:uppercase">Onay Formu</h2><table style="text-transform:uppercase">
 <tr><td>Açıklama</td><td>Ödeme Başarıyla Gerçekleştirildi</td></tr><tr><td>Pos Sipariş Numarası</td><td>VP10000000000000070</td></tr>
 <tr><td>Tutar</td><td>2.500,00 TL</td></tr></table>`, 'Sonuç');
@@ -57,7 +62,9 @@ const sunucular = [
     '/onay3.aspx': ['text/html', sonucSayfasi('Onay Formu', onay('VP10000000000000030'))],
     '/onay4.aspx': ['text/html', sonucSayfasi('Onay Formu', onay('VP10000000000000040'))],
     '/firma-onay.aspx': ['text/html', sonucSayfasi('Onay Formu', onay('VP10000000000000050'), `<p>Firma İsmi : İKİNCİ YAPAY FİRMA (<a>${KIMLIK2}</a>)</p>`)],
-    '/tablo.aspx': ['text/html', tabloSayfasi],
+    '/tablo.aspx': ['text/html', tabloSayfasi], '/gorunmez.aspx': ['text/html', gorunmezSayfasi],
+    '/ayni-hata.aspx': ['text/html', sonucSayfasi('Hata Formu', [['Açıklama', 'İşlem onaylanmadı.'], ['Pos Sipariş Numarası', AYNI], ['Tutar', '100']])],
+    '/ayni-onay.aspx': ['text/html', sonucSayfasi('Onay Formu', onay(AYNI))],
     '/login.aspx': ['text/html', sayfa('<input name="lvergino"><input name="lsifre" type="password">', 'Giriş')] })[yol]],
   [4198, yol => yol === '/kotu' ? ['text/html', sayfa('kötü site', 'Kötü')] : undefined],
 ].map(([port, yanit]) => {
@@ -215,7 +222,7 @@ try {
       assert.ok(Math.abs(b1.okunma - Date.now()) < 60000);
       // Sanal POS sekmesi yazınca yanıtlar: sonuç sayfası ve DenizPay kutusu gösterir, sayfa kapanır.
       await uygulama.evaluate(() => { import('./sonuc_kutusu.js').then(() => bupSonucKutusu.yanitla(JSON.stringify(
-        { posSiparisNo: 'VP10000000000000001', tamam: true, mesaj: 'Kaydedildi: Örnek Yapay Market · 4.500,00 TL', an: 1 }))); });
+        { kimlik: 'VP10000000000000001', tamam: true, mesaj: 'Kaydedildi: Örnek Yapay Market · 4.500,00 TL', an: 1 }))); });
       await sekme.getByText(/BUP Doldur: Kaydedildi: Örnek Yapay Market/).waitFor({ timeout: 8000 });
       await s.waitForEvent('close', { timeout: 8000 });
       // Aynı ekrana yeniden dokunmak kutuya ikinci kayıt eklemez.
@@ -234,6 +241,28 @@ try {
       await s.locator('#pos-no', { hasText: 'VP10000000000000070' }).waitFor({ timeout: 8000 });
       assert.equal(await s.locator('#tutar').textContent(), '2.500,00 TL');
       await s.close();
+      // Görünmez işaretler okunan değerden atılır; telefona temiz sonuç bırakılır.
+      s = await sonucAc('/gorunmez.aspx');
+      await s.locator('#pos-no', { hasText: 'VP10000000000000060' }).waitFor({ timeout: 8000 });
+      assert.equal(await s.locator('#tutar').textContent(), '4.500,00 TL');
+      assert.equal(await s.locator('#aciklama').textContent(), 'Ödeme Başarıyla Gerçekleştirildi');
+      await s.getByRole('button', { name: 'Bu cariye kaydet' }).click();
+      await s.getByText(/Sonuç alındı: Örnek Yapay Market · 4\.500,00 TL/).waitFor();
+      const g = await kayit('VP10000000000000060');
+      assert.deepEqual([g.aciklama, g.uyeSiparisNo, g.tutarMetni], ['Ödeme Başarıyla Gerçekleştirildi', '600061', '4.500,00']);
+      await s.close();
+      // Başarısız deneme ve aynı numarayla gelen başarılı ödeme: ikisi de telefona alınır.
+      s = await sonucAc('/ayni-hata.aspx');
+      await s.locator('#sonuc', { hasText: '✗ Ödeme başarısız' }).waitFor({ timeout: 8000 });
+      await s.getByRole('button', { name: 'Bu cariye kaydet' }).click();
+      await s.getByText(/Sonuç alındı: Örnek Yapay Market · 100,00 TL/).waitFor();
+      await s.close();
+      s = await sonucAc('/ayni-onay.aspx');
+      await s.locator('#sonuc', { hasText: '✓ Ödeme başarılı' }).waitFor({ timeout: 8000 });
+      await s.getByRole('button', { name: 'Bu cariye kaydet' }).click();
+      await s.getByText(/Sonuç alındı: Örnek Yapay Market · 100,00 TL/).waitFor();
+      await s.close();
+      assert.deepEqual((await kutu()).filter(k => k.posSiparisNo === AYNI).map(k => k.sonuc), ['hata', 'basarili']);
 
       // İkinci cariyle de girildi, kart notu yok: kişi seçmeden kaydedilmez.
       await acikKur('cari-2', 'İkinci Yapay Bayi', KIMLIK2);
@@ -264,6 +293,9 @@ try {
       await s.close();
 
       // Kart sayfasında yer imi bu sekmenin firmasını not eder (kart yazılmasa da): sonuç o cariye kesin bağlanır.
+      // Önce bu cariyle yeniden girilir (yeni giriş: son giriş bu cari; ikinci cari daha önce girmişti).
+      await new Promise(r => setTimeout(r, 20));
+      await acikKur();
       await sekme.goto(`${POS}/index.aspx`);
       const [kartSayfasiAcilan] = await Promise.all([baglam.waitForEvent('page'), sekme.evaluate(kod)]);
       await kartSayfasiAcilan.close().catch(() => {});
@@ -286,7 +318,17 @@ try {
       await new Promise(r => setTimeout(r, 20));
       await acikKur('cari-2', 'İkinci Yapay Bayi', KIMLIK2);
       s = await sonucAc('/onay4.aspx');
-      await s.locator('#secim-neden', { hasText: /kart yazıldıktan sonra başka cariyle/ }).waitFor({ timeout: 8000 });
+      await s.locator('#secim-neden', { hasText: /sekmesi eski olabilir/ }).waitFor({ timeout: 8000 });
+      await s.close();
+      // Eski sekmeye dönülüp kart sayfasında yer imine yeniden dokunuldu: not yenilenir ama sekme
+      // eskidir (sonra başka cariyle girildi). Kesin denmez, seçim istenir.
+      await sekme.goto(`${POS}/index.aspx`);
+      const [yeniden] = await Promise.all([baglam.waitForEvent('page'), sekme.evaluate(kod)]);
+      await yeniden.close().catch(() => {});
+      await sekme.getByText(/BUP Doldur/).first().waitFor();
+      s = await sonucAc('/onay4.aspx');
+      await s.locator('#secim-neden', { hasText: /sekmesi eski olabilir/ }).waitFor({ timeout: 8000 });
+      assert.equal(await s.locator('#cari').textContent(), 'Seçilmedi');
       await s.close();
       // Sonuç ekranında firma numarası varsa o kesindir.
       s = await sonucAc('/firma-onay.aspx');
@@ -320,7 +362,7 @@ try {
       assert.deepEqual(harici, []);
       assert.deepEqual(hatalar, []);
       await baglam.close();
-      console.log(`PASS ${ad}: kart yazma, CVV/tutar/düğmeye dokunmama, firma eşleşmesi, köken reddi, süre, sonuç ekranı okuma (kutu/tablo), cari eşleştirme (tek giriş/seçim/kart notu/sonuç ekranı), ağ yalıtımı`);
+      console.log(`PASS ${ad}: kart yazma, CVV/tutar/düğmeye dokunmama, firma eşleşmesi, köken reddi, süre, sonuç ekranı okuma (kutu/tablo), cari eşleştirme (tek giriş/seçim/kart notu/eski sekme/sonuç ekranı), görünmez işaretler, aynı numarada başarısız+başarılı, ağ yalıtımı`);
     } finally { await tarayici.close(); }
   }
 } finally { for (const s of sunucular) s.close(); }

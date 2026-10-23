@@ -6,10 +6,14 @@
 // Sayfa HTML'i görülmedi; üç düzen tanınır: etiketli kutu, etiket ve alt satırda
 // değer, aynı satırda "Etiket: değer" veya tabloda sekmeyle ayrılmış değer.
 
+// Ekranda görünmeyen biçim işaretleri (yön, sıfır genişlik, yumuşak tire). Banka sayfası
+// yazısında bulunabilir; okunan değerden atılır. Dart: lib/domain/tahsilat.dart gorunmez.
+export const GORUNMEZ = /[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g;
+
 // Virgül kuruş, nokta binlik ayracı; tek nokta + 1–2 hane kuruş sayılır. Emin değilse null.
 export function tutarCoz(metin) {
   if (typeof metin !== 'string') return null;
-  const t = metin.replace(/(TL|TRY|₺)/gi, '').replace(/[\s ]/g, '');
+  const t = metin.replace(GORUNMEZ, '').replace(/(TL|TRY|₺)/gi, '').replace(/[\s ]/g, '');
   const binlik = /^[0-9]{1,3}(\.[0-9]{3})+$/;
   let tam, kurus = '';
   if (/^[0-9.]+,[0-9]{1,2}$/.test(t)) {
@@ -36,7 +40,7 @@ export function tutarYaz(kurus) {
   return tl + ',' + String(kurus % 100).padStart(2, '0') + ' TL';
 }
 
-export const duz = v => String(v ?? '').replace(/\s+/g, ' ').trim();
+export const duz = v => String(v ?? '').replace(GORUNMEZ, '').replace(/\s+/g, ' ').trim();
 // Türkçe büyük/küçük harf ve klavye farkını yok sayan karşılaştırma anahtarı.
 const anahtar = v => duz(v).replace(/[İIı]/g, 'i').toLowerCase().replace(/ş/g, 's').replace(/ğ/g, 'g')
   .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/[\s:*]+$/, '');

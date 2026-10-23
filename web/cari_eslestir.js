@@ -45,11 +45,14 @@ export function cariEslestir(girisler, sayfaFirma, sekme, simdi = Date.now()) {
     if (a.length === 0) {
       return yok(`Bu DenizPay sekmesi ${not.vkn} numaralı firmayla açık; bu telefonda son 2 saatte o cariyle giriş yok. Kaydedilmedi; doğru cariyi Sanal POS’ta açıp elle kaydet.`);
     }
-    // Kart yazıldıktan sonra başka cariyle girildiyse DenizPay oturumu değişmiş olabilir.
-    const sonra = l.filter(g => g.kimlikNo !== not.vkn && g.an > not.an);
+    // Bu firmayla son girişten sonra başka cariyle girildiyse DenizPay oturumu değişmiş olabilir
+    // (oturum tarayıcıda tek olabilir; doğrulanmadı). Not alınma anı yetmez: eski sekmeye dönülüp
+    // yer imine yeniden dokunulduğunda not yeni olur ama sekme eskidir.
+    const enSon = Math.max(...a.map(g => g.an));
+    const sonra = l.filter(g => g.kimlikNo !== not.vkn && g.an > enSon);
     if (a.length === 1 && sonra.length === 0) return kesin(a[0], 'kart_sayfasi');
     return secim(cariler([...a, ...sonra]), sonra.length
-      ? 'Bu sekmede kart yazıldıktan sonra başka cariyle de DenizPay’e girildi. Ödemeyi hangi cari için aldıysan onu seç.'
+      ? 'Bu cariyle DenizPay’e girdikten sonra başka cariyle de girildi; bu DenizPay sekmesi eski olabilir. Ödemeyi hangi cari için aldıysan onu seç.'
       : 'Bu VKN / TC ile birden fazla cari var. Ödemenin ait olduğu cariyi seç.');
   }
   const a = cariler(l);

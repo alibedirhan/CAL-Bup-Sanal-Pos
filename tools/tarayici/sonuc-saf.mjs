@@ -26,6 +26,7 @@ test('Tutar ve sonuç ekranı örnekleri (Dart ile ortak dosya)', () => {
     if (o.beklenen.ok) assert.deepEqual(r, o.beklenen, o.ad); else assert.equal(r.ok, false, o.ad);
   }
   assert.equal(coz.tutarYaz(4567890), '45.678,90 TL');
+  for (const [no, sonuc, kimlik] of ornekler.kimlikler) assert.equal(kutuModul.kimlik({ posSiparisNo: no, sonuc }), kimlik);
 });
 
 const T = Date.UTC(2026, 9, 22, 9, 0);
@@ -52,12 +53,20 @@ test('Cari eşleştirme: kesin olmayan durumda kişiye seçtirilir', () => {
   assert.deepEqual(e([a1, b1], A), ['kesin', 'cariA', 'sonuc_ekrani']);
   assert.deepEqual(e([a1, b1], C), ['yok']);
   assert.deepEqual(e([a1, b1], B, { vkn: A, an: T - dk(1) }), ['kesin', 'cariB', 'sonuc_ekrani']);
-  // Kart sayfası notu: sonrasında başka cariyle girilmediyse kesin.
-  assert.deepEqual(e([a1, b1], null, { vkn: A, an: T - dk(20) }), ['kesin', 'cariA', 'kart_sayfasi']);
+  // Kart sayfası notu: o cariyle son girişten sonra başka cariyle girilmediyse kesin.
   assert.deepEqual(e([a1, b1], null, { vkn: B, an: T - dk(10) }), ['kesin', 'cariB', 'kart_sayfasi']);
+  assert.deepEqual(e([a1], null, { vkn: A, an: T - dk(20) }), ['kesin', 'cariA', 'kart_sayfasi']);
   // Kart yazıldıktan sonra başka cariyle girildi: DenizPay oturumu değişmiş olabilir.
   assert.deepEqual(e([a1, b1], null, { vkn: A, an: T - dk(40) }), ['secim', ['cariB', 'cariA']]);
-  assert.match(cariEslestir([a1, b1], null, { vkn: A, an: T - dk(40) }, T).neden, /kart yazıldıktan sonra/);
+  assert.match(cariEslestir([a1, b1], null, { vkn: A, an: T - dk(40) }, T).neden, /sekmesi eski olabilir/);
+  // Eski sekme: A ile girildi, sonra B ile; A'nın açık kalan sekmesine dönülüp yer imine yeniden
+  // dokunuldu. Not yeni ama sekme eski: kesin denmez (0.10.0'da "kesin A" diyordu).
+  assert.deepEqual(e([a1, b1], null, { vkn: A, an: T - dk(20) }), ['secim', ['cariB', 'cariA']]);
+  assert.deepEqual(e([a1, b1], null, { vkn: A, an: T - dk(1) }), ['secim', ['cariB', 'cariA']]);
+  // A ile yeniden girildiyse (yeni sekme) son giriş A'dır: yine kesin.
+  const a4 = giris('cariA', A, T - dk(15), { girisId: 'K'.repeat(20) });
+  const r4 = cariEslestir([a1, b1, a4], null, { vkn: A, an: T - dk(10) }, T);
+  assert.deepEqual([r4.durum, r4.giris?.girisId, r4.eslesme], ['kesin', 'K'.repeat(20), 'kart_sayfasi']);
   assert.deepEqual(e([a1, b1], null, { vkn: C, an: T - dk(10) }), ['yok']);
   // 2 saatten eski veya gelecekteki not kullanılmaz.
   assert.deepEqual(e([a1, b1], null, { vkn: A, an: T - SURE - 1 }), ['secim', ['cariB', 'cariA']]);
@@ -93,6 +102,10 @@ test('Telefondaki giriş listesi: ekler, tekrar etmez, 10 ile ve 2 saatle sını
   assert.equal(JSON.parse(depo.get('bup-acik-giris')).length, 1);
   depo.set('bup-acik-giris', '{bozuk');
   assert.deepEqual(g.oku(), []);
+  // Başka hesapla giriş: yalnız o hesabın girişleri kalır.
+  depo.set('bup-acik-giris', JSON.stringify([yeni(20), { ...yeni(21), uid: 'u2', girisId: 'H'.repeat(20) }]));
+  g.yalniz('u2');
+  assert.deepEqual(g.oku().map(x => x.uid), ['u2']);
   g.temizle();
   assert.equal(depo.has('bup-acik-giris'), false);
   assert.equal(acik.gecerli(yeni(19)), true);
@@ -118,4 +131,40 @@ test('Sonuç kutusu: 2. biçim eşleşme taşır, 1. biçim kabul edilir, 30 gü
   assert.equal(k.ekle(JSON.stringify(sonuc('VP0004', { okunma: Date.now() - 29 * 86400000 }))), 'ok');
   assert.equal(JSON.parse(k.oku()).length, 6);
   assert.equal(kutuModul.gecerli(sonuc('VP0005')), true);
+});
+
+test('Sonuç kutusu: başarısız deneme ve aynı numaralı başarılı ödeme ayrı tutulur', () => {
+  const k = globalThis.bupSonucKutusu;
+  depo.clear();
+  const sonuc = (no, ek = {}) => ({ v: 2, uid: 'u1', girisId: 'G'.repeat(20), cariId: 'cariA', cariAd: 'Örnek A', kimlikNo: A,
+    kartSonDort: '', sonuc: 'basarili', aciklama: 'Ödeme Başarıyla Gerçekleştirildi', posSiparisNo: no, uyeSiparisNo: '',
+    tutarMetni: '4500', eslesme: 'kart_sayfasi', okunma: Date.now(), ...ek });
+  const hata = { sonuc: 'hata', aciklama: 'İşlem onaylanmadı.' };
+  assert.equal(k.ekle(JSON.stringify(sonuc('VP0101', hata))), 'ok');
+  assert.equal(k.ekle(JSON.stringify(sonuc('VP0101'))), 'ok');
+  assert.equal(k.ekle(JSON.stringify(sonuc('VP0101', hata))), 'zaten');
+  assert.equal(k.ekle(JSON.stringify(sonuc('VP0101', { tutarMetni: '450' }))), 'zaten');
+  assert.equal(k.bul('VP0101').sonuc, 'basarili');
+  assert.equal(k.bul('VP0101-h').sonuc, 'hata');
+  // Sanal POS kaydı kimlikle siler: başarısızı silmek başarılıya dokunmaz.
+  k.sil('VP0101-h');
+  assert.deepEqual(JSON.parse(k.oku()).map(x => kutuModul.kimlik(x)), ['VP0101']);
+  k.sil('VP0101');
+  assert.deepEqual(JSON.parse(k.oku()), []);
+});
+
+test('Sonuç kutusu Dart kadar sıkı: Sanal POS’un okuyamayacağı kayıt alınmaz', () => {
+  const s = ek => ({ v: 2, uid: 'u1', girisId: 'G'.repeat(20), cariId: 'cariA', cariAd: 'Örnek A', kimlikNo: A,
+    kartSonDort: '', sonuc: 'basarili', aciklama: 'Ödeme Başarıyla Gerçekleştirildi', posSiparisNo: 'VP0201', uyeSiparisNo: '',
+    tutarMetni: '4500', eslesme: 'tek_giris', okunma: Date.now(), ...ek });
+  for (const kotu of [{ aciklama: 'Ödeme\u200e' }, { tutarMetni: '4500\u2060' }, { aciklama: '   ' }, { cariAd: 'Ö\u202e' },
+    { uyeSiparisNo: '60\u200b0' }, { tutarMetni: '\u00ad' }]) {
+    assert.equal(kutuModul.gecerli(s(kotu)), false, JSON.stringify(kotu));
+  }
+  // sonuc_coz görünmezleri attığı için okunan sonuç kutuya girebilir.
+  const r = coz.sonucCoz({ metin: 'Onay Formu', alanlar: [['Açıklama', 'Ödeme Başarıyla Gerçekleştirildi\u200e'],
+    ['Pos Sipariş Numarası', 'VP\u200b0202'], ['Tutar', '4.500,00\u2060 TL']], firma: null, sekme: null });
+  assert.equal(r.ok, true);
+  assert.equal(kutuModul.gecerli(s({ aciklama: r.aciklama, posSiparisNo: r.posSiparisNo, tutarMetni: r.tutarMetni })), true);
+  assert.equal(r.tutarKurus, 450000);
 });

@@ -4,7 +4,8 @@ import 'tahsilat.dart';
 /// [sure] boyunca tutar). DenizPay sonuç ekranında "BUP Doldur" yer iminin
 /// açtığı `sonuc.html` sonucu bu girişlerden birine bağlar
 /// (`web/cari_eslestir.js`). Sır içermez: kart numarası, şifre, CVV yoktur.
-/// Çıkış/hesap değişimi ve "Boş giriş sayfasını aç" hepsini siler.
+/// Bu sekmede çıkış ve "Boş giriş sayfasını aç" hepsini siler; başka hesapla
+/// girişte o hesabın girişleri atılır (yeni sekmenin oturumsuz açılışı silmez).
 class AcikGiris {
   const AcikGiris(this.giris, this.an);
 

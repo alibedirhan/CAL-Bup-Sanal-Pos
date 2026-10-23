@@ -9,6 +9,8 @@ external JSObject? get _modul;
 external JSString _ekle(JSString acik);
 @JS('bupAcikGiris.temizle')
 external JSString _temizle();
+@JS('bupAcikGiris.yalniz')
+external JSString _yalniz(JSString uid);
 
 /// `web/acik_giris.js` girişi bu kökenin yerel deposundaki listeye ekler;
 /// DenizPay sonuç ekranındaki yer iminin açtığı `sonuc.html` okur.
@@ -26,5 +28,10 @@ class CihazAcikGiris implements AcikGirisPortu {
   @override
   void temizle() {
     if (_modul != null) _temizle();
+  }
+
+  /// Giriş yapan hesabın dışındaki girişleri siler.
+  void yalniz(String uid) {
+    if (_modul != null) _yalniz(uid.toJS);
   }
 }

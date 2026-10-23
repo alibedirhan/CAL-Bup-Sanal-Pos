@@ -5,10 +5,10 @@
 // adaylar gösterilir, kişi seçmeden kaydedilmez. Sunucuya Sanal POS sekmesi
 // yazar: oturum yalnız o sekmededir. Ağ isteği yapmaz. Derlemede uret.py POS
 // kökenini yazar.
-import { sonucCoz, tutarYaz } from './sonuc_coz.js';
+import { sonucCoz, tutarCoz, tutarYaz } from './sonuc_coz.js';
 import { cariEslestir } from './cari_eslestir.js';
 import './acik_giris.js';
-import './sonuc_kutusu.js';
+import { kimlik } from './sonuc_kutusu.js';
 
 const POS = '__POS_KOKENI__';
 // Sekme notu ve sayfa özeti biçimi 3. sürümde geldi; eski yer imi yeniden kurulur.
@@ -102,11 +102,18 @@ function isle(sayfa) {
     }
     const ozet = `${g.cariAd} · ${tutar}`;
     const bekliyor = `Sonuç alındı: ${ozet}. Sanal POS sekmesine dön (şifre sorarsa gir); kayıt kendiliğinden yapılır.`;
+    const k = kimlik(r);
     if (eklendi === 'zaten') {
-      // Sunucuya yazılmamış ilk seçim değiştirilmez; farklıysa açıkça söylenir.
-      const once = globalThis.bupSonucKutusu.bul(r.posSiparisNo);
+      // Sunucuya yazılmamış ilk sonuç değiştirilmez; cari veya tutar farklıysa açıkça söylenir.
+      const once = globalThis.bupSonucKutusu.bul(k);
       if (once && once.cariId !== g.cariId) {
         dur(`Bu sonuç daha önce ${once.cariAd} carisi için alındı ve değiştirilemez. Yanlışsa kaydı yöneticine bildir.`);
+        return;
+      }
+      // Dart ayniOdeme ile aynı: iki tutar da okunabiliyorsa kuruşla, değilse yazıyla.
+      const a = tutarCoz(once?.tutarMetni), b = r.tutarKurus;
+      if (once && (a !== null && b !== null ? a !== b : once.tutarMetni !== r.tutarMetni)) {
+        dur(`Dikkat: Pos No ${r.posSiparisNo} daha önce ${once.tutarMetni} tutarıyla alındı; bu ekranda ${r.tutarMetni} yazıyor. Kaydedilmedi; DenizPay ekranını kontrol edip yöneticine bildir.`);
         return;
       }
       durum(`Bu sonuç zaten alınmıştı: ${ozet}. Sanal POS’a dönünce kaydedilir.`, 'tamam');
@@ -118,7 +125,7 @@ function isle(sayfa) {
     globalThis.bupSonucKutusu.yanitDinle(json => {
       let y = null;
       try { y = JSON.parse(json); } catch { return; }
-      if (y?.posSiparisNo !== r.posSiparisNo || typeof y.mesaj !== 'string') return;
+      if (y?.kimlik !== k || typeof y.mesaj !== 'string') return;
       durum(y.mesaj.slice(0, 300), y.tamam === true ? 'tamam' : 'hata');
       bildir(y.mesaj.slice(0, 300), y.tamam !== true);
       if (y.tamam === true) setTimeout(() => window.close(), 2500);

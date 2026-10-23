@@ -21,7 +21,17 @@
     ["1,2,3", null],
     ["-4500", null],
     ["45,678", null],
-    ["99999999999", null]
+    ["99999999999", null],
+    ["4.500,00\u200e TL", 450000],
+    ["\u200f45678,90\u2060", 4567890],
+    ["4\u00ad500", 450000],
+    ["\ufeff250", 25000]
+  ],
+  "_kimlik": "Bir ödeme denemesinin kayıt kimliği (Dart belgeKimligi, JS sonuc_kutusu.js kimlik, firestore.rules).",
+  "kimlikler": [
+    ["VP10000000000000001", "basarili", "VP10000000000000001"],
+    ["VP10000000000000001", "hata", "VP10000000000000001-h"],
+    ["VP-H", "hata", "VP-H-h"]
   ],
   "sonuclar": [
     {
@@ -192,6 +202,16 @@
         "sekme": {"vkn": "12", "an": 1}
       },
       "beklenen": {"ok": false}
+    },
+    {
+      "ad": "Görünmez biçim işaretleri (yön, sıfır genişlik, BOM, yumuşak tire) atılır",
+      "sayfa": {
+        "metin": "\u200eOnay Formu\u200f",
+        "alanlar": [["A\u00adçıklama", "\u202aÖdeme Başarıyla Gerçekleştirildi\u202c"], ["Üye Sipariş Numarası", "6000\u200b13"], ["Pos Sipariş Numarası\u200e", "VP\u200b1000\u2060000000000013"], ["Tutar", "\ufeff4.500,00\u200e"]],
+        "firma": null,
+        "sekme": null
+      },
+      "beklenen": {"ok": true, "sonuc": "basarili", "aciklama": "Ödeme Başarıyla Gerçekleştirildi", "posSiparisNo": "VP1000000000000013", "uyeSiparisNo": "600013", "tutarMetni": "4.500,00", "tutarKurus": 450000}
     },
     {
       "ad": "Eski yer imi özeti (sekme alanı yok): reddedilir",
