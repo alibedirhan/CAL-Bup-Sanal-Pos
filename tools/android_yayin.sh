@@ -53,7 +53,8 @@ fi
 # 2. Derleme. --no-pub kullanılmaz: eklenti kayıt dosyası sürüm için yenilenmeli,
 # yoksa yalnız geliştirmedeki test eklentisi sürüme sızmaya çalışır.
 flutter pub get
-flutter build apk --release --dart-define-from-file=config/android.json
+flutter build apk --release --target-platform android-arm,android-arm64 \
+  --dart-define-from-file=config/android.json
 apk=build/app/outputs/flutter-apk/app-release.apk
 
 # 3. APK kapısı: imza sertifikası, paket/sürüm, minSdk, hata ayıklama, yedek,

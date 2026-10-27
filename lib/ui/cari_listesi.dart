@@ -38,6 +38,7 @@ class _CariListesiState extends State<CariListesi> {
                   controller: _arama,
                   onChanged: m.ara,
                   maxLength: 80,
+                  buildCounter: sayacsiz,
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   decoration: InputDecoration(
@@ -88,11 +89,13 @@ class _CariListesiState extends State<CariListesi> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                    TextButton.icon(
-                      onPressed: m.mesgul ? null : widget.yeniCari,
-                      icon: const Icon(Icons.add, size: 20),
-                      label: const Text('Yeni cari'),
-                    ),
+                    // Hiç cari yokken aşağıdaki büyük "Cari ekle" yeter.
+                    if (m.cariler.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: m.mesgul ? null : widget.yeniCari,
+                        icon: const Icon(Icons.add, size: 20),
+                        label: const Text('Yeni cari'),
+                      ),
                     if (!m.deneme)
                       IconButton(
                         onPressed: m.mesgul ? null : m.yukle,
@@ -125,8 +128,8 @@ class _CariListesiState extends State<CariListesi> {
                     : 'Cari bulunamadı',
                 aciklama: m.cariler.isEmpty
                     ? m.deneme
-                          ? 'Yeni cari düğmesiyle bir deneme kaydı oluşturabilirsin.'
-                          : 'Yeni cari düğmesiyle ilk carini ekleyebilirsin.'
+                          ? 'Bir deneme kaydı oluşturarak başla.'
+                          : 'Ödeme alacağın cariyi adı ve VKN / TC’siyle ekle.'
                     : 'Farklı bir ad veya kimlik numarası deneyebilirsin.',
                 eylem: m.cariler.isEmpty
                     ? FilledButton(
@@ -147,16 +150,16 @@ class _CariListesiState extends State<CariListesi> {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: SinirliIcerik(
-            child: DurumNotu(
-              m.deneme
-                  ? 'Deneme alanı · Kayıtlar örnektir ve bu oturumda kalır. Gerçek ödeme yapılmaz.'
-                  : 'Kayıtlar hesabında saklanır. Burada ödeme alınmaz; işlem resmi ödeme sitesinde tamamlanır.',
-              simge: Icons.science_outlined,
+        // Canlıda her listede tekrar eden bilgi kutusu yok (Çalışma alanında yazar).
+        if (m.deneme)
+          const SliverToBoxAdapter(
+            child: SinirliIcerik(
+              child: DurumNotu(
+                'Deneme alanı · Kayıtlar örnektir ve bu oturumda kalır. Gerçek ödeme yapılmaz.',
+                simge: Icons.science_outlined,
+              ),
             ),
           ),
-        ),
       ],
     );
   }

@@ -218,6 +218,7 @@ class _YeniHesapState extends State<_YeniHesap> {
                 controller: _ad,
                 enabled: !_mesgul,
                 maxLength: 80,
+                buildCounter: sayacsiz,
                 decoration: const InputDecoration(labelText: 'Ad soyad'),
               ),
               const SizedBox(height: 16),
@@ -236,6 +237,7 @@ class _YeniHesapState extends State<_YeniHesap> {
                 autocorrect: false,
                 enableSuggestions: false,
                 maxLength: 128,
+                buildCounter: sayacsiz,
                 decoration: const InputDecoration(
                   labelText: 'İlk giriş şifresi',
                 ),

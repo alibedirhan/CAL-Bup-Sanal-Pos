@@ -54,6 +54,9 @@
   Ekran kilidi olmayan cihazda (Zebra el terminali, kullanıcı kararı 27 Ekim)
   kasa uygulama PIN'iyle korunur: `PinKasasi.kt`, `docs/ANDROID_KURULUM.md`.
   10 yanlış PIN kasayı siler; bu sınırı gevşetmeyin.
+  **Zebra TC15 (seri 24284524701851) kullanıcıya emanettir:** üzerinde yalnız
+  okuma (getprop/dumpsys/logcat). Kurma, kaldırma, `pm clear`, izin, kilit, ayar
+  veya dosya değişikliği YOK; gerekirse önce kullanıcıya sorun.
   Android'de DenizPay uygulama içinde (WebView); sonuç kaynağı `uygulama`,
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.

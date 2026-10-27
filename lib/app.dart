@@ -75,6 +75,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
           ),
       deneme: widget.deneme,
       denizPayAcici: widget.denizPayAcici,
+      kartTarayici: platformBaglantilari.kartTarayici,
     );
     // Canlı kipte demo deposundan liste dahi istenmez.
     if (widget.deneme || widget.servis != null) unawaited(_model.yukle());

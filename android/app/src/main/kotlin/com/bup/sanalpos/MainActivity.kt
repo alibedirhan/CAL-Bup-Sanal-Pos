@@ -9,6 +9,7 @@ import io.flutter.embedding.engine.FlutterEngine
 // Biyometri penceresi FragmentActivity ister.
 class MainActivity : FlutterFragmentActivity() {
     private var kanal: GuvenlikKanali? = null
+    private var nfc: NfcKanali? = null
 
     // "Kaydet" penceresi (gün sonu CSV). Etkinlik başlamadan kaydedilmelidir.
     private val belge = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) {
@@ -33,5 +34,11 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         kanal = GuvenlikKanali(flutterEngine.dartExecutor.binaryMessenger, this)
+        nfc = NfcKanali(flutterEngine.dartExecutor.binaryMessenger, this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        nfc?.devam()
     }
 }

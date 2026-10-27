@@ -31,6 +31,26 @@ class GuvenlikKanali(
         val ctx = etkinlik.applicationContext
         when (cagri.method) {
             "klasor" -> sonuc.success(ctx.noBackupFilesDir.absolutePath)
+            // Kart formunda okuma düğmeleri için donanım (izin istemez, anında).
+            "cihaz.ozellikler" -> {
+                val pm = ctx.packageManager
+                sonuc.success(
+                    mapOf(
+                        "nfc" to pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_NFC),
+                        "kamera" to pm.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_ANY),
+                    ),
+                )
+            }
+            // Kamera izni reddedildiyse kişi uygulama ayarlarına gönderilir.
+            "ayarlar.uygulama" -> {
+                etkinlik.startActivity(
+                    android.content.Intent(
+                        android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", ctx.packageName, null),
+                    ),
+                )
+                sonuc.success(null)
+            }
             // Sürüm denetimi (lib/domain/surum.dart): kurulu APK'nın versionCode'u.
             "surum" -> sonuc.success(BuildConfig.VERSION_CODE)
             // Kasa uygulama PIN'iyle kurulmuşsa (ekran kilidi olmayan telefon) PinKasasi.

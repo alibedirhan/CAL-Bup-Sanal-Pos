@@ -79,17 +79,16 @@ class _AnaEkranState extends State<AnaEkran> {
               ],
             ),
             actions: [
-              Padding(
-                padding: EdgeInsets.only(right: 4),
-                child: Chip(
-                  label: Text(
-                    m.deneme ? 'Deneme' : surumAdi,
-                    style: const TextStyle(fontSize: 11),
+              // Sürüm Çalışma alanında yazar; üst çubukta yalnız deneme uyarısı.
+              if (m.deneme)
+                const Padding(
+                  padding: EdgeInsets.only(right: 4),
+                  child: Chip(
+                    label: Text('Deneme', style: TextStyle(fontSize: 11)),
+                    padding: EdgeInsets.symmetric(horizontal: 2),
+                    visualDensity: VisualDensity.compact,
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 2),
-                  visualDensity: VisualDensity.compact,
                 ),
-              ),
               IconButton(
                 tooltip: 'Ekranı kilitle',
                 onPressed: widget.kilitle,

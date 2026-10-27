@@ -17,27 +17,50 @@ Future<void> ac(WidgetTester tester, Kullanici? kullanici) async {
 }
 
 void main() {
-  testWidgets('Hesaplı kullanıcıya verisiz yer imi kurulum bağlantısı', (
-    tester,
-  ) async {
-    await ac(
-      tester,
-      Kullanici(
-        id: 'yapay',
-        ad: 'Yapay Kullanıcı',
-        eposta: 'yapay@example.invalid',
-        yonetici: false,
-        aktif: true,
-      ),
-    );
-    final link = tester.widget<Link>(find.byType(Link));
-    expect(link.uri, Uri.base.resolve('kurulum.html'));
-    expect(link.uri!.hasQuery, isFalse);
-    expect(link.uri!.hasFragment, isFalse);
-    expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
-    expect(find.text('Telefon denemesini aç'), findsNothing);
-    expect(find.text('BUP Sanal POS · 0.11.1'), findsOneWidget);
-  });
+  testWidgets(
+    'Hesaplı kullanıcıya verisiz yer imi kurulum bağlantısı',
+    (tester) async {
+      await ac(
+        tester,
+        Kullanici(
+          id: 'yapay',
+          ad: 'Yapay Kullanıcı',
+          eposta: 'yapay@example.invalid',
+          yonetici: false,
+          aktif: true,
+        ),
+      );
+      final link = tester.widget<Link>(find.byType(Link));
+      expect(link.uri, Uri.base.resolve('kurulum.html'));
+      expect(link.uri!.hasQuery, isFalse);
+      expect(link.uri!.hasFragment, isFalse);
+      expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
+      expect(find.text('Telefon denemesini aç'), findsNothing);
+      expect(find.text('BUP Sanal POS · 0.12.0'), findsOneWidget);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+  );
+
+  testWidgets(
+    'Android uygulamasında yer imi yok; metinler uygulamaya göre',
+    (tester) async {
+      await ac(
+        tester,
+        Kullanici(
+          id: 'yapay',
+          ad: 'Yapay Kullanıcı',
+          eposta: 'yapay@example.invalid',
+          yonetici: false,
+          aktif: true,
+        ),
+      );
+      expect(find.byType(Link), findsNothing);
+      expect(find.text('BUP Doldur yer imini kur'), findsNothing);
+      expect(find.textContaining('Safari'), findsNothing);
+      expect(find.textContaining('“Kartı doldur”a bas'), findsOneWidget);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 
   testWidgets('Deneme kipinde kurulum bağlantısı gösterilmez', (tester) async {
     await ac(tester, null);

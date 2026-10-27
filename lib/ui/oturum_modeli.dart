@@ -7,11 +7,17 @@ import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import '../domain/kart_bilgileri.dart';
 import 'denizpay_ekrani.dart';
+import 'kart_tarama_ekrani.dart';
 
 enum CariFiltresi { tumu, yildizli, kartli }
 
 class OturumModeli extends ChangeNotifier {
-  OturumModeli(this.servis, {this.deneme = true, this.denizPayAcici}) {
+  OturumModeli(
+    this.servis, {
+    this.deneme = true,
+    this.denizPayAcici,
+    this.kartTarayici,
+  }) {
     final depo = servis.depo;
     if (!deneme && depo is CariIzlemePortu) {
       _izleme = (depo as CariIzlemePortu)
@@ -334,6 +340,9 @@ class OturumModeli extends ChangeNotifier {
 
   /// Android: DenizPay uygulama içinde açılır.
   final DenizPayAcici? denizPayAcici;
+
+  /// Karttan okuma (Android: NFC, kamera); web'de `null`.
+  final KartTarayicilari? kartTarayici;
   bool get uygulamaIciDenizPay =>
       !deneme && servis.uygulamaIciDenizPay && denizPayAcici != null;
 

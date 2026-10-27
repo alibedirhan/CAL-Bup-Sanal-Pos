@@ -101,6 +101,10 @@ kutuları tek parça tarihi ve iki haneli yılı düzeltir. "Karttan oku" kutusu
 yapıştırılan yazı `domain/kart_okuma.dart` ile ayrıştırılır, hemen silinir;
 yalnız emin olunan alanlar doldurulur, CVV okunmaz. Görüntü işlenmez/gönderilmez
 (uygulama içi OCR yok: telefonun kendi tanıması daha isabetli ve ücretsiz).
+**0.12.0 (yalnız Android):** "Temassız oku" (NFC, `domain/emv.dart`) ve
+"Kamerayla oku" (ML Kit, cihaz içi). Port `application/kart_tarama.dart`,
+ekran `ui/kart_tarama_ekrani.dart`, bağdaştırıcılar `data/android/nfc_okuyucu.dart`,
+`kamera_okuyucu.dart`; bileşim `bilesim/platform_android.dart`. Web değişmedi.
 
 ## Web paketi
 

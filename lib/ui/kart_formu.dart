@@ -31,6 +31,8 @@ class _KartFormu extends StatefulWidget {
 class _KartFormuState extends State<_KartFormu> {
   final _form = GlobalKey<FormState>();
   late final _ad = TextEditingController(text: widget.kart?.ad);
+  // Telefon alanı formda yok (hiçbir yere doldurulmuyordu, 0.12.0); eski
+  // kartlarda kayıtlı değer düzenlemede korunur.
   final _numara = TextEditingController(),
       _sahibi = TextEditingController(),
       _telefon = TextEditingController();
@@ -234,12 +236,14 @@ class _KartFormuState extends State<_KartFormu> {
                       etkin: aktif,
                       simdi: widget.model.servis.saat,
                       okundu: _okundu,
+                      tarayici: widget.model.kartTarayici,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _ad,
                       enabled: aktif,
                       maxLength: 60,
+                      buildCounter: sayacsiz,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
                         labelText: 'Kart adı',
@@ -254,6 +258,7 @@ class _KartFormuState extends State<_KartFormu> {
                       controller: _numara,
                       enabled: aktif,
                       maxLength: 23,
+                      buildCounter: sayacsiz,
                       keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.next,
                       obscureText: !_goster,
@@ -283,6 +288,7 @@ class _KartFormuState extends State<_KartFormu> {
                       controller: _sahibi,
                       enabled: aktif,
                       maxLength: 120,
+                      buildCounter: sayacsiz,
                       textCapitalization: TextCapitalization.characters,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.creditCardName],
@@ -301,6 +307,7 @@ class _KartFormuState extends State<_KartFormu> {
                               AutofillHints.creditCardExpirationMonth,
                             ],
                             maxLength: 7,
+                            buildCounter: sayacsiz,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
                             onChanged: _tarihBol,
@@ -325,6 +332,7 @@ class _KartFormuState extends State<_KartFormu> {
                               AutofillHints.creditCardExpirationYear,
                             ],
                             maxLength: 7,
+                            buildCounter: sayacsiz,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
                             onChanged: _tarihBol,
@@ -337,26 +345,6 @@ class _KartFormuState extends State<_KartFormu> {
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _telefon,
-                      enabled: aktif,
-                      maxLength: 24,
-                      keyboardType: TextInputType.phone,
-                      textInputAction: TextInputAction.done,
-                      decoration: const InputDecoration(
-                        labelText: 'İletişim telefonu (isteğe bağlı)',
-                        helperText: 'Bankanın SMS hedefini değiştirmez.',
-                      ),
-                      validator: (v) {
-                        try {
-                          kartTelefonu(v ?? '');
-                          return null;
-                        } on PosHatasi catch (e) {
-                          return e.mesaj;
-                        }
-                      },
                     ),
                     const SizedBox(height: 12),
                     CheckboxListTile(

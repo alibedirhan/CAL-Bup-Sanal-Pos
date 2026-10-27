@@ -1,3 +1,18 @@
+# 27 Ekim 2026 — 0.12.0: NFC/kamera ile kart okuma, arayüz sadeleştirme (yayında değil)
+
+Kullanıcı istekleri: temassız (NFC) ve kamerayla kart okuma; Aşama 4'ü titizce
+bitirmek; arayüzü kolaylaştırmak (PIN penceresi zor, gereksizler kalksın); CVV'nin
+de kaydedilip otomatik doldurulması (bu son istek UYGULANMADI: PCI DSS CVV'nin
+şifreli de olsa saklanmasını yasaklar; kullanıcıya gerekçe ve seçenekler
+sunuldu, karar bekleniyor). Ayrıntı `ANDROID_PLANI.md` "Arayüz sadeleştirme" ve
+"Karttan okuma"; kabul listesi `docs/ANDROID_KABUL.md`. Kullanıcı uyarısı: Zebra
+TC15 emanet — yalnız okuma (AGENTS.md). Testler: 233 Dart; Android takımı
+(Kotlin 12, uçtan uca 6 dosya: kamera + gerçek ML Kit yapay kart görüntüsü);
+web demo/kasa/doldur/hesap/tahsilat Chromium+WebKit; `android_yayin.sh` deneme
+(60 MB, izin listesi, yalnız ARM). **Yayın yapılmadı**; sürüm 0.12.0+21.
+
+---
+
 # 27 Ekim 2026 — 0.11.1: ekran kilidi olmayan cihazda uygulama PIN'i (YAYINDA)
 
 Kullanıcı, şirketin Zebra el terminalinde (LED işlemleri burada; APK'yı kendisi

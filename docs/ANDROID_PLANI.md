@@ -391,6 +391,40 @@ yöntemi [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
   Sıradaki: Aşama 4 gerçek telefon kabulü.
   Ertelenen: yönetimde "kim hangi sürümde" (kural değişikliği ister).
 
+**Arayüz sadeleştirme (0.12.0, 27 Ekim 2026).** Kullanıcı: "kullanımı kolay
+olsun; PIN penceresi zor, gereksizleri kaldır". Zebra boyutunda (360×800 dp)
+ekran turu (`tools/ekran_turu.sh`, `integration_test/android_ekran_turu_test.dart`;
+test takımında değil) ile bulunup düzeltildi: PIN tam ekran, kendi tuş takımı
+(sistem klavyesi yok), 6. rakamda ilerler, yeni PIN iki adım; üst çubukta
+sürüm etiketi yok (yalnız "Deneme"); bütün kutularda karakter sayacı yok
+(`ortak.dart sayacsiz`); tekrar eden bilgi kutuları (cari listesi altı, cari
+profili altı) kaldırıldı; boş listede tek "Cari ekle"; kart formunda Android'de
+yapıştırma kutusu yok, okuma düğmeleri anında (sistem özelliği `cihaz.ozellikler`);
+"İletişim telefonu" alanı kaldırıldı (hiçbir yere doldurulmuyordu; eski değer
+düzenlemede korunur); Android'de ödeme onayı tek adım (işaret + "DenizPay’e giriş
+yap"; web'de açılır pencere izni yüzünden iki adım kalır), yedek tarayıcı
+bağlantısı onayda; Çalışma alanında Android'e özgü metinler, yer imi bölümü yok.
+
+**Karttan okuma: NFC ve kamera (0.12.0, 27 Ekim 2026).** Kullanıcı isteği.
+Kart formunda (yalnız Android) "Temassız oku" ve "Kamerayla oku"; donanım
+yoksa düğme görünmez. Okunan forma yazılır, kişi karşılaştırıp kaydeder; CVV
+hiçbir yoldan okunmaz. NFC: `domain/emv.dart` saf EMV okuması (PPSE/bilinen
+AID → SELECT → GPO (PDOL: tutar 0, TR/TRY) → AFL kayıtları; yalnız 57/5A/5F24/
+5F20; ödeme/kriptogram/PIN/işlem kaydı komutu gönderilmez, testle zorlanır),
+Kotlin `NfcKanali.kt` yalnız okuyucu kipi ve APDU iletimi (ekran açıkken).
+Kamera: `camera` 0.12.0+2 + `google_mlkit_text_recognition` 0.16.0 (yalnız
+Latin, cihaz içi, ağsız); kareler bellekte, `KareBirlestirici` numarayı iki
+karede aynı görünce kabul eder; görüntü kaydedilmez. DenizPay WebView izin
+isteklerini reddeder (kamera izni oraya geçmez). İzinler: NFC, CAMERA eklendi;
+eklentinin RECORD_AUDIO/depolama izinleri manifestte kaldırıldı; yayın kapısı
+izin listesi ve yalnız ARM (arm64-v8a, armeabi-v7a) denetler (APK 60 MB; x86_64
+yalnız emülatör hata ayıklama derlemesinde). R8: ML Kit'in eklenmeyen dil
+modelleri için `proguard-rules.pro`. Testler: Dart `emv_test` 7 (Visa/MC
+benzeri yapay kartlar, dizinsiz, 61xx, Luhn, süre, TLV), `kart_tarama_test` 9;
+emülatör `android_kamera_test` (gerçek ML Kit yapay kart görüntüsünü okur;
+ekran iki kez açılıp kapanır). NFC gerçek kartla yalnız Aşama 4'te (emülatörde
+NFC yok).
+
 **Uygulama PIN'i (0.11.1, 27 Ekim 2026).** Kullanıcı kararı: ekran kilidi
 olmayan cihazlarda (şirketin Zebra el terminali; LED işlemleri burada) uygulama
 kendi PIN'ini sorsun. §6.2 "kilitsiz telefonda kart saklanmaz" kuralının

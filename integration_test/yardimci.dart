@@ -6,6 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 const parola = 'YapayDenemeSifresi-2026!';
 const pan = '4111111111111111';
 
+/// Cari ekleme düğmesi: liste boşken büyük "Cari ekle", doluyken üstte
+/// "Yeni cari" (0.12.0). Giriş yapıldığının işareti olarak da kullanılır.
+final yeniCariDugmesi = find.textContaining(RegExp(r'^(Yeni cari|Cari ekle)$'));
+
 /// Başarısızlıkta ekrandaki bütün yazılar rapora girer (yapay veri).
 String yazilar() => [
   for (final e in find.byType(Text).evaluate()) ?(e.widget as Text).data,

@@ -1,7 +1,7 @@
 name: bup_sanal_pos
 description: "BUP Sanal POS — bağımsız, telefon odaklı cari ve kart çalışma alanı."
 publish_to: 'none'
-version: 0.11.1+20
+version: 0.12.0+21
 
 environment:
   sdk: ^3.11.0
@@ -18,6 +18,9 @@ dependencies:
   webview_flutter_android: 4.12.0
   webview_flutter_platform_interface: 2.15.1
   web: 1.1.1
+  # Android kart okuma (0.12.0): kamera önizlemesi ve cihaz içi yazı tanıma.
+  camera: 0.12.0+2
+  google_mlkit_text_recognition: 0.16.0
   flutter_localizations:
     sdk: flutter
 

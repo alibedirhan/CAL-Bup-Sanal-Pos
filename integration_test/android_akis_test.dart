@@ -46,7 +46,7 @@ Future<void> akis(WidgetTester t) async {
   await yaz(t, 'Şifre', parola);
   await bas(t, find.text('Giriş yap'));
 
-  await bas(t, find.text('Yeni cari'));
+  await bas(t, yeniCariDugmesi);
   await yaz(t, 'Cari adı', 'Örnek Android Carisi');
   await yaz(t, 'Vergi / TC kimlik numarası', '0000000000');
   await bas(t, find.text('Cariyi kaydet'));
@@ -87,7 +87,7 @@ Future<void> akis(WidgetTester t) async {
   expect(find.text('Kilidi aç'), findsOneWidget);
   await yaz(t, 'Şifre', parola);
   await bas(t, find.text('Kilidi aç'));
-  await bekle(t, find.text('Yeni cari'));
+  await bekle(t, yeniCariDugmesi);
   await bas(t, find.textContaining('Örnek Android Carisi'));
   await bekle(t, kart);
   await kartiAcVeDenetle(t);

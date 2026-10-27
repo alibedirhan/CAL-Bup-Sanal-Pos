@@ -89,10 +89,17 @@ tanim="--dart-define-from-file=config/emulator_android.json"
 # Her test temiz uygulama verisiyle başlar ("flutter test" bitince uygulamayı
 # kaldırabilir; o zaman temizlenecek veri yoktur).
 temizle="($adb_yolu shell pm clear com.bup.sanalpos >/dev/null 2>&1 || true)"
+# Kamera izni sistem penceresiyle istenir; testte adb ile verilir. "flutter test"
+# uygulamayı yeniden kurabildiği için izin uçtan uca testler boyunca 2 sn'de bir
+# yinelenir (aynı izni yeniden vermek etkisizdir; yalnız emülatör). "set -e"
+# altında döngü ilk hatada (uygulama henüz kurulu değil) ölmesin: "|| true".
+( while true; do adb shell pm grant com.bup.sanalpos android.permission.CAMERA >/dev/null 2>&1 || true; sleep 2; done ) & izinci=$!
+trap 'kill $taklit $izinci 2>/dev/null; pin_kaldir' EXIT
 firebase emulators:exec --only auth,firestore --project demo-bup-pos \
   "node tools/sunucu-test/android_hazirla.mjs \
    && $temizle && flutter test integration_test/android_akis_test.dart -d $cihaz --no-pub $tanim \
    && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim \
    && $temizle && flutter test integration_test/android_surum_test.dart -d $cihaz --no-pub $tanim \
+   && $temizle && flutter test integration_test/android_kamera_test.dart -d $cihaz --no-pub $tanim \
    && ($adb_yolu shell locksettings clear --old $PIN >/dev/null) \
    && $temizle && flutter test integration_test/android_pin_test.dart -d $cihaz --no-pub $tanim"

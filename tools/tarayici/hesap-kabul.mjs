@@ -64,7 +64,8 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]].filter(([n]
     }
     await open(); await button('Giriş yap').waitFor();
     await write('E-posta','admin@example.test');await write('Şifre',parola);await button('Giriş yap').click();
-    await button('Yeni cari').click();await page.getByRole('textbox',{name:'Cari adı',exact:true}).waitFor();await page.waitForTimeout(700);
+    // Hiç cari yokken yalnız büyük "Cari ekle" düğmesi görünür (0.12.0).
+    await page.getByRole('button',{name:/^(Yeni cari|Cari ekle)$/}).first().click();await page.getByRole('textbox',{name:'Cari adı',exact:true}).waitFor();await page.waitForTimeout(700);
     await write('Cari adı','Örnek Telefon Carisi');
     assert.equal(await page.getByRole('textbox',{name:'Cari kodu',exact:true}).count(),0);
     await write('Vergi / TC kimlik numarası','0000000000');await button('Cariyi kaydet').click();
@@ -86,7 +87,6 @@ for(const [name,engine] of [['chromium',chromium],['webkit',webkit]].filter(([n]
     await page.getByRole('textbox',{name:'Kart numarası',exact:true}).click();
     await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
     assert.equal(await page.getByRole('textbox',{name:'Kart numarası',exact:true}).inputValue(),'4111111111111111');
-    await write('İletişim telefonu (isteğe bağlı)','05000000000');
     await page.getByRole('checkbox',{name:'Kartı ve bu cari altında saklamayı kontrol ettim.'}).click();
     await button('Kartı kaydet').click();
     await kartFormu();await write('Kart adı','Örnek İkinci Kart');

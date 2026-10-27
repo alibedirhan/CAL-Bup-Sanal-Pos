@@ -1,5 +1,18 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Karttan okuma (0.12.0): temassız kart ve kamera. İkisi de zorunlu değil:
+         NFC/kamerası olmayan cihaza da kurulur. Kamera eklentisinin eklediği
+         mikrofon ve depolama izinleri kaldırılır (görüntü/ses kaydı yok). -->
+    <uses-permission android:name="android.permission.NFC"/>
+    <uses-feature android:name="android.hardware.nfc" android:required="false"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"
+        tools:replace="android:required"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <!-- Güvenlik ayarları: docs/ANDROID_PLANI.md §4. Yedek/aktarım kapalı, yalnız HTTPS. -->
     <application
         android:label="BUP Sanal POS"

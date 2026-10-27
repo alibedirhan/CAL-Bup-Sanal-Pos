@@ -41,6 +41,13 @@ class _PosOnayiState extends State<PosOnayi> {
     });
   }
 
+  /// Android: seçim kontrolü ve uygulama içi giriş tek dokunuştur (web'de
+  /// açılır pencere izni yüzünden iki adım gerekir; uygulamada gerekmez).
+  Future<void> _kontrolEtVeGir() async {
+    await _dene();
+    if (mounted && _sonuc != null) await _uygulamaIciAc();
+  }
+
   /// Android: DenizPay bu uygulamanın içinde açılır; ekran kapanınca bu
   /// pencere de kapanır (seçim kontrolü kısa sürelidir, yeniden yapılır).
   Future<void> _uygulamaIciAc() async {
@@ -95,6 +102,7 @@ class _PosOnayiState extends State<PosOnayi> {
   @override
   Widget build(BuildContext context) {
     final m = widget.model;
+    final tekAdim = m.uygulamaIciDenizPay && !m.deneme;
     return SingleChildScrollView(
       child: SinirliIcerik(
         child: Column(
@@ -199,7 +207,7 @@ class _PosOnayiState extends State<PosOnayi> {
               ),
             ] else ...[
               Text(
-                'Seçimini kontrol et',
+                tekAdim ? 'DenizPay’e geç' : 'Seçimini kontrol et',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 22),
@@ -213,7 +221,11 @@ class _PosOnayiState extends State<PosOnayi> {
               ),
               const SizedBox(height: 22),
               DurumNotu(
-                m.deneme
+                tekAdim && m.seciliKart != null
+                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince “Bu cariye kaydet”e bas.'
+                    : tekAdim
+                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince “Bu cariye kaydet”e bas.'
+                    : m.deneme
                     ? 'Bu adım yalnızca geçiş denemesidir. Gerçek POS bağlantısı sağlayıcı doğrulamasından sonra açılacak.'
                     : m.otomatikGiris
                     ? 'Güncel cari ve kart özeti kontrol edilir. Tam kart bilgisi ödeme sitesine gönderilmez. Giriş bilgileri yalnız sonraki adımda “DenizPay’e giriş yap”a bastığında DenizPay’e gider.'
@@ -224,7 +236,11 @@ class _PosOnayiState extends State<PosOnayi> {
                 value: _onay,
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                title: const Text('Cari ve seçili kartı kontrol ettim.'),
+                title: Text(
+                  m.seciliKart == null
+                      ? 'Cariyi kontrol ettim.'
+                      : 'Cari ve seçili kartı kontrol ettim.',
+                ),
                 onChanged: _mesgul
                     ? null
                     : (v) => setState(() => _onay = v ?? false),
@@ -235,11 +251,17 @@ class _PosOnayiState extends State<PosOnayi> {
               ],
               const SizedBox(height: 12),
               FilledButton.icon(
-                onPressed: _onay && !_mesgul ? _dene : null,
-                icon: const Icon(Icons.arrow_forward_rounded),
+                onPressed: _onay && !_mesgul
+                    ? (tekAdim ? _kontrolEtVeGir : _dene)
+                    : null,
+                icon: Icon(
+                  tekAdim ? Icons.login_rounded : Icons.arrow_forward_rounded,
+                ),
                 label: Text(
                   _mesgul
                       ? 'Kontrol ediliyor…'
+                      : tekAdim
+                      ? 'DenizPay’e giriş yap'
                       : m.deneme
                       ? 'Geçişi dene'
                       : 'Seçimi kontrol et',
@@ -250,6 +272,17 @@ class _PosOnayiState extends State<PosOnayi> {
                 onPressed: _mesgul ? null : () => Navigator.pop(context),
                 child: const Text('Vazgeç'),
               ),
+              if (tekAdim)
+                Link(
+                  uri: Uri.parse('https://denizpay.bupilic.com.tr/login.aspx'),
+                  target: LinkTarget.blank,
+                  // Yedek yol: tarayıcıda açılır; sonuç elle kaydedilir.
+                  builder: (context, ac) => TextButton.icon(
+                    onPressed: _mesgul ? null : ac,
+                    icon: const Icon(Icons.open_in_new, size: 18),
+                    label: const Text('DenizPay’i tarayıcıda aç (yedek)'),
+                  ),
+                ),
             ],
           ],
         ),

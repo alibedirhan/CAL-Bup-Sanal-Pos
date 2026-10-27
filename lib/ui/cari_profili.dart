@@ -90,8 +90,10 @@ class CariProfiliEkrani extends StatelessWidget {
                 'Kayıtlı kartlar (${p.kartlar.length})',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 4),
-              const Text('İşlem için bir kart seç.'),
+              if (p.kartlar.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                const Text('İşlem için bir kart seç.'),
+              ],
               const SizedBox(height: 14),
               if (model.hata != null) ...[
                 DurumNotu(model.hata!, hata: true),
@@ -215,14 +217,13 @@ class CariProfiliEkrani extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
-              DurumNotu(
-                model.deneme
-                    ? 'Burada yalnız örnek kartların son dört hanesi bulunur. Gerçek kart bilgisi girilmez.'
-                    : androidUygulamasi
-                    ? 'Tam kart bilgileri yalnız eklendiği telefonda saklanır. Diğer cihazlarda maskeli özet görünür. CVV ödeme sitesinde girilir.'
-                    : 'Tam kart bilgileri yalnız eklendiği tarayıcıda saklanır. Diğer cihazlarda maskeli özet görünür. CVV ödeme sitesinde girilir.',
-              ),
+              // Kartın nerede saklandığı kart formunda ve Çalışma alanında yazar.
+              if (model.deneme) ...[
+                const SizedBox(height: 28),
+                const DurumNotu(
+                  'Burada yalnız örnek kartların son dört hanesi bulunur. Gerçek kart bilgisi girilmez.',
+                ),
+              ],
             ],
           ),
         ),

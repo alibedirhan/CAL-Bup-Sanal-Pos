@@ -44,25 +44,30 @@ class BilgiSayfasi extends StatelessWidget {
               kullanici?.ad ?? 'Deneme kullanıcısı',
               kullanici?.eposta ?? 'Gerçek hesap girişi henüz bağlı değil.',
             ),
-            const _Bilgi(
+            _Bilgi(
               Icons.credit_card_outlined,
               'Kart özetleri',
-              'Tam kart bilgileri bu tarayıcıda şifreli tutulur. Diğer cihazlarda yalnız maskeli özet görünür. CVV kaydedilmez. Safari, Sanal POS’u uzun süre (yaklaşık 7 gün) hiç açmazsan bu bilgileri silebilir; o zaman kartı yeniden eklersin.',
+              androidUygulamasi
+                  ? 'Kart bilgileri yalnız bu telefonda şifreli saklanır; diğer cihazlarda yalnız son dört hane görünür. CVV saklanmaz. Uygulamayı kaldırırsan kartları yeniden eklersin.'
+                  : 'Tam kart bilgileri bu tarayıcıda şifreli tutulur. Diğer cihazlarda yalnız maskeli özet görünür. CVV kaydedilmez. Safari, Sanal POS’u uzun süre (yaklaşık 7 gün) hiç açmazsan bu bilgileri silebilir; o zaman kartı yeniden eklersin.',
             ),
-            _Bilgi(
-              Icons.sync_disabled,
-              kullanici == null
-                  ? 'Bu oturumda çalışır'
-                  : 'Bağımsız kayıt alanı',
-              kullanici == null
-                  ? 'Buluta veya CAL bup’a kayıt gönderilmez.'
-                  : 'Cariler ve kart özetleri bu uygulamanın ayrı kayıt alanındadır. CAL bup’a aktarım yapılmaz.',
-            ),
+            if (!androidUygulamasi)
+              _Bilgi(
+                Icons.sync_disabled,
+                kullanici == null
+                    ? 'Bu oturumda çalışır'
+                    : 'Bağımsız kayıt alanı',
+                kullanici == null
+                    ? 'Buluta veya CAL bup’a kayıt gönderilmez.'
+                    : 'Cariler ve kart özetleri bu uygulamanın ayrı kayıt alanındadır. CAL bup’a aktarım yapılmaz.',
+              ),
             _Bilgi(
               Icons.open_in_new_rounded,
               'POS bağlantısı',
               kullanici == null
                   ? 'Şu an geçiş denemesi yapılabilir. Gerçek ödeme bağlantısı henüz kurulmadı.'
+                  : androidUygulamasi
+                  ? '“Ödeme sitesine geç” DenizPay’i bu uygulamanın içinde, seçili carinin VKN / TC ve POS şifresiyle açar; kart seçmeden de çalışır. Kart sayfasında “Kartı doldur”a bas. CVV ve tutarı her zaman sen yazarsın.'
                   : '“DenizPay’e giriş yap” seçili carinin VKN / TC ve POS şifresiyle DenizPay’i yeni sekmede açar; kart seçmeden de çalışır. Kart seçtiysen DenizPay kart sayfasında “BUP Doldur” yer imine dokun. CVV ve tutarı her zaman sen yazarsın.',
             ),
             if (hesap != null) ...[
@@ -95,7 +100,8 @@ class BilgiSayfasi extends StatelessWidget {
                 child: const Text('Hesaptan çıkış yap'),
               ),
             ],
-            if (kullanici != null) ...[
+            // Yer imi yalnız tarayıcı sürümü içindir; Android'de "Kartı doldur" var.
+            if (kullanici != null && !androidUygulamasi) ...[
               const SizedBox(height: 24),
               Text(
                 'Kart doldurma yer imi',

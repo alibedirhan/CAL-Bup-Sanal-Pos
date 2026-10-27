@@ -166,14 +166,15 @@ void main() {
     );
   });
 
-  testWidgets('Pencere: yeni PIN iki kez ve kurala göre alınır', (t) async {
-    String? sonuc = 'yok';
+  Future<List<String?>> pencereAc(WidgetTester t, PinIstegi istek) async {
+    final sonuc = <String?>[];
+    await t.binding.setSurfaceSize(const Size(360, 800)); // Zebra TC15 (dp)
+    addTearDown(() => t.binding.setSurfaceSize(null));
     await t.pumpWidget(
       MaterialApp(
         home: Builder(
           builder: (c) => TextButton(
-            onPressed: () async =>
-                sonuc = await pinPenceresiAc(c, const PinIstegi(PinTuru.kur)),
+            onPressed: () async => sonuc.add(await pinPenceresiAc(c, istek)),
             child: const Text('aç'),
           ),
         ),
@@ -181,49 +182,56 @@ void main() {
     );
     await t.tap(find.text('aç'));
     await t.pumpAndSettle();
-    expect(find.text('Uygulama PIN’i belirle'), findsOneWidget);
-    await t.enterText(find.widgetWithText(TextField, 'PIN'), '123456');
-    await t.enterText(find.widgetWithText(TextField, 'PIN (tekrar)'), '123456');
-    await t.tap(find.text('PIN’i kaydet'));
-    await t.pump();
-    expect(find.textContaining('kolay'), findsOneWidget);
-    await t.enterText(find.widgetWithText(TextField, 'PIN'), '48a2915');
-    expect(
-      t
-          .widget<TextField>(find.widgetWithText(TextField, 'PIN'))
-          .controller!
-          .text,
-      '482915',
-    );
-    await t.enterText(find.widgetWithText(TextField, 'PIN (tekrar)'), '482915');
-    await t.tap(find.text('PIN’i kaydet'));
-    await t.pumpAndSettle();
-    expect(sonuc, '482915');
-  });
+    return sonuc;
+  }
 
-  testWidgets('Pencere: önceki denemenin notu görünür, vazgeç null döner', (
+  Future<void> tusla(WidgetTester t, String pin) async {
+    for (final r in pin.split('')) {
+      await t.tap(find.byKey(ValueKey('pin-$r')));
+      await t.pump();
+    }
+    await t.pumpAndSettle();
+  }
+
+  testWidgets(
+    'PIN ekranı: yeni PIN yaz + tekrar; kolay ve uyuşmayan reddedilir',
+    (t) async {
+      final sonuc = await pencereAc(t, const PinIstegi(PinTuru.kur));
+      expect(find.text('Yeni PIN belirle'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing); // sistem klavyesi açılmaz
+      await tusla(t, '123456');
+      expect(find.textContaining('kolay'), findsOneWidget);
+      expect(find.text('Yeni PIN belirle'), findsOneWidget);
+      await tusla(t, '482915');
+      expect(find.text('Aynı PIN’i tekrar yaz'), findsOneWidget);
+      await tusla(t, '482916');
+      expect(find.textContaining('aynı değil'), findsOneWidget);
+      expect(find.text('Yeni PIN belirle'), findsOneWidget);
+      await tusla(t, '482915');
+      await tusla(t, '482915');
+      expect(sonuc, ['482915']);
+    },
+  );
+
+  testWidgets('PIN ekranı: not görünür, silme çalışır, vazgeç null döner', (
     t,
   ) async {
-    String? sonuc = 'yok';
-    await t.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (c) => TextButton(
-            onPressed: () async => sonuc = await pinPenceresiAc(
-              c,
-              const PinIstegi(PinTuru.gir, not: 'PIN yanlış. Kalan deneme: 4.'),
-            ),
-            child: const Text('aç'),
-          ),
-        ),
-      ),
+    var sonuc = await pencereAc(
+      t,
+      const PinIstegi(PinTuru.gir, not: 'PIN yanlış. Kalan deneme: 4.'),
     );
-    await t.tap(find.text('aç'));
-    await t.pumpAndSettle();
     expect(find.text('PIN yanlış. Kalan deneme: 4.'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'PIN (tekrar)'), findsNothing);
-    await t.tap(find.text('Vazgeç'));
+    await tusla(t, '48');
+    expect(find.bySemanticsLabel('2 / 6 rakam yazıldı'), findsOneWidget);
+    await t.tap(find.byKey(const ValueKey('pin-sil')));
+    await t.pump();
+    expect(find.bySemanticsLabel('1 / 6 rakam yazıldı'), findsOneWidget);
+    await t.tap(find.byTooltip('Vazgeç'));
     await t.pumpAndSettle();
-    expect(sonuc, isNull);
+    expect(sonuc, [null]);
+
+    sonuc = await pencereAc(t, const PinIstegi(PinTuru.gir));
+    await tusla(t, '482915');
+    expect(sonuc, ['482915']);
   });
 }

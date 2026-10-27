@@ -83,7 +83,7 @@ try {
       await girisYap();
       await page.getByRole('button', { name: new RegExp(CARI) }).click();
       await dugme('Ödeme sitesine geç').click();
-      await page.getByRole('checkbox', { name: 'Cari ve seçili kartı kontrol ettim.' }).click();
+      await page.getByRole('checkbox', { name: /^(Cari ve seçili kartı|Cariyi) kontrol ettim\.$/ }).click();
       await dugme('Seçimi kontrol et').click();
       const [denizpay] = await Promise.all([baglam.waitForEvent('page'), dugme('DenizPay’e giriş yap').click()]);
       await page.getByText(/sonuç bu cariye kaydedilir/).waitFor();

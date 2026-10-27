@@ -11,11 +11,14 @@ import 'yardimci.dart';
 
 const pin = '482915';
 
-Future<void> pinYaz(WidgetTester t, String etiket, String deger) async {
-  final f = find.widgetWithText(TextField, etiket);
-  await bekle(t, f);
-  await t.enterText(f, deger);
-  await t.pump();
+/// PIN ekranının rakam tuşlarına dokunur (6. rakamda ekran kendiliğinden ilerler).
+Future<void> pinYaz(WidgetTester t, String deger) async {
+  await bekle(t, find.byKey(const ValueKey('pin-0')));
+  for (final r in deger.split('')) {
+    await t.tap(find.byKey(ValueKey('pin-$r')));
+    await t.pump(const Duration(milliseconds: 80));
+  }
+  await t.pump(const Duration(milliseconds: 500));
 }
 
 /// Kart formunu açar; [pinSor] ise önce PIN penceresi beklenir.
@@ -23,12 +26,10 @@ Future<void> kartiAc(WidgetTester t, {String? pinSor, String? yanlis}) async {
   await bas(t, find.text('Bilgiler / düzenle'));
   if (pinSor != null) {
     if (yanlis != null) {
-      await pinYaz(t, 'PIN', yanlis);
-      await bas(t, find.text('Aç'));
+      await pinYaz(t, yanlis);
       await bekle(t, find.textContaining('PIN yanlış.'));
     }
-    await pinYaz(t, 'PIN', pinSor);
-    await bas(t, find.text('Aç'));
+    await pinYaz(t, pinSor);
   }
   final alan = find.widgetWithText(TextFormField, 'Kart numarası');
   await bekle(t, alan);
@@ -60,7 +61,7 @@ Future<void> akis(WidgetTester t) async {
   await yaz(t, 'Şifre', parola);
   await bas(t, find.text('Giriş yap'));
 
-  await bas(t, find.text('Yeni cari'));
+  await bas(t, yeniCariDugmesi);
   await yaz(t, 'Cari adı', 'Örnek PIN Carisi');
   // Diğer uçtan uca testlerin carilerinden ayrı VKN (aynı emülatör verisi).
   await yaz(t, 'Vergi / TC kimlik numarası', '0000000009');
@@ -75,14 +76,12 @@ Future<void> akis(WidgetTester t) async {
   await bas(t, find.text('Kartı kaydet'));
 
   // İlk kart: PIN belirlenir; tahmini kolay PIN reddedilir.
-  await bekle(t, find.text('Uygulama PIN’i belirle'));
-  await pinYaz(t, 'PIN', '123456');
-  await pinYaz(t, 'PIN (tekrar)', '123456');
-  await bas(t, find.text('PIN’i kaydet'));
+  await bekle(t, find.text('Yeni PIN belirle'));
+  await pinYaz(t, '123456');
   await bekle(t, find.textContaining('kolay'));
-  await pinYaz(t, 'PIN', pin);
-  await pinYaz(t, 'PIN (tekrar)', pin);
-  await bas(t, find.text('PIN’i kaydet'));
+  await pinYaz(t, pin);
+  await bekle(t, find.text('Aynı PIN’i tekrar yaz'));
+  await pinYaz(t, pin);
   final kart = find.bySemanticsLabel(
     RegExp('Örnek PIN Kartı, son dört hane 1111'),
   );
@@ -110,7 +109,7 @@ Future<void> akis(WidgetTester t) async {
   await bekle(t, find.text('Kilidi aç'));
   await yaz(t, 'Şifre', parola);
   await bas(t, find.text('Kilidi aç'));
-  await bekle(t, find.text('Yeni cari'));
+  await bekle(t, yeniCariDugmesi);
   await bas(t, find.textContaining('Örnek PIN Carisi'));
   await bekle(t, kart);
   await kartiAc(t, pinSor: pin, yanlis: '000000');

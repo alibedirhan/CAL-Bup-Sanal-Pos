@@ -5,6 +5,7 @@ import '../application/portlar.dart';
 import '../application/surum_denetimi.dart';
 import '../application/tahsilat_servisi.dart';
 import '../ui/denizpay_ekrani.dart';
+import '../ui/kart_tarama_ekrani.dart';
 
 /// Bir platformun (web, Android) cihaza bağlı bağdaştırıcıları. Servisler ve
 /// ekranlar bunları yalnız port olarak görür; hangisinin kullanılacağı derlemede
@@ -22,6 +23,7 @@ class PlatformBaglantilari {
     this.denizPayAcici,
     this.uygulamaSurumu = const KapaliUygulamaSurumu(),
     this.pinKapisi,
+    this.kartTarayici,
   });
   final KartKasasi kartKasasi;
   final PosGirisKapisi girisKapisi;
@@ -44,4 +46,7 @@ class PlatformBaglantilari {
   /// Ekran kilidi olmayan Android telefonda kart kasasının uygulama PIN'i;
   /// açık uygulama ekranı pencereyi gösterir. Web'de yok.
   final PinKapisi? pinKapisi;
+
+  /// Karttan okuma (Android: NFC, kamera). Web'de yapıştırma kutusu yeter.
+  final KartTarayicilari? kartTarayici;
 }

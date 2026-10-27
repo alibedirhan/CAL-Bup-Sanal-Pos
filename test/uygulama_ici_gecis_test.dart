@@ -6,10 +6,10 @@ import 'package:bup_sanal_pos/data/demo_islemleri.dart';
 import 'package:bup_sanal_pos/domain/kart_bilgileri.dart';
 import 'package:bup_sanal_pos/domain/tahsilat.dart';
 import 'package:bup_sanal_pos/ui/oturum_modeli.dart';
+import 'package:bup_sanal_pos/domain/hata.dart';
 import 'package:bup_sanal_pos/ui/pos_onayi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'pos_gecisi_test.dart' show onayla;
 
 // Android uygulama içi DenizPay geçişi: yapay depo, gerçek WebView yok.
 // Kullanıcı isteği (27 Ekim): kart kaydı/seçimi olmadan da carinin DenizPay
@@ -64,6 +64,13 @@ Future<(OturumModeli, DemoIslemDeposu, List<Acilis>)> hazirla(
   await tester.tap(find.text('onay'));
   await tester.pumpAndSettle();
   return (model, islemler, acilan);
+}
+
+/// Android'de seçim kontrolü ve giriş tek adımdır: önce yalnız işaret kutusu.
+Future<void> onayla(WidgetTester tester) async {
+  await tester.tap(find.byType(CheckboxListTile));
+  await tester.pumpAndSettle();
+  expect(find.text('Seçimi kontrol et'), findsNothing);
 }
 
 Future<void> girisYap(WidgetTester tester) async {
@@ -136,15 +143,20 @@ void main() {
     addTearDown(model.dispose);
     await model.yukle();
     await model.profilAc('demo-cari-0');
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: PosOnayi(model: model)),
+    // Arayüzde kontrol ve giriş tek dokunuştur; süre kuralı servis düzeyinde
+    // (kontrol ile giriş arasında zaman geçerse, ör. hata ekranından dönüş).
+    final sonuc = await model.dene();
+    simdi = simdi.add(PosServisi.girisSuresi + const Duration(seconds: 1));
+    expect(
+      () => model.uygulamaIciGirisAc(sonuc!),
+      throwsA(
+        isA<PosHatasi>().having(
+          (e) => e.mesaj,
+          'mesaj',
+          contains('süresi doldu'),
+        ),
       ),
     );
-    await onayla(tester);
-    simdi = simdi.add(PosServisi.girisSuresi + const Duration(seconds: 1));
-    await girisYap(tester);
     expect(acilan, isEmpty);
-    expect(find.textContaining('süresi doldu'), findsOneWidget);
   });
 }

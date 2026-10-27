@@ -64,6 +64,15 @@ android {
             signingConfig = signingConfigs.findByName("surum")
             isMinifyEnabled = true
             isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Dağıtılan sürüm yalnız telefon işlemcileri (ARM) içindir; x86_64 yalnız
+            // emülatörde (hata ayıklama derlemesi) kullanılır. ML Kit modeli ABI
+            // başınadır: APK ~90 → ~60 MB.
+            // Flutter eklentisi varsayılan (x86_64 dahil) listeyi önceden koyar: temizlenir.
+            ndk {
+                abiFilters.clear()
+                abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
+            }
         }
     }
 }

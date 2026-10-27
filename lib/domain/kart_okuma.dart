@@ -258,3 +258,37 @@ OkunanKart kartMetniniOku(String metin, {required DateTime simdi}) {
   final ad = adlar.toSet().length == 1 ? adlar.first : null;
   return OkunanKart(numara: numara, ay: ay, yil: yil, ad: ad);
 }
+
+/// Kamera karelerinden okunanları birleştirir: numara iki karede aynı okununca
+/// kabul edilir (tek karedeki yanlış okumaya karşı); tarih yoksa [tarihBekleme]
+/// kare daha beklenir. Hazır olunca [ekle] kartı döndürür, yoksa `null`.
+class KareBirlestirici {
+  KareBirlestirici({this.tarihBekleme = 6});
+  final int tarihBekleme;
+  String? _aday, _ad;
+  int? _ay, _yil;
+  int _gorulme = 0, _bekleyen = 0;
+
+  /// Numara doğrulandı, tarih aranıyor.
+  bool get tarihAraniyor => _gorulme >= 2 && _ay == null;
+
+  OkunanKart? ekle(OkunanKart k) {
+    if (k.ay != null) {
+      _ay = k.ay;
+      _yil = k.yil;
+    }
+    _ad ??= k.ad;
+    if (k.numara != null) {
+      if (k.numara == _aday) {
+        _gorulme++;
+      } else {
+        _aday = k.numara;
+        _gorulme = 1;
+        _bekleyen = 0;
+      }
+    }
+    if (_aday == null || _gorulme < 2) return null;
+    if (_ay == null && _bekleyen++ < tarihBekleme) return null;
+    return OkunanKart(numara: _aday, ay: _ay, yil: _yil, ad: _ad);
+  }
+}

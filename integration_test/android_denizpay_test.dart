@@ -30,7 +30,7 @@ Future<Object> _js(WidgetTester t, String betik) async {
 Future<String> _adres(WidgetTester t) async => await _web(t).currentUrl() ?? '';
 
 Future<void> _cariEkle(WidgetTester t, String ad, String vkn) async {
-  await bas(t, find.text('Yeni cari'));
+  await bas(t, yeniCariDugmesi);
   await yaz(t, 'Cari adı', ad);
   await yaz(t, 'Vergi / TC kimlik numarası', vkn);
   await bas(t, find.text('Cariyi kaydet'));
@@ -43,7 +43,8 @@ Future<void> _denizPayaGir(WidgetTester t) async {
     find.byType(CheckboxListTile),
   );
   await bas(t, find.byType(CheckboxListTile));
-  await bas(t, find.text('Seçimi kontrol et'));
+  // Android'de kontrol ve giriş tek dokunuş (0.12.0).
+  expect(find.text('Seçimi kontrol et'), findsNothing);
   await bas(t, find.text('DenizPay’e giriş yap'));
 }
 
@@ -117,7 +118,7 @@ Future<void> _akis(WidgetTester t) async {
 
   // 4) Kartsız cari: kart seçmeden girilir, kart bilgileri elle yazılır.
   await bas(t, find.byTooltip('Carilere dön'));
-  await bekle(t, find.text('Yeni cari'));
+  await bekle(t, yeniCariDugmesi);
   await _cariEkle(t, 'Örnek Kartsız Cari', '0000000001');
   await bekle(t, find.text('Ödeme sitesine geç'));
   await _denizPayaGir(t);

@@ -84,6 +84,7 @@ class _CariFormuState extends State<CariFormu> {
                 controller: _ad,
                 enabled: !_kaydediliyor,
                 maxLength: 80,
+                buildCounter: sayacsiz,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
@@ -99,6 +100,7 @@ class _CariFormuState extends State<CariFormu> {
                 controller: _kimlik,
                 enabled: !_kaydediliyor,
                 maxLength: 11,
+                buildCounter: sayacsiz,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _kaydet(),

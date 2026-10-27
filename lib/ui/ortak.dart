@@ -4,7 +4,16 @@ import 'package:flutter/material.dart';
 import 'tema.dart';
 
 /// Ekranda gösterilen sürüm; `pubspec.yaml` ile aynı olmalı (test denetler).
-const surumAdi = '0.11.1';
+const surumAdi = '0.12.0';
+
+/// Karakter sayacı ("0/80") gösterilmez; sınır yine uygulanır. Küçük ekranda
+/// her kutunun altında kalabalık yapıyordu (arayüz gözden geçirmesi, 0.12.0).
+Widget? sayacsiz(
+  BuildContext _, {
+  required int currentLength,
+  required bool isFocused,
+  int? maxLength,
+}) => null;
 
 /// Android uygulaması mı (web sürümü değil). Yalnız metinlerin kullanıcının
 /// diliyle söylenmesi için: "bu telefonda" / "bu tarayıcıda".
@@ -12,7 +21,7 @@ bool get androidUygulamasi =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 String get kartSaklamaNotu => androidUygulamasi
-    ? 'Tam kart bilgileri yalnız bu telefonda şifreli tutulur. Uygulama kaldırılırsa veya verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.'
+    ? 'Kart bilgileri yalnız bu telefonda şifreli saklanır. CVV istenmez; ödeme ekranında yazılır.'
     : 'Tam kart bilgileri yalnız bu tarayıcıda şifreli tutulur. Tarayıcı verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.';
 
 /// Alttan açılan pencere. Üstte boşluk bırakılır: küçük ekranda (iPhone SE)

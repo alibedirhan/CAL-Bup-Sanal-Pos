@@ -17,6 +17,16 @@ from pathlib import Path
 # güncellenemez: bu değer bilerek sabittir.
 IMZA = '0c7696fc91b4ac71916937a0508eb54c02b3bc7ac114c353e8d36f48d70947db'
 PAKET = 'com.bup.sanalpos'
+# İzin listesi: yeni bir izin (eklenti güncellemesiyle gelen dahil) bilinçli
+# eklenmeden yayın durur. Konum, mikrofon, depolama, kişiler vb. yoktur.
+IZINLER = {
+    'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
+    'android.permission.USE_BIOMETRIC', 'android.permission.USE_FINGERPRINT',
+    'android.permission.NFC', 'android.permission.CAMERA',
+    'com.google.android.providers.gsf.permission.READ_GSERVICES',
+    'com.bup.sanalpos.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION',
+}
+ABI = {'arm64-v8a', 'armeabi-v7a'}
 
 
 def dur(neden):
@@ -59,6 +69,15 @@ def main():
         dur('en düşük Android sürümü 28 değil')
     if 'application-debuggable' in rozet:
         dur('hata ayıklanabilir derleme')
+    izinler = set(re.findall(r"^uses-permission: name='([^']+)'", rozet, re.M))
+    if izinler - IZINLER:
+        dur(f'izin listesinde olmayan izin: {sorted(izinler - IZINLER)}')
+    abi = re.search(r"^native-code: (.*)$", rozet, re.M)
+    if not abi or set(re.findall(r"'([^']+)'", abi.group(1))) != ABI:
+        dur(f'işlemci türleri beklenen değil: {abi and abi.group(1)}')
+    for ozellik in ('android.hardware.nfc', 'android.hardware.camera', 'android.hardware.camera.any'):
+        if f"uses-feature: name='{ozellik}'" in rozet:
+            dur(f'{ozellik} zorunlu olmamalı (NFC/kamerasız cihaza da kurulur)')
 
     manifest = calistir(aapt2, 'dump', 'xmltree', '--file', 'AndroidManifest.xml', apk)
     for oznitelik in ('allowBackup', 'usesCleartextTraffic'):

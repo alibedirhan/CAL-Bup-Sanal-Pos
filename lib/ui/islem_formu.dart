@@ -185,6 +185,7 @@ class _IslemFormuState extends State<IslemFormu> {
                   controller: _aciklama,
                   enabled: !_kaydediliyor,
                   maxLength: 200,
+                  buildCounter: sayacsiz,
                   decoration: InputDecoration(
                     labelText: _sonuc == IslemSonucu.hata
                         ? 'Hata açıklaması'

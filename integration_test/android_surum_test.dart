@@ -59,7 +59,7 @@ void main() {
     await yaz(t, 'Şifre', parola);
     await bas(t, find.text('Giriş yap'));
     await bekle(t, find.text('Güncelleme gerekli'));
-    expect(find.text('Yeni cari'), findsNothing);
+    expect(yeniCariDugmesi, findsNothing);
     final link = t.widget<Link>(find.byType(Link));
     expect(link.uri, Uri.parse('https://indir.example.test/'));
     expect(find.text('9.9.9 sürümünü indir'), findsOneWidget);
@@ -72,7 +72,8 @@ void main() {
     await yaz(t, 'Şifre', parola);
     await bas(t, find.text('Giriş yap'));
     await bekle(t, find.text('Yeni sürüm hazır: 9.9.9'));
-    expect(find.text('Yeni cari'), findsOneWidget);
+    // Not, cari listesi yüklenmeden görünebilir; uygulama açılmış olmalı.
+    await bekle(t, yeniCariDugmesi);
     await bas(t, find.byTooltip('Notu kapat'));
     await t.pump(const Duration(milliseconds: 300));
     expect(find.byType(GuncellemeNotu), findsNothing);
@@ -82,7 +83,7 @@ void main() {
     await bas(t, find.byTooltip('Ekranı kilitle'));
     await yaz(t, 'Şifre', parola);
     await bas(t, find.text('Kilidi aç'));
-    await bekle(t, find.text('Yeni cari'));
+    await bekle(t, yeniCariDugmesi);
     await t.pump(const Duration(seconds: 2));
     expect(find.byType(GuncellemeNotu), findsNothing);
   });
