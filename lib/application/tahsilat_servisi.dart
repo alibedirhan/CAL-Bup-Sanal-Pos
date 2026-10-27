@@ -27,6 +27,9 @@ abstract interface class AcikGirisPortu {
   bool get destekli;
   void ekle(AcikGiris acik);
   void temizle();
+
+  /// Bu cihazda başka hesapla giriş yapıldı: yalnız [uid]'nin girişleri kalır.
+  void yalniz(String uid);
 }
 
 /// Gün sonu dosyasını telefona/bilgisayara indirir.
@@ -77,6 +80,8 @@ class KapaliAcikGiris implements AcikGirisPortu {
   void ekle(AcikGiris acik) {}
   @override
   void temizle() {}
+  @override
+  void yalniz(String uid) {}
 }
 
 class KapaliDosyaIndirici implements DosyaIndirici {

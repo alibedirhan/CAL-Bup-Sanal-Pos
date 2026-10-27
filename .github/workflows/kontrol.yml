@@ -45,3 +45,30 @@ jobs:
           npm --prefix tools/tarayici run test
           npm --prefix tools/tarayici run test:kasa
           npm --prefix tools/tarayici run test:doldur
+  # Android derlemesi (docs/ANDROID_PLANI.md). Yalnız deneme kipi, hata ayıklama
+  # imzası: sürüm imza anahtarı CI'da yoktur ve olmayacaktır.
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.2
+          cache: true
+      - name: Flutter bağımlılıkları
+        run: flutter pub get
+      - name: Android deneme paketi
+        run: flutter build apk --debug --no-pub
+      - name: Sürüm imzasız derlenmez
+        run: |
+          if flutter build apk --release --no-pub > surum.log 2>&1; then
+            echo 'İmza anahtarı olmadan sürüm derlendi' >&2
+            exit 1
+          fi
+          grep -q 'Sürüm imza anahtarı bulunamadı' surum.log

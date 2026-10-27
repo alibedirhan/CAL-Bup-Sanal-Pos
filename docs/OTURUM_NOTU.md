@@ -1,3 +1,21 @@
+# 27 Ekim 2026 — Android uygulaması: plan + Aşama 0 (hazırlık)
+
+Kullanıcı Sanal POS'un Flutter ile Android uygulaması olmasını istedi ("titiz,
+sürdürülebilir, mimarisi kusursuz, kurumsal firma için; önce plan"). Mevcut kod
+incelendi, plan `docs/ANDROID_PLANI.md` yazıldı, kararlar soruldu: birkaç
+çalışan/kişisel telefon/MDM yok; parmak izi/yüz + şifre (yeni biyometri
+eklenince şifre); kart doldurma düğmeyle; Play'siz imzalı APK. DenizPay Android'de
+uygulama içinde (WebView) açılacak; her cari girişinde çerezler silinir.
+Aşama 0 bitti (ayrıntı planın "Durum" bölümünde): bileşim `lib/bilesim/`, web
+bağdaştırıcıları `lib/data/web/`, mimari sınır testi, Android güvenlik ayarları,
+depo dışı imza anahtarı, Firebase Android uygulaması kaydı, CI Android işi.
+Web davranışı değişmedi: 126 Dart, kurallar, demo/kasa/doldur/hesap/tahsilat
+Chromium + WebKit geçti. Sürüm artırılmadı (kullanıcıya giden değişiklik yok),
+web yayını yapılmadı. Sıradaki: Aşama 1 (Android temel uygulama, Keystore kasası,
+biyometrik kilit). Kullanıcıdan: imza anahtarı yedeği, API anahtarı kısıtlaması.
+
+---
+
 # 23 Ekim 2026 — 0.10.1: ödeme öncesi tarama düzeltmeleri
 
 Kullanıcı ilk gerçek ödemeden önce titiz tarama istedi; iptal düzenini reddetti

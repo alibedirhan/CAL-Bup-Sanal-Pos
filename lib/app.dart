@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'application/pos_servisi.dart';
 import 'data/demo_deposu.dart';
 import 'data/demo_islemleri.dart';
-import 'data/dosya_indirici.dart';
 import 'application/tahsilat_servisi.dart';
+import 'bilesim/platform.dart';
 import 'ui/ana_ekran.dart';
 import 'ui/karsilama.dart';
 import 'ui/oturum_modeli.dart';
@@ -58,7 +58,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
               depo: DemoIslemDeposu(),
               kullaniciId: DemoDeposu.kullanici,
               kullaniciAdi: 'Deneme Kullanıcısı',
-              indirici: const CihazDosyaIndirici(),
+              indirici: platformBaglantilari.indirici,
             ),
           ),
       deneme: widget.deneme,

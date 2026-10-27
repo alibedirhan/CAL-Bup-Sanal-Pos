@@ -48,6 +48,7 @@ test-results/
 .firebase/
 *-debug.log
 config/canli.json
+config/android.json
 *.yedek.json
 
 # Symbolication related

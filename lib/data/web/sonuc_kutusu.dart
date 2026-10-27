@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:js_interop';
-import '../application/tahsilat_servisi.dart';
+import '../../application/tahsilat_servisi.dart';
 
 @JS('bupSonucKutusu')
 external JSObject? get _modul;
@@ -20,8 +20,8 @@ var _dinleniyor = false;
 
 /// `web/sonuc_kutusu.js`: sonuç sayfasının bu kökenin yerel deposuna bıraktığı
 /// sonuçlar. Okuma/silme hatası işi durdurmaz; sonuç kutuda kalır.
-class CihazSonucKutusu implements SonucKutusu {
-  const CihazSonucKutusu();
+class WebSonucKutusu implements SonucKutusu {
+  const WebSonucKutusu();
   @override
   bool get destekli => _modul != null;
 

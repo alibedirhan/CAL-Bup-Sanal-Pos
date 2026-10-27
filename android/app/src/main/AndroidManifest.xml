@@ -1,8 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Güvenlik ayarları: docs/ANDROID_PLANI.md §4. Yedek/aktarım kapalı, yalnız HTTPS. -->
     <application
         android:label="BUP Sanal POS"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/veri_cikarma"
+        android:networkSecurityConfig="@xml/ag_guvenligi"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

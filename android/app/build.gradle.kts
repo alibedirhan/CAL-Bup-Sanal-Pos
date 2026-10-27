@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,8 +7,19 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Sürüm imzası depo dışındadır (docs/ANDROID_PLANI.md §4.8). Yol BUP_IMZA ile
+// verilebilir; yoksa kullanıcı klasöründeki varsayılan. Anahtar yoksa sürüm
+// derlemesi durur: hata ayıklama anahtarıyla imzalı sürüm hiçbir koşulda çıkmaz.
+val imzaDosyasi = file(
+    System.getenv("BUP_IMZA")
+        ?: "${System.getProperty("user.home")}/.bup-sanal-pos/imza/key.properties",
+)
+val imza = Properties().apply {
+    if (imzaDosyasi.isFile) imzaDosyasi.inputStream().use { load(it) }
+}
+
 android {
-    namespace = "com.bup.bup_sanal_pos"
+    namespace = "com.bup.sanalpos"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,23 +32,48 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // MainActivity, ekran korumasını BuildConfig.DEBUG ile ayırır.
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.bup.bup_sanal_pos"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Kurulduktan sonra değiştirilemez: değişirse telefonda ayrı uygulama olur.
+        applicationId = "com.bup.sanalpos"
+        // Android 9: Keystore'da "cihaz kilidi açıkken" anahtar koşulu (API 28).
+        minSdk = 28
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (imza.isNotEmpty()) {
+            create("surum") {
+                storeFile = file(imza.getProperty("storeFile"))
+                storePassword = imza.getProperty("storePassword")
+                keyAlias = imza.getProperty("keyAlias")
+                keyPassword = imza.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("surum")
+            isMinifyEnabled = true
+            isShrinkResources = true
         }
+    }
+}
+
+gradle.taskGraph.whenReady {
+    val surum = allTasks.any { it.name.contains("Release") && it.project == project }
+    if (surum && imza.isEmpty()) {
+        throw GradleException(
+            "Sürüm imza anahtarı bulunamadı: $imzaDosyasi. " +
+                "Hata ayıklama anahtarıyla sürüm derlenmez (docs/ANDROID_PLANI.md).",
+        )
     }
 }
 

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:js_interop';
 import 'package:web/web.dart' as web;
-import '../application/tahsilat_servisi.dart';
+import '../../application/tahsilat_servisi.dart';
 
 /// Tarayıcının kendi indirmesiyle kaydeder; dosya ağa gönderilmez.
-class CihazDosyaIndirici implements DosyaIndirici {
-  const CihazDosyaIndirici();
+class WebDosyaIndirici implements DosyaIndirici {
+  const WebDosyaIndirici();
   @override
   bool get destekli => true;
   @override

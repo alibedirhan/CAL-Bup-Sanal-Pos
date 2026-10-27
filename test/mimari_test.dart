@@ -28,6 +28,53 @@ void main() {
       );
     }
   });
+  test(
+    'Platform kodu kendi klasöründe kalır, yalnız kendi bileşimince alınır',
+    () {
+      // Klasör → onu içe aktarabilecek tek bileşim dosyası ve yasak içe aktarmalar.
+      const platformlar = {
+        'web': (
+          bilesim: 'lib/bilesim/platform_web.dart',
+          yasak: ['dart:io', 'package:flutter/services.dart'],
+        ),
+        'android': (
+          bilesim: 'lib/bilesim/platform_android.dart',
+          yasak: ['dart:js_interop', 'package:web/'],
+        ),
+      };
+      final iceAktarma = RegExp(r'''^(?:import|export)\s+['"]([^'"]+)['"]''');
+      for (final dosya in Directory(
+        'lib',
+      ).listSync(recursive: true).whereType<File>()) {
+        if (!dosya.path.endsWith('.dart')) continue;
+        final yol = dosya.path.replaceAll(r'\', '/');
+        final hedefler = [
+          for (final satir in dosya.readAsLinesSync())
+            ?iceAktarma.firstMatch(satir.trim())?.group(1),
+        ];
+        final kendi = platformlar.keys
+            .where((p) => yol.startsWith('lib/data/$p/'))
+            .firstOrNull;
+        for (final hedef in hedefler) {
+          if (hedef == 'dart:js_interop' || hedef.startsWith('package:web/')) {
+            expect(kendi, 'web', reason: '$yol → $hedef');
+          }
+          for (final MapEntry(key: p, value: k) in platformlar.entries) {
+            if (hedef.contains('data/$p/') && kendi != p) {
+              expect(yol, k.bilesim, reason: '$yol → $hedef');
+            }
+            if (kendi == p) {
+              expect(
+                k.yasak.any(hedef.startsWith),
+                isFalse,
+                reason: '$yol → $hedef',
+              );
+            }
+          }
+        }
+      }
+    },
+  );
   test('El yazımı Dart dosyaları 400 satır sınırındadır', () {
     for (final dosya in Directory(
       'lib',

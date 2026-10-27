@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:js_interop';
-import '../application/portlar.dart';
-import '../domain/doldurma.dart';
-import '../domain/hata.dart';
+import '../../application/portlar.dart';
+import '../../domain/doldurma.dart';
+import '../../domain/hata.dart';
 
 @JS('bupDoldurma')
 external JSObject? get _modul;
@@ -13,8 +13,8 @@ external JSString _temizle();
 
 /// `web/doldurma.js` işi bu kökenin yerel deposuna yazar; DenizPay'deki yer
 /// iminin açtığı `doldur.html` okur. İşte tam kart yoktur.
-class CihazDoldurmaHazirligi implements DoldurmaHazirligi {
-  const CihazDoldurmaHazirligi();
+class WebDoldurmaHazirligi implements DoldurmaHazirligi {
+  const WebDoldurmaHazirligi();
   @override
   bool get destekli => _modul != null;
   @override

@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app.dart';
+import 'bilesim/platform.dart';
 import 'application/pos_servisi.dart';
 import 'data/firebase_hesap.dart';
 import 'data/firebase_yonetim.dart';
@@ -12,13 +13,7 @@ import 'data/firestore_deposu.dart';
 import 'domain/hata.dart';
 import 'domain/kullanici.dart';
 import 'data/secim_kontrolu.dart';
-import 'data/cihaz_kart_kasasi.dart';
-import 'data/pos_giris_kapisi.dart';
-import 'data/doldurma_hazirligi.dart';
-import 'data/acik_giris.dart';
-import 'data/dosya_indirici.dart';
 import 'data/firestore_islemleri.dart';
-import 'data/sonuc_kutusu.dart';
 import 'application/tahsilat_servisi.dart';
 import 'ui/giris_sayfasi.dart';
 import 'ui/tema.dart';
@@ -99,6 +94,7 @@ class _HesapKapisi extends StatefulWidget {
 }
 
 class _HesapKapisiState extends State<_HesapKapisi> {
+  static const _platform = platformBaglantilari;
   StreamSubscription<String?>? _auth;
   StreamSubscription<Kullanici?>? _profil;
   Kullanici? _kullanici;
@@ -113,13 +109,13 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       // Çıkış veya hesap değişiminde önceki hesabın bekleyen kart işi kalmaz;
       // aynı hesabın sayfa yenilemesi işi silmez.
       if (uid == null || (_sonUid != null && uid != _sonUid)) {
-        const CihazDoldurmaHazirligi().temizle();
+        _platform.doldurma.temizle();
       }
       // DenizPay girişleri (sır yok) yalnız bu sekmede çıkışta silinir. Yeni açılan
       // sekme de önce oturumsuz başlar; o an silinirse DenizPay'de süren ödemenin
       // sonucu cariye bağlanamaz. Giriş yapılınca başka hesabın girişleri atılır.
-      if (uid == null && _sonUid != null) const CihazAcikGiris().temizle();
-      if (uid != null) const CihazAcikGiris().yalniz(uid);
+      if (uid == null && _sonUid != null) _platform.acikGiris.temizle();
+      if (uid != null) _platform.acikGiris.yalniz(uid);
       _sonUid = uid;
       _nesil++;
       unawaited(_profil?.cancel().catchError((Object _) {}));
@@ -138,8 +134,8 @@ class _HesapKapisiState extends State<_HesapKapisi> {
               _kontrol = false;
               _kullanici = k?.aktif == true ? k : null;
               if (_kullanici == null) {
-                const CihazDoldurmaHazirligi().temizle();
-                const CihazAcikGiris().temizle();
+                _platform.doldurma.temizle();
+                _platform.acikGiris.temizle();
               }
               _hata = k?.aktif == true
                   ? null
@@ -193,16 +189,16 @@ class _HesapKapisiState extends State<_HesapKapisi> {
           depo: FirestoreDeposu(widget.hesap.db),
           baglanti: const SecimKontrolu(),
           kullaniciId: k.id,
-          kartKasasi: const CihazKartKasasi(),
-          girisKapisi: const CihazPosGirisKapisi(),
-          doldurma: const CihazDoldurmaHazirligi(),
+          kartKasasi: _platform.kartKasasi,
+          girisKapisi: _platform.girisKapisi,
+          doldurma: _platform.doldurma,
           tahsilat: TahsilatServisi(
             depo: FirestoreIslemDeposu(widget.hesap.db),
             kullaniciId: k.id,
             kullaniciAdi: k.ad,
-            acikGiris: const CihazAcikGiris(),
-            indirici: const CihazDosyaIndirici(),
-            kutu: const CihazSonucKutusu(),
+            acikGiris: _platform.acikGiris,
+            indirici: _platform.indirici,
+            kutu: _platform.sonucKutusu,
           ),
         ),
         kullanici: k,

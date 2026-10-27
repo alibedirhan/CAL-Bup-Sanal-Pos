@@ -1,3 +1,8 @@
+**Android (27 Ekim 2026):** plan ve durum [ANDROID_PLANI.md](ANDROID_PLANI.md).
+Platforma bağlı bağdaştırıcılar `lib/bilesim/platform.dart` ile derlemede seçilir
+(`PlatformBaglantilari`); web olanlar `lib/data/web/`, Android olanlar
+`lib/data/android/` altındadır. Aşağıdaki `_web.dart` dosya adları eski düzendir.
+
 **0.4.0:** Cihaz kart kasası `application/KartKasasi` portuyla bağlandı;
 Web Crypto/IndexedDB bağdaştırıcısı yalnız webde etkin, diğer platformda
 kapalıdır. Saf kurallar/işlem tutarlılığı domain/application katmanındadır.

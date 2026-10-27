@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Yalnız HTTPS ve yalnız sistemin güvendiği sertifikalar. Kullanıcının telefona
+     sonradan yüklediği sertifikalar (kişisel telefonda araya girme riski) sayılmaz. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

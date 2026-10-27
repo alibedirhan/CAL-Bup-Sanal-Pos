@@ -41,6 +41,13 @@
   kural ve hosting birlikte yayınlanır). Sonuç kutudan yalnız sunucuda kayıt
   görülünce çıkar; görünmez işaretler okunan değerden atılır. İptal/düzeltme
   düzeni kullanıcı kararıyla yoktur. Ayrıntı `docs/TAHSILAT.md`.
+- **27 Ekim: Android uygulaması** (kullanıcı kararı; 21 Ekim "yerel uygulama
+  yok" kararını Android için kaldırır, iPhone web'de kalır). Önce
+  `docs/ANDROID_PLANI.md` okuyun: kararlar (kişisel telefon, parmak izi + şifre,
+  düğmeyle doldurma, Play'siz APK), aşamalar ve durum. Platform bağdaştırıcıları
+  yalnız `lib/bilesim/` üzerinden seçilir (mimari test zorlar). Sürüm imza
+  anahtarı depo dışı `~/.bup-sanal-pos/imza/`; asla depoya/CI'a koymayın,
+  kaybı güncellemeyi imkânsız kılar. Paket adı `com.bup.sanalpos` değişmez.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

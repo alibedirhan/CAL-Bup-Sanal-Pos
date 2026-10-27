@@ -32,6 +32,8 @@ class SahteAcikGiris implements AcikGirisPortu {
 
   @override
   void temizle() => temizlenme++;
+  @override
+  void yalniz(String uid) {}
 }
 
 class KayitliDepo extends DemoIslemDeposu {

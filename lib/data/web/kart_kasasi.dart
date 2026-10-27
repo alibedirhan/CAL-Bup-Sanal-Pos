@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:js_interop';
-import '../application/kart_kasasi.dart';
-import '../domain/hata.dart';
-import '../domain/kart_bilgileri.dart';
-import '../domain/modeller.dart';
+import '../../application/kart_kasasi.dart';
+import '../../domain/hata.dart';
+import '../../domain/kart_bilgileri.dart';
+import '../../domain/modeller.dart';
 
 @JS('bupKartKasasi.hazirla')
 external JSPromise<JSString> _hazirla(
@@ -18,8 +18,8 @@ external JSPromise<JSString> _oku(JSString uid, JSString meta);
 @JS('bupKartKasasi.sil')
 external JSPromise<JSString> _sil(JSString uid, JSString cari, JSString? kart);
 
-class CihazKartKasasi implements KartKasasi {
-  const CihazKartKasasi();
+class WebKartKasasi implements KartKasasi {
+  const WebKartKasasi();
   Future<dynamic> _dene(JSPromise<JSString> Function() f) async {
     try {
       final r =
