@@ -375,8 +375,12 @@ yöntemi [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
   `android_surum_test`: gerçek kanal sürümü, "Güncelleme gerekli" → çıkış, "Yeni
   sürüm hazır" notu ve kapatma, güncelde not yok); web demo/kasa/doldur/saf/
   hesap/tahsilat Chromium + WebKit geçti.
-- **Yapılmadı (kullanıcı onayı bekliyor):** `bup-sanal-pos-indir` sitesinin
-  oluşturulması, kural + web 0.11.0 yayını, APK yayını, `ayarlar/android`.
+- **Yayın (kullanıcı onayıyla, 27 Ekim):** `bup-sanal-pos-indir` sitesi
+  oluşturuldu; `yayin.sh` ile kurallar + web 0.11.0 (`test:yayin` geçti). İlk
+  `android_yayin.sh --yayinla` APK'yı Hosting'e yüklerken durdu: Spark
+  çalıştırılabilir dosyayı yasaklıyor (kurallar zaten yayındaydı; site sürümü
+  yayınlanmadı, `ayarlar/android` yazılmadı). Kullanıcı kararı: APK ayrı açık
+  depo `alibedirhan/bup-sanal-pos-android` sürüm eki; sayfa Hosting'de.
   Ertelenen: yönetimde "kim hangi sürümde" (kural değişikliği ister).
 
 ## Aşama 3 — başlangıç kararları ve ayrıntılı iş listesi (27 Ekim 2026)

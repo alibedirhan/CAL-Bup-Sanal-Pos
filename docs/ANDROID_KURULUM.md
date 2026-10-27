@@ -46,18 +46,27 @@ Her yayından önce kullanıcıya sorulur. Betik sırasıyla:
    imza, paket/versionCode/versionName, minSdk 28, hata ayıklama yok, yedek
    kapalı, düz HTTP kapalı (manifest + ağ güvenliği), dex'te test kodu yok,
    `libapp.so`'da emülatör adresi/demo proje yok, canlı proje ve DenizPay var.
-4. `build/indir/`: sürüm adlı APK + doldurulmuş kurulum sayfası.
-5. `--yayinla`: yayın kapısı (`yayin_oncesi.mjs`) → Firestore kuralları →
-   `hosting:indir` → yayındaki APK'nın SHA-256'sı ve sayfa doğrulanır →
-   `ayarlar/android` (`android_surum_yaz.mjs`; sürüm geri alınamaz,
-   `--zorunlu` yoksa önceki `enDusuk` korunur).
+4. `build/indir/index.html` (doldurulmuş kurulum sayfası) ve
+   `build/android_surum/bup-sanal-pos-<sürüm>.apk`.
+5. `--yayinla`: yayın kapısı (`yayin_oncesi.mjs`) → aynı etiketli GitHub sürümü
+   varsa durur → Firestore kuralları → APK, açık
+   `alibedirhan/bup-sanal-pos-android` deposunda `v<sürüm>` sürüm eki olur →
+   indirilen ekin SHA-256'sı doğrulanır → `hosting:indir` (yalnız sayfa) →
+   sayfanın bu sürümü ve eki gösterdiği doğrulanır → `ayarlar/android`
+   (`android_surum_yaz.mjs`; sürüm geri alınamaz, `--zorunlu` yoksa önceki
+   `enDusuk` korunur).
 
 Web uygulaması ayrı yayınlanır (`tools/yayin.sh` → yalnız `hosting:web`).
 İki site aynı Firebase projesindedir (`.firebaserc` hedefleri `web`, `indir`).
 
-Spark (ücretsiz) Hosting sınırı günde ~360 MB aktarımdır; APK ~58 MB, yani
-günde ~6 indirme. Birkaç çalışan için yeterli; artarsa ABI'ye bölünmüş APK
-(~20 MB) düşünülür.
+**APK neden GitHub'da:** Firebase Spark (ücretsiz) Hosting çalıştırılabilir
+dosyaları (.apk) reddeder ("Executable files are forbidden on the Spark billing
+plan", 27 Ekim 2026'daki ilk yayında görüldü). Billing kapalı kalacağı için
+kullanıcı kararıyla APK, yalnız APK tutan açık GitHub deposunun sürüm ekidir
+(kaynak kodu orada yoktur; APK'da sır yoktur, hesap olmadan kullanılamaz).
+Kurulum sayfası Hosting'de kalır, uygulamadaki `indirme` adresi sayfadır.
+Firebase'e `.apk` konmaz (`firebase.json` `ignore`). Ekleri değiştirmeyin:
+yeni dosya = yeni sürüm numarası.
 
 ## Yöneticinin hesabında yapacakları
 
