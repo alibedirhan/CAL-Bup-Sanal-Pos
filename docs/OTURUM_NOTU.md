@@ -9,8 +9,13 @@ kullanıcı PIN'i seçti). Ayrıntı `ANDROID_PLANI.md` "Uygulama PIN'i",
 SHA-256 `4bc73489adb631928e88cc43dce1cf6e50e1c1c083df6141aa93e9d8e6fd4049`,
 `ayarlar/android` enDusuk 19 / son 20 (0.11.0 açılır, not gösterir). Web
 değişmedi; web 0.11.0'da kalır (ekrandaki sürüm etiketi web'de 0.11.0). Testler: 216 Dart, Android takımı (Kotlin 12, uçtan uca 4) geçti.
-Zebra terminal bilgisayarda USB'de görünmedi (lsusb'de yok: kablo/USB modu/USB
-hata ayıklama); cihazda hiçbir şey denenmedi. Kullanıcı sordu: güncelleme
+Zebra terminal sonra bağlandı (yalnız okundu, hiçbir şey kurulmadı): **Zebra
+TC15**, Android 13 (SDK 33), güvenlik yaması 2024-03-01, parmak izi/yüz yok,
+ekran kilidi desteği var; WebView 156; StageNow + MX ve Play Store kurulu, cihaz
+sahibi/MDM yok; uygulama 0.11.0 (19) kurulu. adb için kullanıcı
+`/etc/udev/rules.d/51-zebra.rules` (vendor 05e0, plugdev) ekledi; sistem
+kuralında yalnız 05e0:2101 vardı, TC15 05e0:2106. Seri `24284524701851`;
+android_test.sh bu cihazda ÇALIŞTIRILMAZ (yalnız emulator-*). Kullanıcı sordu: güncelleme
 kendiliğinden kurulmaz (Play'siz Android izin vermez); bildirim + üstüne kurma.
 
 ---
