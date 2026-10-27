@@ -15,7 +15,11 @@ ekran kilidi desteği var; WebView 156; StageNow + MX ve Play Store kurulu, ciha
 sahibi/MDM yok; uygulama 0.11.0 (19) kurulu. adb için kullanıcı
 `/etc/udev/rules.d/51-zebra.rules` (vendor 05e0, plugdev) ekledi; sistem
 kuralında yalnız 05e0:2101 vardı, TC15 05e0:2106. Seri `24284524701851`;
-android_test.sh bu cihazda ÇALIŞTIRILMAZ (yalnız emulator-*). Kullanıcı sordu: güncelleme
+android_test.sh bu cihazda ÇALIŞTIRILMAZ (yalnız emulator-*).
+**İlk gerçek cihaz güncellemesi (Aşama 4, kısmi):** kullanıcı TC15'te 0.11.0 →
+0.11.1'i uygulama içinden kurdu; cihazda versionCode 20, ilk kurulum zamanı
+aynı (üstüne kuruldu, veri korundu), çökme kaydı yok. PIN ve kart ekleme
+kullanıcı denemesinde. Kullanıcı sordu: güncelleme
 kendiliğinden kurulmaz (Play'siz Android izin vermez); bildirim + üstüne kurma.
 
 ---
