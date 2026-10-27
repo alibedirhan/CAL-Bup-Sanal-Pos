@@ -4,8 +4,40 @@ import 'modeller.dart';
 /// DenizPay sonuç ekranı: "Onay Formu" başarılı, "Hata Formu" başarısız ödemedir.
 enum IslemSonucu { basarili, hata }
 
-/// Sonuç ekranından "BUP Doldur" yer imiyle mi, profilde elle mi kaydedildi.
-enum IslemKaynagi { yerImi, elle }
+/// Sonuç nasıl kaydedildi. Kodlar sunucu kuralı (`firestore.rules`) ile aynıdır.
+enum IslemKaynagi {
+  /// Web: DenizPay sonuç ekranında "BUP Doldur" yer imiyle.
+  yerImi('yer_imi', 'Sonuç ekranından'),
+
+  /// Cari profilinden elle.
+  elle('elle', 'Elle'),
+
+  /// Android: uygulama içi DenizPay ekranının sonuç sayfasından (27 Ekim 2026).
+  uygulama('uygulama', 'Uygulama içi DenizPay');
+
+  const IslemKaynagi(this.kod, this.etiket);
+  final String kod, etiket;
+
+  static IslemKaynagi? kodla(Object? kod) {
+    for (final k in values) {
+      if (k.kod == kod) return k;
+    }
+    return null;
+  }
+
+  /// Bu kaynağın kurabileceği cari eşleşmeleri (denetim izi tutarlılığı).
+  Set<CariEslesmesi> get eslesmeler => switch (this) {
+    yerImi => const {
+      CariEslesmesi.sonucEkrani,
+      CariEslesmesi.kartSayfasi,
+      CariEslesmesi.tekGiris,
+      CariEslesmesi.secim,
+      CariEslesmesi.sonGiris,
+    },
+    elle => const {CariEslesmesi.elle},
+    uygulama => const {CariEslesmesi.uygulamaIci},
+  };
+}
 
 /// Ödemenin hangi cariye ait olduğunun nasıl belirlendiği (denetim izi).
 /// Kodlar sunucu kuralı ve `web/cari_eslestir.js` ile aynıdır.
@@ -26,7 +58,11 @@ enum CariEslesmesi {
   sonGiris('son_giris', 'Telefondaki son DenizPay girişiyle'),
 
   /// Cari profilinden elle kaydedildi.
-  elle('elle', 'Cari profilinden elle');
+  elle('elle', 'Cari profilinden elle'),
+
+  /// Android: DenizPay bu cari için uygulama içinde, temiz oturumla açıldı;
+  /// sonuç o oturumun ekranından okundu (cari kesin bilinir).
+  uygulamaIci('uygulama_ici', 'Uygulama içi DenizPay oturumuyla');
 
   const CariEslesmesi(this.kod, this.etiket);
   final String kod, etiket;
@@ -210,9 +246,11 @@ class PosIslemi {
         (kartSonDort.isNotEmpty && !_rakam4.hasMatch(kartSonDort)) ||
         (girisId.isNotEmpty &&
             !RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(girisId)) ||
-        // Elle kayıt cariyi profilden alır; yer imi kaydı bir eşleşmeyle gelir.
-        (kaynak == IslemKaynagi.elle) != (eslesme == CariEslesmesi.elle) ||
-        (kaynak == IslemKaynagi.elle && okunma != null)) {
+        // Elle kayıt cariyi profilden alır; yer imi ve uygulama kaydı ekrandan
+        // okunur (okunma anı vardır; 0.9.0 yer imi kayıtlarında yoktu).
+        !kaynak.eslesmeler.contains(eslesme) ||
+        (kaynak == IslemKaynagi.elle && okunma != null) ||
+        (kaynak == IslemKaynagi.uygulama && okunma == null)) {
       throw const PosHatasi('islem', 'İşlem kaydı hazırlanamadı.');
     }
   }

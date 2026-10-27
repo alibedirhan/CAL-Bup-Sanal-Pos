@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../application/denizpay_oturumu.dart';
+import '../domain/kart_bilgileri.dart';
 import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import 'ortak.dart';
@@ -36,6 +39,33 @@ class _PosOnayiState extends State<PosOnayi> {
           ? widget.model.hata ?? 'Seçimi yenileyip tekrar deneyin.'
           : null;
     });
+  }
+
+  /// Android: DenizPay bu uygulamanın içinde açılır; ekran kapanınca bu
+  /// pencere de kapanır (seçim kontrolü kısa sürelidir, yeniden yapılır).
+  Future<void> _uygulamaIciAc() async {
+    final m = widget.model;
+    final ({
+      DenizPayBaglami baglam,
+      Future<void> girisKaydi,
+      Future<KartBilgileri?> Function() kartiOku,
+    })
+    g;
+    try {
+      g = m.uygulamaIciGirisAc(_sonuc!);
+    } on PosHatasi catch (e) {
+      setState(() => _hata = e.mesaj);
+      return;
+    }
+    setState(() {
+      _girisAcildi = true;
+      _hata = null;
+    });
+    // Giriş kaydı gün sonundaki "sonuç bekleyen" uyarısı içindir; yazılamazsa
+    // ödeme sonucu yine kaydedilir (giriş kaydı zorunlu değildir).
+    unawaited(g.girisKaydi.catchError((Object _) {}));
+    await m.denizPayAcici!(context, g.baglam, g.kartiOku);
+    if (mounted) await Navigator.maybePop(context);
   }
 
   // Açılır pencere izni için tıklamayla eşzamanlı çalışır; yanıt okunmaz.
@@ -83,6 +113,10 @@ class _PosOnayiState extends State<PosOnayi> {
               Text(
                 m.deneme
                     ? 'Cari ve kart seçimi doğrulandı. Gerçek POS açılmadı; ödeme veya SMS işlemi yapılmadı.'
+                    : m.uygulamaIciDenizPay && _sonuc?.kart != null
+                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince sonuç ekranında “Bu cariye kaydet”e bas. Burada ödeme yapılmadı.'
+                    : m.uygulamaIciDenizPay
+                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince sonuç ekranında “Bu cariye kaydet”e bas. Burada ödeme yapılmadı.'
                     : m.otomatikGiris && _sonuc?.kart != null
                     ? 'DenizPay yeni sekmede bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “BUP Doldur” yer imine dokun; kart numarası, ad ve son kullanma yazılır. CVV ve tutarı sen gir. Burada ödeme yapılmadı.'
                     : m.otomatikGiris
@@ -91,7 +125,7 @@ class _PosOnayiState extends State<PosOnayi> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (m.otomatikGiris) ...[
+              if (m.otomatikGiris && !m.uygulamaIciDenizPay) ...[
                 DurumNotu(
                   !_girisAcildi
                       ? 'Başka bir cariyle açık DenizPay sekmesi varsa önce onu kapat.'
@@ -115,11 +149,30 @@ class _PosOnayiState extends State<PosOnayi> {
                 ),
                 const SizedBox(height: 12),
               ],
+              if (m.uygulamaIciDenizPay) ...[
+                if (_hata != null) ...[
+                  DurumNotu(_hata!, hata: true),
+                  const SizedBox(height: 12),
+                ],
+                FilledButton.icon(
+                  onPressed: _girisAcildi ? null : _uygulamaIciAc,
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('DenizPay’e giriş yap'),
+                ),
+                const SizedBox(height: 12),
+              ],
               if (!m.deneme) ...[
                 Link(
                   uri: Uri.parse('https://denizpay.bupilic.com.tr/login.aspx'),
                   target: LinkTarget.blank,
-                  builder: (context, ac) => m.otomatikGiris
+                  builder: (context, ac) => m.uygulamaIciDenizPay
+                      ? TextButton.icon(
+                          // Yedek yol: tarayıcıda açılır; sonuç elle kaydedilir.
+                          onPressed: ac,
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('DenizPay’i tarayıcıda aç (yedek)'),
+                        )
+                      : m.otomatikGiris
                       ? OutlinedButton.icon(
                           // Elle girişte cari farklı olabilir: sonuç önceki
                           // cariye bağlanmasın diye son giriş işareti silinir.

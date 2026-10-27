@@ -6,6 +6,7 @@ import 'data/demo_islemleri.dart';
 import 'application/tahsilat_servisi.dart';
 import 'bilesim/platform.dart';
 import 'ui/ana_ekran.dart';
+import 'ui/denizpay_ekrani.dart';
 import 'ui/karsilama.dart';
 import 'ui/oturum_modeli.dart';
 import 'ui/tema.dart';
@@ -24,6 +25,7 @@ class BupPosApp extends StatefulWidget {
     this.hesap,
     this.yonetim,
     this.canliKilit,
+    this.denizPayAcici,
   });
   final bool deneme;
   final PosServisi? servis;
@@ -32,6 +34,9 @@ class BupPosApp extends StatefulWidget {
   final HesapPortu? hesap;
   final YonetimPortu? yonetim;
   final VoidCallback? canliKilit;
+
+  /// Uygulama içi DenizPay (Android); `null`: DenizPay ayrı sekmede açılır.
+  final DenizPayAcici? denizPayAcici;
   @override
   State<BupPosApp> createState() => _BupPosAppState();
 }
@@ -62,6 +67,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
             ),
           ),
       deneme: widget.deneme,
+      denizPayAcici: widget.denizPayAcici,
     );
     // Canlı kipte demo deposundan liste dahi istenmez.
     if (widget.deneme || widget.servis != null) unawaited(_model.yukle());

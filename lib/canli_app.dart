@@ -258,6 +258,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
           kartKasasi: _platform.kartKasasi,
           girisKapisi: _platform.girisKapisi,
           doldurma: _platform.doldurma,
+          uygulamaIciDenizPay: _platform.denizPayAcici != null,
           tahsilat: TahsilatServisi(
             depo: FirestoreIslemDeposu(widget.hesap.db),
             kullaniciId: k.id,
@@ -268,6 +269,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
           ),
         ),
         kullanici: k,
+        denizPayAcici: _platform.denizPayAcici,
         hesap: widget.hesap,
         yonetim: k.yonetici
             ? FirebaseYonetim(

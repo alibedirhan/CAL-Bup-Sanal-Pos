@@ -75,6 +75,9 @@ emülatörüyle ve yapay verilerle:
 bash tools/android_test.sh emulator-5584
 ```
 
+Uçtan uca testler taklit DenizPay/banka (`tools/android_taklit_denizpay.py`,
+bilgisayarda 4199/4200) kullanır; gerçek DenizPay'e istek yoktur.
+
 Sürüm APK'sı depo dışındaki imza anahtarı olmadan derlenmez. Sürüm derlemesinde
 `--no-pub` kullanmayın (eklenti kayıt dosyası yenilenmez).
 

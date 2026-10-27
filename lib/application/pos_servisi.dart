@@ -7,6 +7,7 @@ import 'kart_islemleri.dart';
 import '../domain/kart_bilgileri.dart';
 import '../domain/pos_girisi.dart';
 import '../domain/tahsilat.dart';
+import 'denizpay_oturumu.dart';
 import 'tahsilat_servisi.dart';
 
 /// Flutter, Firebase, tarayıcı ve ekran durumundan bağımsız iş akışı.
@@ -20,7 +21,12 @@ class PosServisi {
     this.girisKapisi = const KapaliPosGirisKapisi(),
     this.doldurma = const KapaliDoldurmaHazirligi(),
     this.tahsilat,
+    this.uygulamaIciDenizPay = false,
   }) : saat = saat ?? DateTime.now;
+
+  /// Android: DenizPay uygulamanın içinde açılır (docs/ANDROID_PLANI.md §3);
+  /// giriş [uygulamaIciGirisHazirla] ile, ekran arayüzce açılır.
+  final bool uygulamaIciDenizPay;
 
   /// Canlı kipte giriş/işlem kayıtları ve gün sonu; demoda bellekte.
   final TahsilatServisi? tahsilat;
@@ -127,11 +133,10 @@ class PosServisi {
     }
   }
 
-  bool get otomatikGiris => girisKapisi.destekli;
+  bool get otomatikGiris => girisKapisi.destekli || uygulamaIciDenizPay;
 
-  /// Yalnız kısa süre önce doğrulanmış seçimle, eşzamanlı çağrılır. Dönen
-  /// giriş kaydı (tahsilat açıksa) ayrıca sunucuya yazılmalıdır.
-  PosGirisi? girisiAc(DenemeSonucu sonuc) {
+  /// Seçim kontrolü kısa süre önce yapılmış olmalı; giriş bilgisi o an üretilir.
+  PosGirisBilgisi _dogrulanmisGiris(DenemeSonucu sonuc) {
     final zaman = sonuc.zaman;
     final fark = zaman == null ? null : saat().difference(zaman);
     if (fark == null || fark.isNegative || fark > girisSuresi) {
@@ -140,7 +145,32 @@ class PosServisi {
         'Seçim kontrolünün süresi doldu. Kartlara dönüp yeniden kontrol et.',
       );
     }
-    final giris = PosGirisBilgisi.kimlikten(sonuc.kimlikNo);
+    return PosGirisBilgisi.kimlikten(sonuc.kimlikNo);
+  }
+
+  /// Android uygulama içi DenizPay: doğrulanmış seçimden ekranın bağlamı. Giriş
+  /// kaydı hazırlanır (sunucuya ayrıca [TahsilatServisi.girisKaydet] ile).
+  /// Kart seçilmediyse de girilir; kart bilgileri o zaman elle yazılır.
+  DenizPayBaglami uygulamaIciGirisHazirla(DenemeSonucu sonuc) {
+    final t = tahsilat;
+    if (!uygulamaIciDenizPay || t == null) {
+      throw const PosHatasi(
+        'giris_yok',
+        'Uygulama içi DenizPay bu cihazda kullanılamıyor.',
+      );
+    }
+    final giris = _dogrulanmisGiris(sonuc);
+    return DenizPayBaglami(
+      giris: giris,
+      kayit: t.girisHazirla(sonuc),
+      kart: sonuc.kart,
+    );
+  }
+
+  /// Yalnız kısa süre önce doğrulanmış seçimle, eşzamanlı çağrılır. Dönen
+  /// giriş kaydı (tahsilat açıksa) ayrıca sunucuya yazılmalıdır.
+  PosGirisi? girisiAc(DenemeSonucu sonuc) {
+    final giris = _dogrulanmisGiris(sonuc);
     // Kart sayfası yer imi için yalnız bu doğrulanmış kartın kasa referansı
     // bırakılır; kartsız veya başka cihazda eklenmiş kartta eski iş silinir.
     final kart = sonuc.kart;

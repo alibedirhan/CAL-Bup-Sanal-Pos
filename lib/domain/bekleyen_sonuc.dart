@@ -1,6 +1,7 @@
 import 'tahsilat.dart';
 
-/// DenizPay sonuç ekranından okunup bu cihazda bekleyen sonuç (`web/sonuc_kutusu.js`).
+/// DenizPay sonuç ekranından okunup bu cihazda bekleyen sonuç (web: `web/sonuc_kutusu.js`,
+/// Android: `data/android/sonuc_kutusu.dart`).
 /// Oturum yalnız Sanal POS sekmesinde olduğundan sunucuya o sekme yazar.
 /// Biçim JS tarafında da denetlenir; burada yeniden doğrulanır, bozuk kayıt `null`.
 class BekleyenSonuc {
@@ -25,13 +26,17 @@ class BekleyenSonuc {
     try {
       final uid = j['uid']! as String;
       final okunma = DateTime.fromMillisecondsSinceEpoch(j['okunma']! as int);
-      // 1: 0.9.0 sonuç sayfası (cari = telefondaki son giriş); 2: eşleşmeli.
+      // 1: 0.9.0 sonuç sayfası (cari = telefondaki son giriş); 2: eşleşmeli;
+      // 3: Android uygulama içi DenizPay (cari o oturumdan kesin).
       final eslesme = switch (j['v']) {
         1 when !j.containsKey('eslesme') => CariEslesmesi.sonGiris,
-        2 => CariEslesmesi.kodla(j['eslesme']),
+        2 || 3 => CariEslesmesi.kodla(j['eslesme']),
         _ => null,
       };
-      if (eslesme == null || (j['v'] == 2 && !_yerImi.contains(eslesme))) {
+      final kaynak = j['v'] == 3 ? IslemKaynagi.uygulama : IslemKaynagi.yerImi;
+      if (eslesme == null ||
+          (j['v'] == 2 && !_yerImi.contains(eslesme)) ||
+          (j['v'] == 3 && eslesme != CariEslesmesi.uygulamaIci)) {
         return null;
       }
       // Banka ekranından gelen yazılar; görünmez işaretler eski sayfadan da gelebilir.
@@ -55,7 +60,7 @@ class BekleyenSonuc {
           aciklama: ekran('aciklama'),
           uyeSiparisNo: ekran('uyeSiparisNo'),
           tutarMetni: ekran('tutarMetni'),
-          kaynak: IslemKaynagi.yerImi,
+          kaynak: kaynak,
           eslesme: eslesme,
           okunma: okunma,
         ),

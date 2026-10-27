@@ -208,6 +208,22 @@ test('Cari eşleşmesi ve okunma anı (0.10.0) kurala uymalı',async()=>{
   const {eslesme,...eksik}=islemVerisi('VP0080');
   await assertFails(setDoc(doc(db,'posIslemleri','VP0080'),eksik));
 });
+test('Android uygulama içi DenizPay kaydı yalnız kendi eşleşmesi ve okunma anıyla (27 Ekim 2026)',async()=>{
+  await tahsilatCari();const db=dbFor(uid);
+  const yaz=(no,patch)=>setDoc(doc(db,'posIslemleri',no),islemVerisi(no,{kaynak:'uygulama',eslesme:'uygulama_ici',...patch}));
+  await assertSucceeds(yaz('VP0101',{}));
+  await assertFails(yaz('VP0102',{sonuc:'hata',aciklama:'3D Şifresi Yanlış.',uyeSiparisNo:''})); // başarısız: "-h" eksiz olmaz
+  await assertSucceeds(setDoc(doc(db,'posIslemleri','VP0102-h'),islemVerisi('VP0102',{kaynak:'uygulama',eslesme:'uygulama_ici',
+    sonuc:'hata',aciklama:'3D Şifresi Yanlış.',uyeSiparisNo:''})));
+  await assertFails(yaz('VP0103',{eslesme:'tek_giris'})); // uygulama kaydı yer imi eşleşmesi diyemez
+  await assertFails(yaz('VP0104',{eslesme:'elle'}));
+  await assertFails(yaz('VP0105',{okunma:null})); // okunma anı zorunlu
+  await assertFails(yaz('VP0106',{okunma:Timestamp.fromMillis(Date.now()+2*86400000)}));
+  await assertFails(yaz('VP0107',{kaynak:'yer_imi'})); // yer imi kaydı uygulama eşleşmesi diyemez
+  await assertFails(yaz('VP0108',{kaynak:'elle',okunma:null}));
+  await assertFails(yaz('VP0109',{kaynak:'bilinmiyor'}));
+  await assertFails(yaz('VP0110',{kimlikNo:'0000000009'})); // VKN yine sunucudaki cariyle aynı olmalı
+});
 test('Yanlış VKN, başka kullanıcının carisi, başkası adına ve istemci saatiyle kayıt reddedilir',async()=>{
   await tahsilatCari();const db=dbFor(uid);
   const yaz=(no,patch)=>setDoc(doc(db,'posIslemleri',no),islemVerisi(no,patch));

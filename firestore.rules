@@ -143,9 +143,11 @@ service cloud.firestore {
       function islemBicim(id, d) {
         return d.posSiparisNo is string && d.posSiparisNo.matches('^[A-Z0-9_-]{4,64}$')
           && ((d.sonuc == 'basarili' && id == d.posSiparisNo) || (d.sonuc == 'hata' && id == d.posSiparisNo + '-h'))
-          && d.kaynak in ['yer_imi', 'elle']
+          && d.kaynak in ['yer_imi', 'elle', 'uygulama']
           && ((d.kaynak == 'elle' && d.eslesme == 'elle' && d.okunma == null)
-            || (d.kaynak == 'yer_imi' && d.eslesme in ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim', 'son_giris']
+            || (((d.kaynak == 'yer_imi' && d.eslesme in ['sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim', 'son_giris'])
+                // Android (27 Ekim 2026): uygulama içi DenizPay oturumunun sonuç ekranı; cari o oturumdan kesin.
+                || (d.kaynak == 'uygulama' && d.eslesme == 'uygulama_ici'))
               && d.okunma is timestamp && d.okunma <= request.time + duration.value(1, 'd')
               && d.okunma > request.time - duration.value(31, 'd')))
           && metin(d.aciklama, 1, 200) && metin(d.tutarMetni, 1, 40)

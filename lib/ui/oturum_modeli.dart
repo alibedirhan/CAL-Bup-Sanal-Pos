@@ -1,15 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../application/portlar.dart';
+import '../application/denizpay_oturumu.dart';
 import '../application/pos_servisi.dart';
 import '../domain/hata.dart';
 import '../domain/modeller.dart';
 import '../domain/kart_bilgileri.dart';
+import 'denizpay_ekrani.dart';
 
 enum CariFiltresi { tumu, yildizli, kartli }
 
 class OturumModeli extends ChangeNotifier {
-  OturumModeli(this.servis, {this.deneme = true}) {
+  OturumModeli(this.servis, {this.deneme = true, this.denizPayAcici}) {
     final depo = servis.depo;
     if (!deneme && depo is CariIzlemePortu) {
       _izleme = (depo as CariIzlemePortu)
@@ -328,6 +330,34 @@ class OturumModeli extends ChangeNotifier {
     }
     final giris = servis.girisiAc(sonuc);
     return giris == null ? null : servis.tahsilat!.girisKaydet(giris);
+  }
+
+  /// Android: DenizPay uygulama içinde açılır.
+  final DenizPayAcici? denizPayAcici;
+  bool get uygulamaIciDenizPay =>
+      !deneme && servis.uygulamaIciDenizPay && denizPayAcici != null;
+
+  /// Android uygulama içi DenizPay için bağlam, giriş kaydının sunucu işi ve
+  /// kartın (seçildiyse) her doldurmada sunucuda doğrulanarak okunması.
+  ({
+    DenizPayBaglami baglam,
+    Future<void> girisKaydi,
+    Future<KartBilgileri?> Function() kartiOku,
+  })
+  uygulamaIciGirisAc(DenemeSonucu sonuc) {
+    if (_kapali || kilitli) {
+      throw const PosHatasi('kilit', 'Ekran kilitlendi. Yeniden kart seçin.');
+    }
+    final nesil = _nesil;
+    final baglam = servis.uygulamaIciGirisHazirla(sonuc);
+    final kart = baglam.kart;
+    return (
+      baglam: baglam,
+      girisKaydi: servis.tahsilat!.girisKaydet(baglam.kayit),
+      kartiOku: () async => kart == null
+          ? null
+          : servis.kartBilgileri(kart, () => _guncel(nesil)),
+    );
   }
 
   /// DenizPay sonuç ekranından gelen kaydın sonucu (üstte not olarak).

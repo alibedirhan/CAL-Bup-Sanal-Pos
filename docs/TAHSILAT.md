@@ -1,3 +1,8 @@
+**Android (27 Ekim 2026):** uygulama içi DenizPay sonucu kaynak `uygulama`,
+eşleşme `uygulama_ici` ile (cari, uygulamanın kendi açtığı temiz DenizPay
+oturumundan kesin bilinir); bekleyen biçim v3, aynı `kutuyuIsle` yolu. Ayrıntı
+`docs/ANDROID_PLANI.md` "Durum". Aşağısı web akışıdır.
+
 # Tahsilat kaydı ve gün sonu (0.9.0, 0.10.0, 0.10.1)
 
 Kullanıcı isteği (22 Ekim 2026): bir cariyle DenizPay'e girilip alınan ödeme

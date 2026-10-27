@@ -89,7 +89,7 @@ class FirestoreIslemDeposu implements IslemDeposu {
         'uyeSiparisNo': i.uyeSiparisNo,
         'tutarMetni': i.tutarMetni,
         'tutarKurus': i.tutarKurus,
-        'kaynak': i.kaynak == IslemKaynagi.elle ? 'elle' : 'yer_imi',
+        'kaynak': i.kaynak.kod,
         'eslesme': i.eslesme.kod,
         'okunma': i.okunma == null ? null : Timestamp.fromDate(i.okunma!),
         'zaman': FieldValue.serverTimestamp(),
@@ -152,7 +152,8 @@ PosGirisi girisOku(String id, Map<String, dynamic> d) => PosGirisi(
 /// bağlanmıştı. 0.10.1'den önceki başarısız kayıtların kimliği "-h" eksiz
 /// numaradır; numara her zaman alandan okunur.
 PosIslemi islemOku(String id, Map<String, dynamic> d) {
-  final elle = d['kaynak'] == 'elle';
+  final kaynak = IslemKaynagi.kodla(d['kaynak']) ?? IslemKaynagi.yerImi;
+  final elle = kaynak == IslemKaynagi.elle;
   final okunma = d['okunma'];
   return PosIslemi(
     posSiparisNo: d['posSiparisNo'] as String,
@@ -167,7 +168,7 @@ PosIslemi islemOku(String id, Map<String, dynamic> d) {
     aciklama: d['aciklama'] as String,
     uyeSiparisNo: d['uyeSiparisNo'] as String,
     tutarMetni: d['tutarMetni'] as String,
-    kaynak: elle ? IslemKaynagi.elle : IslemKaynagi.yerImi,
+    kaynak: kaynak,
     eslesme:
         CariEslesmesi.kodla(d['eslesme']) ??
         (elle ? CariEslesmesi.elle : CariEslesmesi.sonGiris),

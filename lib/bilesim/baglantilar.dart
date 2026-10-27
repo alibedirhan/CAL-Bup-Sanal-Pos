@@ -2,6 +2,7 @@ import '../application/biyometrik_kilit.dart';
 import '../application/kart_kasasi.dart';
 import '../application/portlar.dart';
 import '../application/tahsilat_servisi.dart';
+import '../ui/denizpay_ekrani.dart';
 
 /// Bir platformun (web, Android) cihaza bağlı bağdaştırıcıları. Servisler ve
 /// ekranlar bunları yalnız port olarak görür; hangisinin kullanılacağı derlemede
@@ -16,6 +17,7 @@ class PlatformBaglantilari {
     required this.indirici,
     this.biyometri = const KapaliBiyometrikKilit(),
     this.acilistaKilit = false,
+    this.denizPayAcici,
   });
   final KartKasasi kartKasasi;
   final PosGirisKapisi girisKapisi;
@@ -28,4 +30,7 @@ class PlatformBaglantilari {
   /// Hesap oturumu uygulama kapanınca da sürüyorsa (Android) açılış kilitli
   /// olur: şifre veya biyometri gerekir. Web'de oturum yalnız sekmededir.
   final bool acilistaKilit;
+
+  /// Uygulama içi DenizPay ekranı (Android). `null`: web'deki gibi ayrı sekme.
+  final DenizPayAcici? denizPayAcici;
 }

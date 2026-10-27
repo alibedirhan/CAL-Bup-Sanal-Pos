@@ -1,3 +1,19 @@
+# 27 Ekim 2026 — Android Aşama 2: uygulama içi DenizPay
+
+Kullanıcı Aşama 2'yi onayladı; dışarıdayken emülatör ekran görüntüleri istedi
+(6 ekran gönderildi; parmak izi penceresi Android güvenliği gereği görüntülenemez).
+Aşama sırasında yeni istek: kart kaydı olmadan da carinin DenizPay hesabına girmek
+(kart bilgileri elle) — Android'de de geçerli, testli. Kullanıcı telefonunu
+kullanmaya izin verdi ("ekran kilitli"); gerçek cihaz kabulü kullanıcı yanındayken
+yapılacak, telefonun kilit ayarlarına dokunulmayacak, gerçek DenizPay/kart/ödeme
+denenmeyecek. Aşama 2 ayrıntısı, doğrulama ve bulunan iki hata `ANDROID_PLANI.md`
+"Durum"da. `firestore.rules` değişti (Android kaydı); canlıya yayınlanmadı —
+Aşama 3'te Android dağıtımından önce yayınlanmalı. Sürüm artırılmadı, web yayını
+yok. Sıradaki: Aşama 3 (imzalı APK, sürüm zorunluluğu, kurulum anlatımı, yayın
+betiği, kural yayını).
+
+---
+
 # 27 Ekim 2026 — Android Aşama 1: temel uygulama
 
 Kullanıcı "devam edelim" dedi. Aşama 1 bitti; ayrıntı, doğrulama, bulunan ve

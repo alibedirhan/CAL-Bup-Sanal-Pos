@@ -159,7 +159,7 @@ Web sürümü her aşamada bütün mevcut testlerinden geçer; web davranışı 
   Firebase emülatörüne karşı uçtan uca (gerçek kurallar, iki kullanıcı, yetki
   iptali).
 
-**Aşama 2 — Uygulama içi DenizPay**
+**Aşama 2 — Uygulama içi DenizPay** — *tamamlandı 27 Ekim ("Durum")*
 - `DenizPayOturumu` portu + WebView bağdaştırıcısı; gezinme politikası; çerez
   ayrımı; "Kartı doldur"; sonuç okuma (Dart) + bekleyen kutu; kural değişikliği.
 - Testler: taklit DenizPay (bugünkü test sayfaları: giriş, kart sayfası, Onay/
@@ -291,3 +291,61 @@ dosyası yenilenmez, test eklentisi sürüme sızmaya çalışır); yayın beti�
 zorunlu kılacak (Aşama 3).
 **Gerçek telefonda denenmedi:** gerçek parmak izi/yüz, StrongBox, Android 9–14
 sürümleri, üretici farkları; kullanıcı kabulü Aşama 4'tedir.
+
+**Aşama 2 tamamlandı (27 Ekim 2026).**
+- Kullanıcı isteği (27 Ekim, aşama sırasında): kart kaydı/seçimi olmadan da
+  carinin DenizPay hesabına girilebilsin; kart bilgileri o zaman DenizPay'de elle
+  yazılır. Web'de zaten böyleydi; Android'de `otomatikGiris` uygulama içi girişle
+  açıldığı için aynı kural geçerli (ana ekran "Kart seçmeden de DenizPay’e
+  girebilirsin"). Uçtan uca testte kartsız cariyle sınandı.
+- Saf kurallar `domain/denizpay.dart`: `DenizPayAdresi` (canlıda yalnız
+  `https://denizpay.bupilic.com.tr`; taklit köken yalnız `BUP_EMULATOR` derlemesinde
+  ve o zaman aynı makinedeki http taklit banka), `Gezinme` kararı (DenizPay / dış
+  https / engel: http, intent, javascript, file, data, kullanıcı bilgili adres),
+  `SayfaOzeti`, `sonucCoz` — `web/sonuc_coz.js`'in satır satır karşılığı; ortak
+  `test/veri/tahsilat_ornekleri.json`'daki 19 örneğin 17'si birebir aynı sonucu
+  verir (2'si yalnız web yer iminin sekme notu biçimidir).
+- `application/denizpay_oturumu.dart`: `DenizPayOturumu` (açılışta önceki oturumu
+  silip carinin bilgileriyle POST; banka sayfasında betik yok; kart yalnız
+  "Kartı doldur"la, firma numarası görünür ve aynıysa, kart sunucuda yeniden
+  doğrulanınca; sonuç yalnız "Bu cariye kaydet"le; kapanınca oturum hemen
+  silinir), `DenizPayTarayicisi` ve `SonucBirakmaPortu` portları.
+  `PosServisi.uygulamaIciGirisHazirla` seçim süresini denetler, giriş kaydını
+  hazırlar.
+- Kayıt: kaynak `uygulama`, eşleşme `uygulama_ici` (bekleyen sonuç biçimi v3).
+  Sonuç Android'in kalıcı kutusuna (`data/android/sonuc_kutusu.dart`, yedeksiz
+  klasör, 20 sonuç/30 gün, bozuk dosya `.bozuk` olarak korunur) bırakılır ve web
+  ile **aynı** `TahsilatServisi.kutuyuIsle` yolundan yazılır (çift kayıt, farklı
+  tutar, internet yokken bekleme, "-h" kimliği aynen). `firestore.rules`
+  `kaynak in ['yer_imi','elle','uygulama']`; `uygulama` yalnız `uygulama_ici` ve
+  okunma anıyla. Web kayıt kuralları değişmedi. **Kural, Android dağıtımından önce
+  yayınlanmalı (Aşama 3).**
+- Android: `data/android/denizpay_tarayicisi.dart` (webview_flutter 4.14.1,
+  Android eki 4.12.0 — Flutter 3.41 ile uyumlu en yeni): JavaScript açık; dosya/
+  içerik erişimi, konum, kamera/mikrofon izinleri, dosya seçme kapalı; karışık
+  içerik yasak; SSL hatasında açıkça iptal; sürümde hata ayıklama kapalı. Betik
+  (`denizpay_betigi.dart`) web yer imiyle aynı kurallar; betik çalışmadan önce
+  açık adres yeniden denetlenir ve betik kökeni kendisi de denetler; kart
+  sayfasında ekran yazıları okunmaz. Ekran `ui/denizpay_ekrani.dart` (üstte cari,
+  VKN, açık sitenin adresi; kaydedilmemiş sonuç/süren ödemede kapatma onayı).
+  Ekran kilidi ve çıkış ekranı kapatır, DenizPay oturumu silinir.
+- Yedek yol: onay ekranında "DenizPay’i tarayıcıda aç (yedek)" (sonuç o zaman
+  elle kaydedilir).
+
+**Doğrulama (Aşama 2):** 199 Dart testi (yeni: `denizpay_test` 24,
+`denizpay_oturumu_test` 10, `denizpay_ekrani_test` 5, `uygulama_ici_gecis_test` 3,
+`android_sonuc_kutusu_test` 5, v3 kutu testi, eşleşme/kaynak tutarlılığı); sunucu
+kural testleri (Android kaydı: kabul + 9 ret); web tarayıcı takımı değişmeden geçti.
+`tools/android_test.sh` uçtan uca, gerçek WebView + taklit DenizPay/banka
+(`tools/android_taklit_denizpay.py`): kartlı cari, "Kartı doldur" yalnız numara/ad/
+SKT (CVV ve tutar boş), `intent:`/http bağlantıları açılmaz, başka kökende taklit
+3D Secure, sonuç okunup kaydedildi, kartsız cariyle giriş ("Kart seçmedin" notu,
+düğme yok), başka firmanın kart sayfasında uyarı ve kart yazılmaz, kapatma onayı,
+gün sonunda kayıt, taklit sunucu iki girişi de doğru alanlarla aldı.
+Testlerin bulduğu ve düzeltilenler: (1) ekran kapanınca oturum önce akışları
+kapatmayı bekliyordu, DenizPay çerezleri gecikebilir/silinmeyebilirdi — artık
+önce silinir (test eski sırada kırılır); (2) kart sayfasında firma numarası hiç
+yoksa "Kartı doldur" açık kalıyordu — web yer imi gibi kapalı (test kuralsız kırılır).
+**Bilinmeyen (gerçek denemede görülecek):** DenizPay ve bankanın 3D Secure
+sayfalarının WebView'de çalışması, gerçek kart sayfasının alan adları ve sonuç
+sayfasının gerçek HTML'i. Okunamayan sonuçta ekran "elle kaydet" der.

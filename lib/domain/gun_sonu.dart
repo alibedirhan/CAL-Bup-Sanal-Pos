@@ -148,7 +148,7 @@ String gunSonuCsv(GunSonu g) {
         i.kartSonDort.isEmpty ? '' : '•••• ${i.kartSonDort}',
         i.aciklama,
         i.kullaniciAd,
-        i.kaynak == IslemKaynagi.elle ? 'Elle' : 'Sonuç ekranından',
+        i.kaynak.etiket,
         i.eslesme.etiket,
         i.okunma == null ? '' : tarihSaatYaz(i.okunma!),
       ],

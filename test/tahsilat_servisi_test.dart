@@ -112,6 +112,38 @@ class HataliDepo extends DemoIslemDeposu {
 void main() {
   group('Sonuç kutusu', () {
     test(
+      'Android uygulama içi sonucu (v3) aynı yoldan, kendi kaynağıyla yazılır',
+      () async {
+        final kutu = SahteKutu()
+          ..kayitlar.addAll([
+            bekleyen('VP9501', v: 3, eslesme: 'uygulama_ici'),
+            // v3 yalnız uygulama içi eşleşme taşır; yer imi v2 de onu taşıyamaz.
+            bekleyen('VP9502', v: 3, eslesme: 'tek_giris'),
+            bekleyen('VP9503', eslesme: 'uygulama_ici'),
+          ]);
+        final depo = DemoIslemDeposu();
+        final servis = TahsilatServisi(
+          depo: depo,
+          kullaniciId: 'u1',
+          kullaniciAdi: 'Örnek Satıcı',
+          kutu: kutu,
+        );
+        final sonuclar = await servis.kutuyuIsle();
+        expect(sonuclar.map((s) => s.tamam), [true, false, false]);
+        final gun = await depo.gun(servis.bugun, kullaniciId: 'u1');
+        final i = gun.islemler.single;
+        expect(i.posSiparisNo, 'VP9501');
+        expect(i.kaynak, IslemKaynagi.uygulama);
+        expect(i.eslesme, CariEslesmesi.uygulamaIci);
+        expect(i.okunma, isNotNull);
+        expect(kutu.kayitlar.map((k) => k['posSiparisNo']), [
+          'VP9502',
+          'VP9503',
+        ]);
+      },
+    );
+
+    test(
       'Kendi sonuçları yazılır, silinir, sonuç sayfasına yanıt gider',
       () async {
         final kutu = SahteKutu()

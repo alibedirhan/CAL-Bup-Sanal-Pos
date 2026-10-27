@@ -160,6 +160,16 @@ void main() {
           okunma: okunma,
         );
     const yer = IslemKaynagi.yerImi, elle = IslemKaynagi.elle;
+    const uyg = IslemKaynagi.uygulama, ici = CariEslesmesi.uygulamaIci;
+    // Uygulama kaydı yalnız kendi eşleşmesiyle ve okunma anıyla.
+    expect(() => yap(uyg, ici, okunma: tr(22, 9)), returnsNormally);
+    expect(() => yap(uyg, ici), throwsA(isA<PosHatasi>()));
+    expect(
+      () => yap(uyg, CariEslesmesi.tekGiris, okunma: tr(22, 9)),
+      throwsA(isA<PosHatasi>()),
+    );
+    expect(() => yap(yer, ici, okunma: tr(22, 9)), throwsA(isA<PosHatasi>()));
+    expect(() => yap(elle, ici), throwsA(isA<PosHatasi>()));
     expect(() => yap(elle, CariEslesmesi.elle), returnsNormally);
     expect(() => yap(yer, CariEslesmesi.secim), returnsNormally);
     expect(() => yap(yer, CariEslesmesi.elle), throwsA(isA<PosHatasi>()));
@@ -178,15 +188,25 @@ void main() {
       'secim',
       'son_giris',
       'elle',
+      'uygulama_ici',
     ]);
+    expect(IslemKaynagi.values.map((k) => k.kod), [
+      'yer_imi',
+      'elle',
+      'uygulama',
+    ]);
+    expect(IslemKaynagi.kodla('uygulama'), IslemKaynagi.uygulama);
     expect(CariEslesmesi.kodla('secim'), CariEslesmesi.secim);
     expect(CariEslesmesi.kodla('yok'), isNull);
     // Yeni sonuç sayfasının yazabileceği dördü: kural (artı 0.9.0'dan bekleyen
     // 'son_giris'), sonuç kutusu ve eşleştirici aynı listeyi kullanır.
     const yerImi = "'sonuc_ekrani', 'kart_sayfasi', 'tek_giris', 'secim'";
+    final kural = File('firestore.rules').readAsStringSync();
+    expect(kural, contains("[$yerImi, 'son_giris']"));
+    expect(kural, contains("d.kaynak in ['yer_imi', 'elle', 'uygulama']"));
     expect(
-      File('firestore.rules').readAsStringSync(),
-      contains("[$yerImi, 'son_giris']"),
+      kural,
+      contains("d.kaynak == 'uygulama' && d.eslesme == 'uygulama_ici'"),
     );
     expect(
       File('web/sonuc_kutusu.js').readAsStringSync(),

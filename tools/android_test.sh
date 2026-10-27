@@ -77,8 +77,17 @@ echo '== Ekran kilidi yokken'
 pin_kaldir
 calistir -e class com.bup.sanalpos.EkranKilidiYokTest
 
-echo '== Uçtan uca (Firebase emülatörü)'
+echo '== Uçtan uca (Firebase emülatörü + taklit DenizPay)'
 pin_ayarla
-adb shell pm clear com.bup.sanalpos >/dev/null
+python3 tools/android_taklit_denizpay.py & taklit=$!
+trap 'kill $taklit 2>/dev/null; pin_kaldir' EXIT
+for _ in $(seq 1 20); do curl -s -o /dev/null http://127.0.0.1:4199/girisler && break; sleep 0.5; done
+adb_yolu="${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb -s $cihaz"
+tanim="--dart-define-from-file=config/emulator_android.json"
+# Her test temiz uygulama verisiyle başlar ("flutter test" bitince uygulamayı
+# kaldırabilir; o zaman temizlenecek veri yoktur).
+temizle="($adb_yolu shell pm clear com.bup.sanalpos >/dev/null 2>&1 || true)"
 firebase emulators:exec --only auth,firestore --project demo-bup-pos \
-  "node tools/sunucu-test/android_hazirla.mjs && flutter test integration_test/android_akis_test.dart -d $cihaz --no-pub --dart-define-from-file=config/emulator_android.json"
+  "node tools/sunucu-test/android_hazirla.mjs \
+   && $temizle && flutter test integration_test/android_akis_test.dart -d $cihaz --no-pub $tanim \
+   && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim"
