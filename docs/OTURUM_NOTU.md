@@ -1,3 +1,19 @@
+# 27 Ekim 2026 — Android Aşama 3: dağıtım hazır, yayın onay bekliyor
+
+Kullanıcı "Aşama 3 ile devam" dedi. (a) sürüm denetimi, (b) ayrı indirme sitesi
+yapılandırması + kurulum sayfası, (c) `tools/android_yayin.sh` deneme kipi uçtan
+uca, (d) belgeler yapıldı; ayrıntı `docs/ANDROID_PLANI.md` "Aşama 3 (a–d)" ve
+yeni `docs/ANDROID_KURULUM.md`. Sürüm 0.11.0+19. **Hiçbir yayın yapılmadı:**
+web hâlâ 0.10.1, `firestore.rules` (Android kaydı + `ayarlar/android`) canlıda
+değil, `bup-sanal-pos-indir` sitesi yok. Sıradaki (e): kullanıcıya tek soruda onay
+(site oluşturma → `yayin.sh` kural + web 0.11.0 → `android_yayin.sh --yayinla`),
+sonra (f) Aşama 4 gerçek telefon kabulü kullanıcı yanındayken. Kullanıcıdan
+beklenen: imza anahtarı yedeği, Android API anahtarı kısıtlaması (adımlar ve
+SHA-1 `ANDROID_KURULUM.md` sonunda). Test AVD'si `BUP_SanalPOS_Test35` hâlâ
+duruyor (emülatör 5584).
+
+---
+
 # 27 Ekim 2026 — Devir: Aşama 3 başında oturum kapatıldı
 
 Kullanıcı Aşama 3'ü (dağıtım) onayladı, ardından "yapılanları kaydet, ekranı

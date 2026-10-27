@@ -9,7 +9,8 @@
 #    telefon PIN'le açılır: anahtar yalnız kilit açıkken kullanılır)
 # 2. Telefon kilitliyken anahtarın kullanılamadığı
 # 3. Ekran kilidi yokken kart saklanmadığı (PIN kaldırılır)
-# 4. Uçtan uca uygulama testi (giriş, cari, kart kasası, kilit)
+# 4. Uçtan uca uygulama testleri (giriş, cari, kart kasası, kilit, DenizPay,
+#    sürüm denetimi)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 cihaz="${1:?Kullanım: bash tools/android_test.sh emulator-NNNN}"
@@ -90,4 +91,5 @@ temizle="($adb_yolu shell pm clear com.bup.sanalpos >/dev/null 2>&1 || true)"
 firebase emulators:exec --only auth,firestore --project demo-bup-pos \
   "node tools/sunucu-test/android_hazirla.mjs \
    && $temizle && flutter test integration_test/android_akis_test.dart -d $cihaz --no-pub $tanim \
-   && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim"
+   && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim \
+   && $temizle && flutter test integration_test/android_surum_test.dart -d $cihaz --no-pub $tanim"

@@ -26,4 +26,5 @@ assert 'SURUM_NO = 3' in y and 'const EN_AZ_YER_IMI = 3;' in r, 'Yer imi ve sonu
 k = Path('build/canli/kurulum.js').read_text()
 assert 'denizpay.bupilic.com.tr' in k and 'bup-sanal-pos-izmir.web.app' in k, 'Kurulum yer iminde canlı kökenler yok'
 KONTROL
-firebase deploy --only firestore:rules,firestore:indexes,hosting --project bup-sanal-pos-izmir
+# Yalnız web sitesi; Android indirme sitesi ayrıdır (tools/android_yayin.sh).
+firebase deploy --only firestore:rules,firestore:indexes,hosting:web --project bup-sanal-pos-izmir

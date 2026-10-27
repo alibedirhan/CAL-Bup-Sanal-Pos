@@ -4,12 +4,14 @@ import 'cari_formu.dart';
 import 'cari_listesi.dart';
 import 'cari_profili.dart';
 import 'gun_sonu_sayfasi.dart';
+import 'guncelleme.dart';
 import 'ortak.dart';
 import 'oturum_modeli.dart';
 import 'pos_onayi.dart';
 import 'tema.dart';
 import '../application/hesap_portu.dart';
 import '../domain/kullanici.dart';
+import '../domain/surum.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({
@@ -19,18 +21,21 @@ class AnaEkran extends StatefulWidget {
     this.kullanici,
     this.hesap,
     this.yonetim,
+    this.guncelleme,
   });
   final OturumModeli model;
   final VoidCallback kilitle;
   final Kullanici? kullanici;
   final HesapPortu? hesap;
   final YonetimPortu? yonetim;
+  final AndroidSurumu? guncelleme;
   @override
   State<AnaEkran> createState() => _AnaEkranState();
 }
 
 class _AnaEkranState extends State<AnaEkran> {
   int _sekme = 0;
+  bool _notKapali = false;
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.model,
@@ -78,7 +83,7 @@ class _AnaEkranState extends State<AnaEkran> {
                 padding: EdgeInsets.only(right: 4),
                 child: Chip(
                   label: Text(
-                    m.deneme ? 'Deneme' : '0.10.1',
+                    m.deneme ? 'Deneme' : surumAdi,
                     style: const TextStyle(fontSize: 11),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 2),
@@ -104,6 +109,14 @@ class _AnaEkranState extends State<AnaEkran> {
             bottom: false,
             child: Column(
               children: [
+                if (widget.guncelleme != null && !_notKapali && !detay)
+                  SinirliIcerik(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: GuncellemeNotu(
+                      bilgi: widget.guncelleme!,
+                      kapat: () => setState(() => _notKapali = true),
+                    ),
+                  ),
                 if (m.uyari != null) SinirliIcerik(child: DurumNotu(m.uyari!)),
                 Expanded(
                   child: detay

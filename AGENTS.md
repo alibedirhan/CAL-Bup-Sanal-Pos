@@ -55,8 +55,11 @@
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.
   Kartsız giriş (kart bilgileri elle) kullanıcı isteğidir, kaldırmayın.
-  **Devam noktası:** Aşama 3 (dağıtım) — `docs/ANDROID_PLANI.md` sonundaki
-  "Aşama 3 — başlangıç kararları" bölümü; yayınlardan önce kullanıcıya sorun.
+  **Devam noktası:** Aşama 3 kodu bitti (0.11.0+19), yayın kullanıcı onayı
+  bekliyor — `docs/ANDROID_PLANI.md` "Aşama 3 (a–d)", `docs/ANDROID_KURULUM.md`.
+  Android yayını yalnız `tools/android_yayin.sh --yayinla` (varsayılan deneme);
+  web yalnız `tools/yayin.sh` (`hosting:web`). Her yayından önce kullanıcıya sorun.
+  Ekrandaki sürüm `lib/ui/ortak.dart surumAdi` = pubspec (test zorlar).
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

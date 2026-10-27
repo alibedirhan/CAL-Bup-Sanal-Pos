@@ -1,6 +1,7 @@
 import '../application/biyometrik_kilit.dart';
 import '../application/kart_kasasi.dart';
 import '../application/portlar.dart';
+import '../application/surum_denetimi.dart';
 import '../application/tahsilat_servisi.dart';
 import '../ui/denizpay_ekrani.dart';
 
@@ -18,6 +19,7 @@ class PlatformBaglantilari {
     this.biyometri = const KapaliBiyometrikKilit(),
     this.acilistaKilit = false,
     this.denizPayAcici,
+    this.uygulamaSurumu = const KapaliUygulamaSurumu(),
   });
   final KartKasasi kartKasasi;
   final PosGirisKapisi girisKapisi;
@@ -33,4 +35,7 @@ class PlatformBaglantilari {
 
   /// Uygulama içi DenizPay ekranı (Android). `null`: web'deki gibi ayrı sekme.
   final DenizPayAcici? denizPayAcici;
+
+  /// Kurulu uygulamanın sürümü (Android); web'de sürüm denetimi yoktur.
+  final UygulamaSurumuPortu uygulamaSurumu;
 }

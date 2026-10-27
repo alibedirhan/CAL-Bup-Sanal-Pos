@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>BUP Sanal POS — Android</title>
+<!-- Şablon: tools/android_yayin.sh yer tutucuları doldurur; betik yok (CSP default-src 'none'). -->
+<style>
+:root { --zemin:#f4f6f8; --kart:#fff; --koyu:#16343e; --metin:#172e36; --ikincil:#526671;
+  --vurgu:#08786e; --acik:#e6f3ef; --uyari:#86520f; --acikUyari:#fff4df; --cizgi:#dce4e7; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--zemin); color:var(--metin);
+  font: 16px/1.55 Roboto, "Segoe UI", system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+header { text-align:center; padding: 12px 0 8px; }
+h1 { font-size: 24px; margin: 8px 0 4px; color: var(--koyu); }
+h2 { font-size: 18px; margin: 0 0 12px; color: var(--koyu); }
+.alt { color: var(--ikincil); font-size: 14px; margin: 0; }
+.kart { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px;
+  padding: 20px 18px; margin: 16px 0; }
+.indir { display:block; text-align:center; background: var(--vurgu); color:#fff;
+  text-decoration:none; font-weight:700; font-size:18px; padding: 16px; border-radius: 14px; }
+.indir:focus-visible { outline: 3px solid var(--koyu); outline-offset: 3px; }
+ol { margin:0; padding:0; list-style:none; counter-reset: adim; }
+ol > li { counter-increment: adim; position:relative; padding: 0 0 18px 46px; }
+ol > li:last-child { padding-bottom: 0; }
+ol > li::before { content: counter(adim); position:absolute; left:0; top:-2px;
+  width:32px; height:32px; border-radius:50%; background: var(--acik); color: var(--vurgu);
+  font-weight:700; display:flex; align-items:center; justify-content:center; }
+li b { color: var(--koyu); }
+.not { background: var(--acik); border-radius: 12px; padding: 12px 14px; font-size: 14px; margin-top: 10px; }
+.uyari { background: var(--acikUyari); color: var(--uyari); }
+.dugme { display:inline-block; border:1px solid var(--cizgi); border-radius:8px; padding:0 6px;
+  background:#fff; font-weight:600; white-space:nowrap; }
+code { font: 12px/1.5 ui-monospace, monospace; word-break: break-all; color: var(--koyu); }
+a { color: var(--vurgu); }
+footer { color: var(--ikincil); font-size: 13px; text-align:center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#08786e"/><path fill="#fff" d="M5 7.5A1.5 1.5 0 0 1 6.5 6h11A1.5 1.5 0 0 1 19 7.5V9H5V7.5zM5 11h14v5.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 16.5V11zm2 4v1h4v-1H7z"/></svg>
+    <h1>BUP Sanal POS</h1>
+    <p class="alt">Android uygulaması · Sürüm __SURUM__ · __BOYUT__ · __TARIH__</p>
+  </header>
+
+  <div class="kart">
+    <a class="indir" href="__APK__" download>Uygulamayı indir</a>
+    <p class="not uyari"><b>Yalnız Android telefon içindir.</b> iPhone kullanıyorsan
+      uygulamayı kurma; web sürümünü kullan:
+      <a href="https://bup-sanal-pos-izmir.web.app/">bup-sanal-pos-izmir.web.app</a></p>
+  </div>
+
+  <section class="kart" aria-labelledby="kurulum">
+    <h2 id="kurulum">İlk kurulum</h2>
+    <ol>
+      <li><b>Telefonda ekran kilidi açık olsun.</b> PIN, desen veya şifre; parmak izi
+        de ekleyebilirsin. Ekran kilidi olmayan telefonda uygulama kart saklamaz.</li>
+      <li><b>Yukarıdaki “Uygulamayı indir” düğmesine dokun.</b> Chrome “Bu dosya zararlı
+        olabilir” derse: <span class="dugme">Yine de indir</span></li>
+      <li><b>İndirme bitince: <span class="dugme">Aç</span></b> Telefon “Bilinmeyen
+        uygulamalar” izni isterse: <span class="dugme">Ayarlar</span> → <b>Bu kaynağa
+        izin ver</b> anahtarını aç ve geri dön.</li>
+      <li><b>Kurulum: <span class="dugme">Yükle</span></b> “Play Koruma” veya
+        “Tanınmayan uygulama” uyarısı çıkarsa <span class="dugme">Ayrıntılar</span> →
+        <span class="dugme">Yine de yükle</span>. Uygulama Play Store’da olmadığı için bu
+        uyarı normaldir.</li>
+      <li><b>Uygulamayı aç, şirket e-postan ve şifrenle giriş yap.</b> Sonraki
+        açılışlarda parmak izi veya yüzle açılır.</li>
+      <li><b>Kartları bir kez ekle.</b> Web sürümünde eklediğin kartlar telefona
+        gelmez; kart bilgileri yalnız bu telefonda şifreli tutulur.</li>
+    </ol>
+    <p class="not">Şifren şu durumlarda yeniden sorulur: 7 gün geçince, telefon
+      yeniden başlayınca, telefona yeni parmak izi/yüz eklenince ve çıkış yapınca.</p>
+  </section>
+
+  <section class="kart" aria-labelledby="guncelleme">
+    <h2 id="guncelleme">Güncelleme</h2>
+    <p>Yeni sürüm çıkınca uygulama haber verir. Bu sayfadan indirip aynı adımlarla
+      <b>mevcut uygulamanın üstüne</b> kur.</p>
+    <p class="not uyari"><b>Uygulamayı kaldırma.</b> Kaldırırsan telefondaki kartlar
+      silinir ve yeniden eklemen gerekir. Sunucudaki carilerin ve ödeme kayıtların
+      silinmez.</p>
+  </section>
+
+  <section class="kart" aria-labelledby="dogrulama">
+    <h2 id="dogrulama">Dosya doğrulama (yönetici için)</h2>
+    <p class="alt">Dosya adı: <code>__APK__</code><br>
+      SHA-256: <code>__SHA256__</code></p>
+  </section>
+
+  <footer>Sorun olursa yöneticine yaz. Bu sayfa yalnız şirket çalışanları içindir.</footer>
+</main>
+</body>
+</html>

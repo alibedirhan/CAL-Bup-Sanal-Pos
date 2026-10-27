@@ -8,15 +8,19 @@ import 'app.dart';
 import 'bilesim/platform.dart';
 import 'application/biyometrik_kilit.dart';
 import 'application/pos_servisi.dart';
+import 'application/surum_denetimi.dart';
 import 'data/firebase_hesap.dart';
 import 'data/firebase_yonetim.dart';
 import 'data/firestore_deposu.dart';
+import 'data/firestore_surum.dart';
 import 'domain/hata.dart';
 import 'domain/kullanici.dart';
+import 'domain/surum.dart';
 import 'data/secim_kontrolu.dart';
 import 'data/firestore_islemleri.dart';
 import 'application/tahsilat_servisi.dart';
 import 'ui/giris_sayfasi.dart';
+import 'ui/guncelleme.dart';
 import 'ui/tema.dart';
 
 class CanliApp extends StatefulWidget {
@@ -111,6 +115,11 @@ class _HesapKapisiState extends State<_HesapKapisi> {
   String? _hata;
   int _nesil = 0;
   String? _sonUid;
+  SurumSonucu _surum = SurumSonucu.guncel;
+  late final _surumDenetimi = SurumDenetimi(
+    uygulama: _platform.uygulamaSurumu,
+    ayar: FirestoreSurumAyari(widget.hesap.db),
+  );
   @override
   void initState() {
     super.initState();
@@ -151,6 +160,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
         _profil = widget.hesap.profilIzle().listen(
           (k) {
             if (!mounted) return;
+            if (_kullanici == null && k?.aktif == true) _surumuDenetle();
             setState(() {
               _kontrol = false;
               _kullanici = k?.aktif == true ? k : null;
@@ -202,7 +212,19 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       _kilitli = false;
       _kullanici = k;
     });
+    _surumuDenetle();
     return k;
+  }
+
+  /// Android: açılışta ve kilit açılınca sunucudaki en düşük/son sürüme bakılır.
+  /// Web'de ve denetlenemezse uygulama olduğu gibi açılır.
+  void _surumuDenetle() {
+    final nesil = _nesil;
+    unawaited(
+      _surumDenetimi.denetle().then((s) {
+        if (mounted && nesil == _nesil) setState(() => _surum = s);
+      }),
+    );
   }
 
   /// Parmak izi/yüz. Dönen metin ekranda gösterilir; `null`: söylenecek yok.
@@ -247,6 +269,20 @@ class _HesapKapisiState extends State<_HesapKapisi> {
   @override
   Widget build(BuildContext context) {
     final k = _kullanici;
+    final surum = _surum.bilgi;
+    if (k != null &&
+        !_kilitli &&
+        surum != null &&
+        _surum.durum == SurumDurumu.guncellemeGerekli) {
+      return MaterialApp(
+        theme: posTemasi(),
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('tr'),
+        supportedLocales: const [Locale('tr')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: GuncellemeSayfasi(bilgi: surum, cikis: widget.hesap.cikis),
+      );
+    }
     if (k != null && !_kilitli) {
       return BupPosApp(
         key: ValueKey('${k.id}-$_nesil'),
@@ -279,6 +315,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
               )
             : null,
         canliKilit: _kilitle,
+        guncelleme: _surum.durum == SurumDurumu.guncellemeVar ? surum : null,
       );
     }
     return MaterialApp(

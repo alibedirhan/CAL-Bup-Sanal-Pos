@@ -156,6 +156,9 @@ service cloud.firestore {
           && (d.tutarKurus == null || (d.tutarKurus is int && d.tutarKurus >= 0 && d.tutarKurus <= 99999999999));
       }
     }
+    // Android sürüm denetimi (lib/domain/surum.dart): üyeler okur; yalnız yönetici
+    // aracı (admin SDK, tools/android_yayin.sh) yazar.
+    match /ayarlar/android { allow get: if uye(); }
     match /{document=**} { allow read, write: if false; }
   }
 }

@@ -31,6 +31,8 @@ class GuvenlikKanali(
         val ctx = etkinlik.applicationContext
         when (cagri.method) {
             "klasor" -> sonuc.success(ctx.noBackupFilesDir.absolutePath)
+            // Sürüm denetimi (lib/domain/surum.dart): kurulu APK'nın versionCode'u.
+            "surum" -> sonuc.success(BuildConfig.VERSION_CODE)
             "kasa.sifrele" -> arkada(sonuc) {
                 val (iv, veri) = KasaAnahtari.sifrele(
                     ctx, cagri.metin("uid"), cagri.bayt("ekVeri"), cagri.bayt("duz"),

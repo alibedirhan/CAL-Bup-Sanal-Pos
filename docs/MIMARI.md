@@ -2,6 +2,11 @@
 Platforma bağlı bağdaştırıcılar `lib/bilesim/platform.dart` ile derlemede seçilir
 (`PlatformBaglantilari`); web olanlar `lib/data/web/`, Android olanlar
 `lib/data/android/` altındadır. Aşağıdaki `_web.dart` dosya adları eski düzendir.
+Android sürüm denetimi (Aşama 3): saf kural `domain/surum.dart`, servis
+`application/surum_denetimi.dart` (portlar: kurulu sürüm Kotlin kanalından
+`surum`, sunucu `ayarlar/android` — istemci yazamaz); `canli_app.dart` açılışta
+ve kilit açılınca sorar, yalnız açık "en düşük sürüm altı" kararında durdurur.
+Dağıtım ve yayın [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
 
 **0.4.0:** Cihaz kart kasası `application/KartKasasi` portuyla bağlandı;
 Web Crypto/IndexedDB bağdaştırıcısı yalnız webde etkin, diğer platformda

@@ -12,6 +12,7 @@ import 'ui/oturum_modeli.dart';
 import 'ui/tema.dart';
 import 'application/hesap_portu.dart';
 import 'domain/kullanici.dart';
+import 'domain/surum.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 class BupPosApp extends StatefulWidget {
@@ -26,6 +27,7 @@ class BupPosApp extends StatefulWidget {
     this.yonetim,
     this.canliKilit,
     this.denizPayAcici,
+    this.guncelleme,
   });
   final bool deneme;
   final PosServisi? servis;
@@ -37,6 +39,9 @@ class BupPosApp extends StatefulWidget {
 
   /// Uygulama içi DenizPay (Android); `null`: DenizPay ayrı sekmede açılır.
   final DenizPayAcici? denizPayAcici;
+
+  /// Android'de daha yeni sürüm yayındaysa ana ekranda not gösterilir.
+  final AndroidSurumu? guncelleme;
   @override
   State<BupPosApp> createState() => _BupPosAppState();
 }
@@ -204,6 +209,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
             kullanici: widget.kullanici,
             hesap: widget.hesap,
             yonetim: widget.yonetim,
+            guncelleme: widget.guncelleme,
           ),
   );
 }

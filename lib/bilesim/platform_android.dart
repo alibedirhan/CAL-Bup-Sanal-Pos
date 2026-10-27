@@ -8,6 +8,7 @@ import '../data/android/denizpay_tarayicisi.dart';
 import '../data/android/dosya_indirici.dart';
 import '../data/android/kart_kasasi.dart';
 import '../data/android/sonuc_kutusu.dart';
+import '../data/android/uygulama_surumu.dart';
 import '../data/kasa/sifreli_kasa.dart';
 import '../domain/denizpay.dart';
 import '../domain/kart_bilgileri.dart';
@@ -30,6 +31,7 @@ final PlatformBaglantilari platformBaglantilari = Platform.isAndroid
         biyometri: AndroidBiyometrikKilit(),
         acilistaKilit: true,
         denizPayAcici: _denizPayAc,
+        uygulamaSurumu: const AndroidUygulamaSurumu(),
       )
     : kapaliBaglantilar;
 

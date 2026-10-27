@@ -1,1 +1,17 @@
-{"projects": {"default": "bup-sanal-pos-izmir"}}
+{
+  "projects": {
+    "default": "bup-sanal-pos-izmir"
+  },
+  "targets": {
+    "bup-sanal-pos-izmir": {
+      "hosting": {
+        "web": [
+          "bup-sanal-pos-izmir"
+        ],
+        "indir": [
+          "bup-sanal-pos-indir"
+        ]
+      }
+    }
+  }
+}

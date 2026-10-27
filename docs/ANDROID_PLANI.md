@@ -350,6 +350,35 @@ yoksa "Kartı doldur" açık kalıyordu — web yer imi gibi kapalı (test kural
 sayfalarının WebView'de çalışması, gerçek kart sayfasının alan adları ve sonuç
 sayfasının gerçek HTML'i. Okunamayan sonuçta ekran "elle kaydet" der.
 
+**Aşama 3 (a–d) tamamlandı, yayın bekliyor (27 Ekim 2026).** Ayrıntı ve yayın
+yöntemi [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
+- Sürüm denetimi: `domain/surum.dart` (belge doğrulama: tam 5 alan, enDusuk ≤ son,
+  sürüm adı, küçük harf SHA-256, yalnız https/kullanıcı bilgisi ve port yok),
+  `application/surum_denetimi.dart` (8 sn sınır; okunamazsa engellemez),
+  `data/firestore_surum.dart`, `data/android/uygulama_surumu.dart` (Kotlin
+  `surum` → `BuildConfig.VERSION_CODE`), `ui/guncelleme.dart` ("Güncelleme
+  gerekli" sayfası, ana ekranda kapatılabilir "Yeni sürüm hazır" notu; indirme
+  telefonun tarayıcısında açılır). `canli_app.dart` açılışta ve kilit açılınca
+  sorar. Kural: `ayarlar/android` yalnız üye okur, kimse istemciden yazamaz.
+- Ekrandaki sürüm tek sabit `ui/ortak.dart surumAdi`; test pubspec ile aynılığını
+  zorlar. Sürüm **0.11.0+19**.
+- İndirme sitesi: `firebase.json` iki hedef (`web`, `indir` → `bup-sanal-pos-indir`,
+  `build/indir`; CSP `default-src 'none'`, noindex, APK `attachment`).
+  `tools/yayin.sh` artık yalnız `hosting:web` yayınlar (kuru çalıştırma geçti).
+  Kurulum sayfası şablonu `tools/indir/index.html` (betiksiz).
+- `tools/android_yayin.sh` (deneme varsayılan) + `tools/android_apk_denetle.py` +
+  `tools/sunucu-test/android_surum_yaz.mjs`. Deneme kipi uçtan uca geçti
+  (APK 58 MB, imza `0C:76…47:DB`). Kapının yakaladığı denendi: hata ayıklama
+  imzalı APK (imza), emülatör ayarlı sürüm APK'sı (`10.0.2.2`), yanlış sürüm adı/kodu.
+- **Doğrulama:** 207 Dart testi (yeni `surum_test` 8); kurallar 28 (yeni: sürüm
+  ayarı okuma/yazma); `tools/android_test.sh` Kotlin 8 + uçtan uca 3 (yeni
+  `android_surum_test`: gerçek kanal sürümü, "Güncelleme gerekli" → çıkış, "Yeni
+  sürüm hazır" notu ve kapatma, güncelde not yok); web demo/kasa/doldur/saf/
+  hesap/tahsilat Chromium + WebKit geçti.
+- **Yapılmadı (kullanıcı onayı bekliyor):** `bup-sanal-pos-indir` sitesinin
+  oluşturulması, kural + web 0.11.0 yayını, APK yayını, `ayarlar/android`.
+  Ertelenen: yönetimde "kim hangi sürümde" (kural değişikliği ister).
+
 ## Aşama 3 — başlangıç kararları ve ayrıntılı iş listesi (27 Ekim 2026)
 
 Kullanıcı Aşama 3'e geçişi onayladı; inceleme yapıldı, **kod yazılmadı**. Kullanıcı

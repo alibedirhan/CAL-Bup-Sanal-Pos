@@ -274,3 +274,16 @@ test('Yönetici başkasına atanmış cari için kendi adına kayıt ekleyebilir
   await tahsilatCari();
   await assertSucceeds(setDoc(doc(dbFor('admin'),'posIslemleri','VP50'),{...islemVerisi('VP50'),kullaniciId:'admin'}));
 });
+test('Android sürüm ayarını üyeler okur; kimse istemciden yazamaz (Aşama 3)',async()=>{
+  const ayar={enDusuk:19,son:19,sonAd:'0.11.0',indirme:'https://ornek.test/',sha256:'0'.repeat(64)};
+  await env.withSecurityRulesDisabled(async ctx=>{await setDoc(doc(ctx.firestore(),'ayarlar','android'),ayar);});
+  await assertSucceeds(getDoc(doc(dbFor(uid),'ayarlar','android')));
+  await assertFails(getDoc(doc(dbFor('pasif'),'ayarlar','android')));
+  await assertFails(getDoc(doc(dbFor(null),'ayarlar','android')));
+  await assertFails(getDoc(doc(dbFor(uid),'ayarlar','web')));
+  await assertFails(getDocs(collection(dbFor('admin'),'ayarlar')));
+  for(const who of [uid,'admin']){
+    await assertFails(setDoc(doc(dbFor(who),'ayarlar','android'),{...ayar,enDusuk:1}));
+    await assertFails(updateDoc(doc(dbFor(who),'ayarlar','android'),{enDusuk:1}));
+  }
+});

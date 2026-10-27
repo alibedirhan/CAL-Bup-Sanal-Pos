@@ -1,6 +1,7 @@
 {
   "firestore": {"rules": "firestore.rules", "indexes": "firestore.indexes.json"},
-  "hosting": {
+  "hosting": [{
+    "target": "web",
     "public": "build/canli",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/*.map"],
     "rewrites": [{"source": "**", "destination": "/index.html"}],
@@ -14,7 +15,25 @@
     ]},
       {"source": "/canvaskit-*/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]},
       {"source": "/main.dart.js", "headers": [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]}]
-  },
+  }, {
+    "target": "indir",
+    "public": "build/indir",
+    "ignore": ["**/.*"],
+    "cleanUrls": false,
+    "headers": [{"source": "**", "headers": [
+      {"key": "Cache-Control", "value": "no-cache"},
+      {"key": "X-Content-Type-Options", "value": "nosniff"},
+      {"key": "Referrer-Policy", "value": "no-referrer"},
+      {"key": "X-Frame-Options", "value": "DENY"},
+      {"key": "X-Robots-Tag", "value": "noindex, nofollow"},
+      {"key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()"},
+      {"key": "Content-Security-Policy", "value": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"}
+    ]},
+      {"source": "**/*.apk", "headers": [
+        {"key": "Content-Type", "value": "application/vnd.android.package-archive"},
+        {"key": "Content-Disposition", "value": "attachment"},
+        {"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]}]
+  }],
   "emulators": {
     "auth": {"host": "127.0.0.1", "port": 9098},
     "firestore": {"host": "127.0.0.1", "port": 8088},
