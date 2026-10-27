@@ -55,6 +55,8 @@
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.
   Kartsız giriş (kart bilgileri elle) kullanıcı isteğidir, kaldırmayın.
+  **Devam noktası:** Aşama 3 (dağıtım) — `docs/ANDROID_PLANI.md` sonundaki
+  "Aşama 3 — başlangıç kararları" bölümü; yayınlardan önce kullanıcıya sorun.
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

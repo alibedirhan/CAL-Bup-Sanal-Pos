@@ -1,3 +1,16 @@
+# 27 Ekim 2026 — Devir: Aşama 3 başında oturum kapatıldı
+
+Kullanıcı Aşama 3'ü (dağıtım) onayladı, ardından "yapılanları kaydet, ekranı
+temizleyip yeniden başlayalım" dedi. Aşama 0–2 commit'li ve CI yeşil (`695e9fb`).
+Aşama 3 için yalnız inceleme yapıldı; kararlar ve sıralı iş listesi
+`docs/ANDROID_PLANI.md` sonundaki "Aşama 3 — başlangıç kararları" bölümünde.
+Yeni oturum oradan başlar; kod yazılmadı, hiçbir yayın yapılmadı (web hâlâ
+0.10.1 canlıda; `firestore.rules` Android değişikliği canlıda DEĞİL). Her yayın
+öncesi kullanıcıya sorulur. Kullanıcı dışarıdayken ekran görüntüsü istemeyi
+seviyor (SendUserFile ile gönderildi; görüntüler geçici klasördeydi).
+
+---
+
 # 27 Ekim 2026 — Android Aşama 2: uygulama içi DenizPay
 
 Kullanıcı Aşama 2'yi onayladı; dışarıdayken emülatör ekran görüntüleri istedi

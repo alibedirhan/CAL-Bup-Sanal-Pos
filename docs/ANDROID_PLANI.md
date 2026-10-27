@@ -349,3 +349,72 @@ yoksa "Kartı doldur" açık kalıyordu — web yer imi gibi kapalı (test kural
 **Bilinmeyen (gerçek denemede görülecek):** DenizPay ve bankanın 3D Secure
 sayfalarının WebView'de çalışması, gerçek kart sayfasının alan adları ve sonuç
 sayfasının gerçek HTML'i. Okunamayan sonuçta ekran "elle kaydet" der.
+
+## Aşama 3 — başlangıç kararları ve ayrıntılı iş listesi (27 Ekim 2026)
+
+Kullanıcı Aşama 3'e geçişi onayladı; inceleme yapıldı, **kod yazılmadı**. Kullanıcı
+konuşmayı temizleyip yeni oturumda devam etmek istedi. Yeni oturum buradan başlar.
+
+**Verilen kararlar (gerekçeli):**
+1. **Ayrı indirme sitesi:** APK ve kurulum sayfası web uygulamasının sitesine
+   konmaz; aynı Firebase projesinde ayrı Hosting sitesi (öneri
+   `bup-sanal-pos-indir`, Spark'ta ücretsiz). Gerekçe: web yayını
+   (`tools/yayin.sh` → `--only hosting`) APK'sız bir bilgisayardan yapılırsa
+   indirme bağlantısını siler; ayrı sitede bağımsızdır. `firebase.json` hosting
+   dizisine ve `.firebaserc` hedeflerine çevrilir; `yayin.sh` yalnız web hedefini
+   yayınlayacak şekilde güncellenir (web yayını davranışı değişmemeli).
+2. **Sürüm denetimi:** Firestore `ayarlar/android` belgesi {enDusuk (versionCode),
+   son (versionCode), sonAd, indirme (https adres), sha256}. Kural: `allow read: if
+   uye(); allow write: if false;` — yalnız yönetici aracı/admin SDK yazar
+   (`tools/sunucu-test/bulut.mjs` `adminApp/cloudFetch` yöntemi). Uygulamanın
+   kendi sürümü Kotlin kanalından (`BuildConfig.VERSION_CODE/VERSION_NAME`;
+   `GuvenlikKanali` "surum"), define gerekmez. Kurallar saf Dart
+   (`domain/surum.dart`: güncel / güncelleme var / güncelleme gerekli). Belge
+   okunamazsa (çevrimdışı) engellemez — yazma yetkisi zaten sunucuda.
+   `enDusuk` altı: tam ekran "Güncelleme gerekli" + indirme düğmesi + çıkış;
+   `son` altı: açılışta not. Yalnız Android'de (web'de yok).
+3. **Yayın betiği** `tools/android_yayin.sh`: varsayılan **deneme** (yalnız
+   derler ve denetler); yayın yalnız `--yayinla` ile ve **her yayından önce
+   kullanıcıya sorulur**. Denetimler: temiz git ağacı/main, `config/android.json`
+   proje `bup-sanal-pos-izmir`, `BUP_DENEME=false`, `BUP_EMULATOR`/
+   `BUP_DENIZPAY_KOKENI` yok; imza anahtarı var; `flutter pub get` (sürümde
+   `--no-pub` YOK — eklenti kayıt dosyası); `flutter build apk --release
+   --dart-define-from-file=config/android.json`; `apksigner` sertifika SHA-256 =
+   `0C:76:96:FC:…:47:DB` (§4.10); `aapt2`: paket, minSdk 28, debuggable yok,
+   allowBackup false, cleartext false; APK'da `integration_test`/androidx.test
+   yok; `libapp.so` içinde `10.0.2.2` yok. Sonra: SHA-256, kurulum sayfası
+   (sürüm, boyut, SHA-256), sırayla **kural yayını → indirme sitesi →
+   `ayarlar/android`**. Kural yayını Android'den önce zorunlu (`uygulama`
+   kaynağı); web 0.11.0 yayını ile birlikte yapılabilir (`yayin.sh`).
+4. **Sürüm:** `pubspec.yaml` 0.10.1+18 → **0.11.0+19** (Android ilk sürüm; web'de
+   de kart metinleri ve dosya indirme değişti). Web yayını ayrıca kullanıcı onayıyla.
+5. **APK:** evrensel APK (~55 MB; az kullanıcı, Spark aktarımı yeterli).
+   Bölünmüş (`--split-per-abi`) gerekmezse yapılmaz.
+6. **Kurulum anlatımı:** indirme sayfasında sade Türkçe adımlar (bilinmeyen
+   kaynak izni, kurulum, ilk açılış, telefon ekran kilidi şartı, parmak izi,
+   "Play Koruma uyarısı" açıklaması) + `docs/ANDROID_KURULUM.md`.
+7. **Ertelenen (kullanıcıya söylenecek):** yönetici ekranında "kim hangi
+   sürümde" — `kullanicilar` kuralını değiştirmeyi gerektirir; istenirse ayrı iş.
+8. **Kullanıcının hesabında yapacağı:** Android API anahtarını Google Cloud'da
+   paket adı + imza SHA-256'ya kısıtlamak (adımları yayından önce verilecek);
+   imza anahtarı klasörünü (`~/.bup-sanal-pos/imza/`) yedeklemek (Aşama 0'da istendi,
+   yapılıp yapılmadığı sorulmalı).
+
+**Sıra:** (a) sürüm denetimi kodu + kural + testler; (b) indirme sitesi
+yapılandırması + kurulum sayfası; (c) `android_yayin.sh` deneme kipiyle uçtan
+uca; (d) belgeler, commit; (e) kullanıcıya tek soruda onay: site oluşturma,
+kural+web 0.11.0 yayını, APK yayını, `ayarlar/android`; (f) Aşama 4 gerçek
+telefon (kullanıcı yanındayken; telefonun kilit ayarlarına dokunulmaz;
+`tools/android_test.sh` telefonda ÇALIŞTIRILMAZ — PIN değiştirir).
+
+**Ortam (yeni oturum için):** Test AVD'leri geçici klasördeydi (oturum
+temizlenince gidebilir). Yeniden: `avdmanager create avd -n BUP_SanalPOS_Test35
+-k "system-images;android-35;google_apis;x86_64" -d medium_phone -p <geçici
+klasör>/avd35`, `config.ini` içinde `hw.ramSize = 4G`, başlatma: `emulator -avd
+BUP_SanalPOS_Test35 -no-window -no-audio -no-boot-anim -no-snapshot -memory 4096
+-cores 4 -gpu swiftshader_indirect -port 5584` (Android 16.1/36.1 görüntüsü bu
+bilgisayardaki emülatör 36.3.10 ile çöker; `-gpu host` API 35'te çöktü).
+Emülatörde ekran görüntüsü `adb exec-out screencap -p` ile alınır (hata ayıklama
+derlemesinde FLAG_SECURE kapalı; biyometri penceresi sistem gereği siyah çıkar);
+`adb input text` Türkçe harf yazamaz. Kullanıcının telefonu USB'de bağlı olabilir:
+komutları her zaman `-s emulator-NNNN` ile verin.
