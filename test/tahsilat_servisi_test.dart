@@ -602,8 +602,8 @@ void main() {
     expect(depo.istenen, ['u1', null]);
     // İndirme desteklenmeyen cihazda kullanıcıya açık mesaj verilir.
     final g = await servis.gunSonu(servis.bugun);
-    expect(
-      () => servis.disaAktar(g),
+    await expectLater(
+      servis.disaAktar(g),
       throwsA(isA<PosHatasi>().having((e) => e.kod, 'kod', 'indir')),
     );
   });

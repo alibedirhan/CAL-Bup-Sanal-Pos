@@ -219,6 +219,8 @@ class CariProfiliEkrani extends StatelessWidget {
               DurumNotu(
                 model.deneme
                     ? 'Burada yalnız örnek kartların son dört hanesi bulunur. Gerçek kart bilgisi girilmez.'
+                    : androidUygulamasi
+                    ? 'Tam kart bilgileri yalnız eklendiği telefonda saklanır. Diğer cihazlarda maskeli özet görünür. CVV ödeme sitesinde girilir.'
                     : 'Tam kart bilgileri yalnız eklendiği tarayıcıda saklanır. Diğer cihazlarda maskeli özet görünür. CVV ödeme sitesinde girilir.',
               ),
             ],

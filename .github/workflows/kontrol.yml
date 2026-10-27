@@ -65,6 +65,11 @@ jobs:
         run: flutter pub get
       - name: Android deneme paketi
         run: flutter build apk --debug --no-pub
+      # Keystore/biyometri Kotlin testleri yalnız emülatörde koşar
+      # (tools/android_test.sh); burada derlendikleri denetlenir.
+      - name: Android test paketi derlenir
+        working-directory: android
+        run: ./gradlew -q :app:assembleDebugAndroidTest
       - name: Sürüm imzasız derlenmez
         run: |
           if flutter build apk --release --no-pub > surum.log 2>&1; then

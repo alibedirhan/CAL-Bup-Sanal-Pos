@@ -1,0 +1,10 @@
+{
+  "BUP_DENEME": "false",
+  "BUP_EMULATOR": "true",
+  "BUP_EMULATOR_HOST": "10.0.2.2",
+  "FIREBASE_PROJECT_ID": "demo-bup-pos",
+  "FIREBASE_API_KEY": "demo-public-key",
+  "FIREBASE_APP_ID": "1:123:android:demo",
+  "FIREBASE_SENDER_ID": "123",
+  "FIREBASE_AUTH_DOMAIN": "localhost"
+}

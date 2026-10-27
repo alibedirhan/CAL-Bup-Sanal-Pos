@@ -48,6 +48,9 @@
   yalnız `lib/bilesim/` üzerinden seçilir (mimari test zorlar). Sürüm imza
   anahtarı depo dışı `~/.bup-sanal-pos/imza/`; asla depoya/CI'a koymayın,
   kaybı güncellemeyi imkânsız kılar. Paket adı `com.bup.sanalpos` değişmez.
+  Android testleri yalnız emülatörde: `bash tools/android_test.sh emulator-NNNN`
+  (gerçek telefona kurmayın; kullanıcının telefonu USB'de bağlı olabilir).
+  Kart kasası kuralları `lib/data/kasa/` (web JS ile aynı sözleşme).
 - Yalnız yeni `bup-sanal-pos-izmir` Firebase projesi kullanılır. Billing kapalı
   kalır. CAL bup / Sipariş Firebase projesine veya verisine yazmayın.
 - Gerçek POS'a istek, giriş, kart/ödeme/SMS testi yapmayın. Gerçek şirket,

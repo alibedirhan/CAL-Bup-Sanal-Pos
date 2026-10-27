@@ -45,6 +45,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -79,4 +80,20 @@ gradle.taskGraph.whenReady {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Parmak izi/yüz penceresi (Google, AndroidX). Sürüm sabit.
+    implementation("androidx.biometric:biometric:1.1.0")
+    // integration_test (yalnız geliştirme) eski androidx.test 1.2 ister; o sürümün
+    // etkinlikleri Android 12+ manifest kuralına uymaz. Aynı kuşaktan güncel
+    // sürümler zorlanır; kısıt bağımlılık eklemez, sürüm derlemesine test girmez.
+    constraints {
+        implementation("androidx.test:runner:1.6.2")
+        implementation("androidx.test:rules:1.6.1")
+        implementation("androidx.test:core:1.6.1")
+        implementation("androidx.test:monitor:1.7.2")
+        implementation("androidx.test.espresso:espresso-core:3.6.1")
+    }
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
 }

@@ -35,7 +35,18 @@ abstract interface class AcikGirisPortu {
 /// Gün sonu dosyasını telefona/bilgisayara indirir.
 abstract interface class DosyaIndirici {
   bool get destekli;
-  void indir(String dosyaAdi, String icerik);
+  Future<DosyaSonucu> indir(String dosyaAdi, String icerik);
+}
+
+enum DosyaSonucu {
+  /// Tarayıcı indirmeyi başlattı; nereye kaydedildiğini tarayıcı gösterir.
+  indirildi,
+
+  /// Kişinin seçtiği yere kaydedildi (Android "Kaydet" penceresi).
+  kaydedildi,
+
+  /// Kişi kaydetme penceresini kapattı; hiçbir şey yazılmadı.
+  vazgecildi,
 }
 
 /// DenizPay sonuç ekranından okunup bu cihazda bekleyen sonuçlar. Ham kayıtlar
@@ -89,7 +100,7 @@ class KapaliDosyaIndirici implements DosyaIndirici {
   @override
   bool get destekli => false;
   @override
-  void indir(String dosyaAdi, String icerik) =>
+  Future<DosyaSonucu> indir(String dosyaAdi, String icerik) async =>
       throw const PosHatasi('indir', 'Bu cihazda dosya indirilemiyor.');
 }
 
@@ -321,7 +332,7 @@ class TahsilatServisi {
     return GunSonu.hesapla(gun, k.girisler, k.islemler);
   }
 
-  void disaAktar(GunSonu gunSonu) => indirici.indir(
+  Future<DosyaSonucu> disaAktar(GunSonu gunSonu) => indirici.indir(
     'gun-sonu-${gunSonu.gun.anahtar}.csv',
     gunSonuCsv(gunSonu),
   );

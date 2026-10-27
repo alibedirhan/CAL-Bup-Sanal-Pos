@@ -223,9 +223,7 @@ class _KartFormuState extends State<_KartFormu> {
                     const SizedBox(height: 8),
                     Text('Bu kart ${widget.cari.ad} carisine aittir.'),
                     const SizedBox(height: 16),
-                    const DurumNotu(
-                      'Tam kart bilgileri yalnız bu tarayıcıda şifreli tutulur. Tarayıcı verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.',
-                    ),
+                    DurumNotu(kartSaklamaNotu),
                     const SizedBox(height: 20),
                     if (_yukleniyor) const LinearProgressIndicator(),
                     if (_bilgi != null) ...[

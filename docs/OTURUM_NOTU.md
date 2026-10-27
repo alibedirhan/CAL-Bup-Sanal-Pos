@@ -1,3 +1,20 @@
+# 27 Ekim 2026 — Android Aşama 1: temel uygulama
+
+Kullanıcı "devam edelim" dedi. Aşama 1 bitti; ayrıntı, doğrulama, bulunan ve
+düzeltilen üç hata, bilinen eklenti kaydı ve ortam notları `docs/ANDROID_PLANI.md`
+"Durum"da. Özet: Keystore kart kasası (platformdan bağımsız kurallar + Kotlin
+şifreleme), parmak izi/yüz kilidi (yeni biyometri/yeniden başlatma/7 gün → şifre),
+Android'de soğuk açılışta kilit, gün sonu "Kaydet" penceresi. Web davranışı
+değişmedi (bütün tarayıcı testleri geçti). Testler bilgisayarda; emülatör testleri
+`tools/android_test.sh` yalnız `emulator-*` kabul eder. Bilgisayara USB ile bağlı
+gerçek bir telefon görüldü; ona hiçbir şey kurulmadı/gönderilmedi.
+Test için SDK'ya Android 15 Google APIs görüntüsü eklendi (mevcut 36.1 görüntüsü
+emülatör 36.3.10 ile çöküyor); test AVD'leri `BUP_SanalPOS_Test*` geçici klasörde.
+Sürüm artırılmadı, web yayını yapılmadı, APK dağıtılmadı. Sıradaki: Aşama 2
+(uygulama içi DenizPay).
+
+---
+
 # 27 Ekim 2026 — Android uygulaması: plan + Aşama 0 (hazırlık)
 
 Kullanıcı Sanal POS'un Flutter ile Android uygulaması olmasını istedi ("titiz,

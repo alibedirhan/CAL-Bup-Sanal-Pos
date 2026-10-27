@@ -1,6 +1,16 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'tema.dart';
+
+/// Android uygulaması mı (web sürümü değil). Yalnız metinlerin kullanıcının
+/// diliyle söylenmesi için: "bu telefonda" / "bu tarayıcıda".
+bool get androidUygulamasi =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+String get kartSaklamaNotu => androidUygulamasi
+    ? 'Tam kart bilgileri yalnız bu telefonda şifreli tutulur. Uygulama kaldırılırsa veya verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.'
+    : 'Tam kart bilgileri yalnız bu tarayıcıda şifreli tutulur. Tarayıcı verileri silinirse yeniden eklemen gerekir. CVV ödeme ekranında girilir.';
 
 /// Alttan açılan pencere. Üstte boşluk bırakılır: küçük ekranda (iPhone SE)
 /// tutma çizgisi ekranın tepesine yapışmaz, aşağı çekerek kapatılabilir.

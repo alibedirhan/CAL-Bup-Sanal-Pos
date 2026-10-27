@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'app.dart';
 import 'bilesim/platform.dart';
+import 'application/biyometrik_kilit.dart';
 import 'application/pos_servisi.dart';
 import 'data/firebase_hesap.dart';
 import 'data/firebase_yonetim.dart';
@@ -47,8 +48,13 @@ class _CanliAppState extends State<CanliApp> {
     final auth = FirebaseAuth.instance, db = FirebaseFirestore.instance;
     db.settings = const Settings(persistenceEnabled: false);
     if (emulator) {
-      await auth.useAuthEmulator('127.0.0.1', 9098);
-      db.useFirestoreEmulator('127.0.0.1', 8088);
+      // Android emülatöründe bilgisayarın yerel adresi 10.0.2.2'dir.
+      const host = String.fromEnvironment(
+        'BUP_EMULATOR_HOST',
+        defaultValue: '127.0.0.1',
+      );
+      await auth.useAuthEmulator(host, 9098);
+      db.useFirestoreEmulator(host, 8088);
     }
     final hesap = FirebaseHesap(auth, db);
     await hesap.hazirla();
@@ -94,11 +100,14 @@ class _HesapKapisi extends StatefulWidget {
 }
 
 class _HesapKapisiState extends State<_HesapKapisi> {
-  static const _platform = platformBaglantilari;
+  static final _platform = platformBaglantilari;
   StreamSubscription<String?>? _auth;
   StreamSubscription<Kullanici?>? _profil;
   Kullanici? _kullanici;
   bool _hazir = false, _kilitli = false, _kontrol = false;
+  // İlk olay: uygulama açılışında kalıcı oturumdan gelen hesap (Android). Sonraki
+  // olaylar şifreyle giriş veya çıkıştır.
+  bool _ilkOlay = true, _biyometri = false;
   String? _hata;
   int _nesil = 0;
   String? _sonUid;
@@ -116,16 +125,28 @@ class _HesapKapisiState extends State<_HesapKapisi> {
       // sonucu cariye bağlanamaz. Giriş yapılınca başka hesabın girişleri atılır.
       if (uid == null && _sonUid != null) _platform.acikGiris.temizle();
       if (uid != null) _platform.acikGiris.yalniz(uid);
+      // Çıkıştan sonra yeniden şifre gerekir; yeni giriş şifreyle yapılmıştır.
+      final onceki = _sonUid;
+      if (onceki != null && uid != onceki) {
+        unawaited(_platform.biyometri.unut(onceki));
+      }
+      final acilis = _ilkOlay && uid != null && _platform.acilistaKilit;
+      if (uid != null && !_ilkOlay) {
+        unawaited(_platform.biyometri.sifreDogrulandi(uid));
+      }
+      _ilkOlay = false;
       _sonUid = uid;
       _nesil++;
       unawaited(_profil?.cancel().catchError((Object _) {}));
       setState(() {
         _kullanici = null;
-        _kilitli = false;
+        _kilitli = acilis;
+        _biyometri = false;
         _hata = null;
         _hazir = true;
         _kontrol = uid != null;
       });
+      if (acilis) _biyometriyiDenetle();
       if (uid != null) {
         _profil = widget.hesap.profilIzle().listen(
           (k) {
@@ -168,14 +189,59 @@ class _HesapKapisiState extends State<_HesapKapisi> {
   Future<void> _ac(String parola) async {
     final nesil = _nesil;
     await widget.hesap.yenidenDogrula(parola);
+    final k = await _profilAc(nesil);
+    if (k != null) unawaited(_platform.biyometri.sifreDogrulandi(k.id));
+  }
+
+  /// Kilit açıldıktan sonra hesap yetkisi her zaman sunucudan yeniden okunur.
+  Future<Kullanici?> _profilAc(int nesil) async {
     final k = await widget.hesap.profil();
     if (!k.aktif) throw const PosHatasi('yetki', 'Bu hesaba erişim kapalı.');
-    if (mounted && nesil == _nesil) {
-      setState(() {
-        _kilitli = false;
-        _kullanici = k;
-      });
+    if (!mounted || nesil != _nesil) return null;
+    setState(() {
+      _kilitli = false;
+      _kullanici = k;
+    });
+    return k;
+  }
+
+  /// Parmak izi/yüz. Dönen metin ekranda gösterilir; `null`: söylenecek yok.
+  Future<String?> _biyometriyleAc() async {
+    final nesil = _nesil, uid = _sonUid;
+    if (uid == null) return null;
+    switch (await _platform.biyometri.dogrula(uid)) {
+      case BiyometriSonucu.tamam:
+        await _profilAc(nesil);
+        return null;
+      case BiyometriSonucu.iptal:
+        return null;
+      case BiyometriSonucu.sifreGerekli:
+        if (mounted && nesil == _nesil) setState(() => _biyometri = false);
+        return 'Parmak iziyle açma bu kez kullanılamıyor. Hesap şifreni yaz.';
+      case BiyometriSonucu.hata:
+        return 'Parmak izi doğrulanamadı. Yeniden dene ya da şifreni yaz.';
     }
+  }
+
+  void _kilitle() {
+    setState(() {
+      _kilitli = true;
+      _biyometri = false;
+    });
+    _biyometriyiDenetle();
+  }
+
+  /// Kilit ekranında biyometri düğmesi yalnız gerçekten kullanılabiliyorsa görünür.
+  void _biyometriyiDenetle() {
+    final nesil = _nesil, uid = _sonUid;
+    if (uid == null) return;
+    unawaited(
+      _platform.biyometri.kullanilabilir(uid).then((kullanilir) {
+        if (mounted && nesil == _nesil && _kilitli) {
+          setState(() => _biyometri = kullanilir);
+        }
+      }),
+    );
   }
 
   @override
@@ -210,7 +276,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
                 emulator: const bool.fromEnvironment('BUP_EMULATOR'),
               )
             : null,
-        canliKilit: () => setState(() => _kilitli = true),
+        canliKilit: _kilitle,
       );
     }
     return MaterialApp(
@@ -245,6 +311,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
               eposta: k?.eposta,
               kilitli: _kilitli,
               giris: _kilitli ? _ac : null,
+              biyometri: _kilitli && _biyometri ? _biyometriyleAc : null,
             ),
     );
   }

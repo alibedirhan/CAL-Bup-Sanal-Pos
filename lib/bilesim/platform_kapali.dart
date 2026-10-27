@@ -5,7 +5,9 @@ import 'baglantilar.dart';
 
 /// Cihaz özelliği olmayan ortam: kart kasası, DenizPay girişi, yer imi ve dosya
 /// indirme kapalıdır; ekranlar bunu `destekli` ile görür.
-const platformBaglantilari = PlatformBaglantilari(
+const platformBaglantilari = kapaliBaglantilar;
+
+const kapaliBaglantilar = PlatformBaglantilari(
   kartKasasi: KapaliKartKasasi(),
   girisKapisi: KapaliPosGirisKapisi(),
   doldurma: KapaliDoldurmaHazirligi(),

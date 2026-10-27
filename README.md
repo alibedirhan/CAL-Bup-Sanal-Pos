@@ -65,6 +65,19 @@ Demo tarayıcı kabulü: 4195 açıkken `npm --prefix tools/tarayici test`.
 Görseller/günlükler `/tmp/` altındadır. Linux WebKit denemesi fiziksel iPhone
 veya Safari ana ekran kurulumunun yerine geçmez.
 
+## Android
+
+Plan, kararlar ve durum: [docs/ANDROID_PLANI.md](docs/ANDROID_PLANI.md).
+Testler yalnız Android emülatöründe (gerçek telefona kurulmaz), yerel Firebase
+emülatörüyle ve yapay verilerle:
+
+```sh
+bash tools/android_test.sh emulator-5584
+```
+
+Sürüm APK'sı depo dışındaki imza anahtarı olmadan derlenmez. Sürüm derlemesinde
+`--no-pub` kullanmayın (eklenti kayıt dosyası yenilenmez).
+
 ## Canlı kurulum
 
 Yeni kaynaklar yalnız `bup-sanal-pos-izmir` projesindedir. Ücretli plan açılmaz.

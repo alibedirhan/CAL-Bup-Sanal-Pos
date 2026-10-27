@@ -61,7 +61,13 @@ class FirebaseYonetim implements YonetimPortu {
     User? yeni;
     try {
       if (emulator) {
-        await ikincil.useAuthEmulator('127.0.0.1', 9098);
+        await ikincil.useAuthEmulator(
+          const String.fromEnvironment(
+            'BUP_EMULATOR_HOST',
+            defaultValue: '127.0.0.1',
+          ),
+          9098,
+        );
       }
       if (kIsWeb) await ikincil.setPersistence(Persistence.NONE);
       yeni = (await ikincil.createUserWithEmailAndPassword(

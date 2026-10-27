@@ -9,7 +9,7 @@ class WebDosyaIndirici implements DosyaIndirici {
   @override
   bool get destekli => true;
   @override
-  void indir(String dosyaAdi, String icerik) {
+  Future<DosyaSonucu> indir(String dosyaAdi, String icerik) async {
     final blob = web.Blob(
       [icerik.toJS].toJS,
       web.BlobPropertyBag(type: 'text/csv;charset=utf-8'),
@@ -23,5 +23,6 @@ class WebDosyaIndirici implements DosyaIndirici {
     a.remove();
     // iOS indirme sorusunu gösterirken adres hâlâ geçerli olmalı.
     Timer(const Duration(minutes: 1), () => web.URL.revokeObjectURL(adres));
+    return DosyaSonucu.indirildi;
   }
 }

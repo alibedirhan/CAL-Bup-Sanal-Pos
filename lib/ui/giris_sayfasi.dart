@@ -11,11 +11,16 @@ class GirisSayfasi extends StatefulWidget {
     this.eposta,
     this.kilitli = false,
     this.giris,
+    this.biyometri,
   });
   final HesapPortu hesap;
   final String? eposta;
   final bool kilitli;
   final Future<void> Function(String parola)? giris;
+
+  /// Kilit ekranında parmak izi/yüz (yalnız kullanılabiliyorsa). Dönen metin
+  /// gösterilir. Ekran açılınca bir kez kendiliğinden sorar.
+  final Future<String?> Function()? biyometri;
   @override
   State<GirisSayfasi> createState() => _GirisSayfasiState();
 }
@@ -27,7 +32,51 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
   // _denendi: ilk girişten sonra uyarılar yazdıkça güncellenir/kalkar.
   bool _mesgul = false, _goster = false, _denendi = false;
   String? _mesaj;
-  bool _hata = false;
+  bool _hata = false, _biyometriSoruldu = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _biyometriyiSor();
+  }
+
+  @override
+  void didUpdateWidget(GirisSayfasi eski) {
+    super.didUpdateWidget(eski);
+    if (eski.biyometri == null) _biyometriyiSor();
+  }
+
+  /// Kilit ekranı açılınca bir kez; kişi kapatırsa düğmeyle yeniden sorar.
+  void _biyometriyiSor() {
+    if (widget.biyometri == null || _biyometriSoruldu) return;
+    _biyometriSoruldu = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _biyometriyleAc();
+    });
+  }
+
+  Future<void> _biyometriyleAc() async {
+    final f = widget.biyometri;
+    if (f == null || _mesgul) return;
+    setState(() {
+      _mesgul = true;
+      _mesaj = null;
+    });
+    String? mesaj;
+    try {
+      mesaj = await f();
+    } catch (e) {
+      mesaj = e is PosHatasi ? e.mesaj : 'Kilit açılamadı. Şifreni yaz.';
+    }
+    if (mounted) {
+      setState(() {
+        _mesgul = false;
+        _mesaj = mesaj;
+        _hata = mesaj != null;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _eposta.dispose();
@@ -123,6 +172,14 @@ class _GirisSayfasiState extends State<GirisSayfasi> {
                           : 'Yönetici tarafından açılan hesabınla giriş yap.',
                     ),
                     const SizedBox(height: 28),
+                    if (widget.biyometri != null) ...[
+                      FilledButton.tonalIcon(
+                        onPressed: _mesgul ? null : _biyometriyleAc,
+                        icon: const Icon(Icons.fingerprint_rounded),
+                        label: const Text('Parmak iziyle aç'),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     TextFormField(
                       controller: _eposta,
                       enabled: !_mesgul && !widget.kilitli,

@@ -49,7 +49,7 @@ class KartIslemleri {
         return KartKayitSonucu(
           sonuc,
           uyari:
-              'Kart kaydedildi. Cihazdaki son adım tamamlanamadı; kartı tekrar açarak yeniden dene. Tarayıcı verilerini silme.',
+              'Kart kaydedildi. Cihazdaki son adım tamamlanamadı; kartı tekrar açarak yeniden dene. Uygulama veya tarayıcı verilerini silme.',
         );
       }
     }
@@ -84,7 +84,7 @@ class KartIslemleri {
       await kasa.sil(uid, cariId, kartId);
       return null;
     } catch (_) {
-      return 'Kayıt sunucudan kaldırıldı; bu cihazdaki şifreli kopya temizlenemedi. Tarayıcının saklama iznini kontrol et.';
+      return 'Kayıt sunucudan kaldırıldı; bu cihazdaki şifreli kopya temizlenemedi. Uygulamayı yeniden açıp kartı tekrar silmeyi dene.';
     }
   }
 }

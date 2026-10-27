@@ -1,3 +1,10 @@
+**Android (27 Ekim 2026):** aynı sözleşme `lib/data/kasa/sifreli_kasa.dart`'ta
+platformdan bağımsız uygulanır; şifreleme Android Keystore'dadır (kullanıcı
+başına dışa aktarılamaz AES-256-GCM, StrongBox varsa, yalnız telefon kilidi
+açıkken; ekran kilidi olmayan telefonda kart saklanmaz). Kayıtlar yedeğe/cihaz
+aktarımına girmeyen klasörde, kullanıcı başına tek JSON belgesindedir. Ayrıntı ve
+doğrulama `docs/ANDROID_PLANI.md` "Durum". Aşağısı web kasasıdır.
+
 # Cihazdaki kart kasası — 0.4.0
 
 ## Kullanıcının açık kararları

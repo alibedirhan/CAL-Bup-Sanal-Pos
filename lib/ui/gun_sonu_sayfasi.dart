@@ -83,13 +83,22 @@ class _GunSonuSayfasiState extends State<GunSonuSayfasi> {
     unawaited(_yukle());
   }
 
-  void _aktar(GunSonu g) {
+  Future<void> _aktar(GunSonu g) async {
+    String? mesaj;
     try {
-      widget.servis.disaAktar(g);
+      // Tarayıcı indirmesini kendisi gösterir; vazgeçilince söylenecek bir şey yok.
+      if (await widget.servis.disaAktar(g) == DosyaSonucu.kaydedildi) {
+        mesaj = 'Gün sonu dosyası kaydedildi.';
+      }
     } on PosHatasi catch (e) {
+      mesaj = e.mesaj;
+    } catch (_) {
+      mesaj = 'Dosya kaydedilemedi. Yeniden dene.';
+    }
+    if (mesaj != null && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.mesaj)));
+      ).showSnackBar(SnackBar(content: Text(mesaj)));
     }
   }
 

@@ -151,7 +151,7 @@ Web sürümü her aşamada bütün mevcut testlerinden geçer; web davranışı 
 - Android lisansları, test emülatörü (AVD), imza anahtarı, `android/` güvenlik
   ayarları, CI'a Android derleme + birim testleri.
 
-**Aşama 1 — Android temel uygulama**
+**Aşama 1 — Android temel uygulama** — *tamamlandı 27 Ekim ("Durum")*
 - Giriş, kilitli açılış, cariler, kart özetleri, yönetim, gün sonu (paylaş ile
   CSV) Android'de; Keystore kart kasası (Kotlin + Dart bağdaştırıcı).
 - Testler: Dart birim; Kotlin kasa testleri emülatörde (anahtar dışa aktarılamaz,
@@ -229,3 +229,65 @@ cihazda). Android'de kartlar bir kez yeniden eklenir; web kartları yerinde kal�
 - Açık: imza anahtarının kullanıcı tarafından ikinci güvenli yere yedeklenmesi;
   Android API anahtarı kısıtlaması (§4.10). Android uygulaması henüz yalnız
   deneme kipinde ve platform özellikleri kapalı (Aşama 1).
+
+**Aşama 1 tamamlandı (27 Ekim 2026).**
+- Kart kasası: kurallar platformdan bağımsız `lib/data/kasa/sifreli_kasa.dart`
+  (web `kart_kasasi.js` ile aynı sözleşme: taslak → tamamla, yarım kalanın
+  sunucu referansıyla kurtarılması, ek doğrulama verisi aynı JSON, kayıt varken
+  anahtar yoksa yeni anahtar üretmeme, bozuk belgeyi ezmeme, işlemler sırayla).
+  Android: `KeystoreSifreleyici` + `DosyaKasaDeposu` (kullanıcı başına tek JSON,
+  `noBackupFilesDir/kart-kasasi`, geçici dosya + yeniden adlandırma). Kotlin
+  `KasaAnahtari.kt`: kullanıcı başına AES-256-GCM, StrongBox varsa, IV Keystore'da
+  rastgele, `setUnlockedDeviceRequired`; ekran kilidi yoksa kart saklanmaz/açılmaz
+  ("ekran_kilidi" mesajı). Ödünleşim: tek belge bozulursa o hesabın bütün kartları
+  açılmaz (atomik yazma nedeniyle beklenmez; sessiz sıfırlama yerine seçildi).
+- Biyometri: `domain/biyometri.dart` (7 gün, açılış sayacı, saat geri),
+  `application/biyometrik_kilit.dart` portu, `data/android/biyometrik_kilit.dart`,
+  Kotlin `BiyometriAnahtari.kt` (BIOMETRIC_STRONG, anahtar her kullanımda
+  biyometri ister, `setInvalidatedByBiometricEnrollment`; başarı CryptoObject ile
+  gerçek şifrelemeyle kanıtlanır). Biyometri yalnız ekran kilidini açar; ardından
+  hesap yetkisi sunucudan okunur. Kart kasası anahtarı biyometriye bağlı değildir
+  (kullanıcı kararı: ek kasa parolası yok).
+- Oturum: `PlatformBaglantilari.acilistaKilit` (Android): kalıcı Firebase oturumu
+  soğuk açılışta kilitli açılır; şifre doğrulanınca biyometri yenilenir, çıkış ve
+  hesap değişiminde silinir (`canli_app.dart`). Kilit ekranı biyometriyi bir kez
+  kendiliğinden sorar, vazgeçilirse düğme kalır, şifre her zaman seçenektir.
+- Gün sonu: `DosyaIndirici.indir` artık `Future<DosyaSonucu>`; Android "Kaydet"
+  penceresi (`ACTION_CREATE_DOCUMENT`), web indirmesi değişmedi.
+- Metinler: kart saklama notu Android'de "bu telefonda" (`ui/ortak.dart`
+  `androidUygulamasi`); kasa uyarıları platformdan bağımsız sözlerle.
+- Firebase emülatör adresi `BUP_EMULATOR_HOST` (Android emülatöründe 10.0.2.2);
+  `config/emulator_android.json` yalnız yapay değerler.
+- DenizPay girişi/yer imi/sonuç kutusu Android'de kapalı (Aşama 2).
+
+**Doğrulama (Aşama 1):** 151 Dart testi (yeni: `sifreli_kasa_test` 11,
+`biyometri_test` 3, `android_baglantilari_test` 8, `giris_biyometri_test` 3);
+kural testleri; web demo/kasa/doldur/hesap/tahsilat Chromium + WebKit;
+`bash tools/android_test.sh emulator-NNNN` (yalnız emülatör kabul eder):
+Kotlin Keystore 4 + kanal kodlama 1, telefon kilitliyken anahtar kullanılamaz,
+ekran kilidi yokken kart saklanmaz, uçtan uca (giriş, cari, kart, kasa dosyasında
+düz kart yok, kilit, yanlış/doğru şifre, kartın yeniden çözülmesi). Elle emülatör
+kabulü (uiautomator ile, gerçek Android biyometri penceresi, sanal parmak izi):
+soğuk açılışta kilit; şifreden sonra parmak iziyle açma; soğuk açılışta pencere,
+vazgeçip düğmeyle açma; **yeni parmak izi eklenince şifre istenmesi**; şifreden
+sonra yeniden etkinleşme; **telefon yeniden başlayınca yalnız şifre**. İmzalı
+sürüm APK emülatörde: `FLAG_SECURE` açık, APK'da test kodu yok.
+Testlerin bulduğu ve düzeltilen hatalar: (1) kanaldan gelen çözülmüş bayt dizisi
+salt okunur, bellekten silme denemesi kart okumayı bozuyordu (sahte şifreleyici
+artık salt okunur döner); (2) değer döndürmeyen Kotlin işi (`biyo.sil`) kanalda
+`Unit` taşıyamayıp uygulamayı çökertiyordu — tam yeni parmak izi senaryosunda
+(`GuvenlikKanali.kanalDegeri` + Kotlin testi); (3) ek doğrulama verisi testi
+açık alan denetimi yüzünden boş geçiyordu (kayıttaki açık alanlar özete uyacak
+şekilde kurcalanınca da reddi sınayan test eklendi). Hepsi bilerek bozulmuş
+kodla testin kırıldığı görülerek doğrulandı.
+**Bilinen ve kabul edilen:** `cloud_firestore` Android eklentisi transaction
+bittikten sonra "cancel … MissingPluginException" kaydı düşüyor; işlem başarılı,
+uygulama etkilenmez; uçtan uca testte yalnız bu tam ileti sayılıp geçilir.
+**Ortam notları:** bilgisayardaki emülatör 36.3.10, Android 16.1 (36.1)
+görüntüsüyle uyumsuz (SurfaceFlinger `hasReadColorBufferDma` çöküşü); testler
+eklenen Android 15 (API 35, Google APIs) görüntüsünde, `-gpu swiftshader_indirect`
+ve 4 GB bellekle koşar. Sürüm APK'sı `--no-pub` ile derlenmez (eklenti kayıt
+dosyası yenilenmez, test eklentisi sürüme sızmaya çalışır); yayın betiği bunu
+zorunlu kılacak (Aşama 3).
+**Gerçek telefonda denenmedi:** gerçek parmak izi/yüz, StrongBox, Android 9–14
+sürümleri, üretici farkları; kullanıcı kabulü Aşama 4'tedir.
