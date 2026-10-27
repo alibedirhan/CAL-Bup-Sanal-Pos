@@ -1,11 +1,13 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import '../application/denizpay_oturumu.dart';
+import '../application/pin_kapisi.dart';
 import '../application/portlar.dart';
 import '../application/tahsilat_servisi.dart';
 import '../data/android/biyometrik_kilit.dart';
 import '../data/android/denizpay_tarayicisi.dart';
 import '../data/android/dosya_indirici.dart';
+import '../data/android/kanal.dart';
 import '../data/android/kart_kasasi.dart';
 import '../data/android/sonuc_kutusu.dart';
 import '../data/android/uygulama_surumu.dart';
@@ -22,7 +24,10 @@ import 'platform_kapali.dart' show kapaliBaglantilar;
 /// Android dışında (Dart testleri, masaüstü) kapalı bağdaştırıcılar.
 final PlatformBaglantilari platformBaglantilari = Platform.isAndroid
     ? PlatformBaglantilari(
-        kartKasasi: SifreliKasa(const KeystoreSifreleyici(), DosyaKasaDeposu()),
+        kartKasasi: SifreliKasa(
+          KeystoreSifreleyici(pin: _pin),
+          DosyaKasaDeposu(),
+        ),
         girisKapisi: const KapaliPosGirisKapisi(),
         doldurma: const KapaliDoldurmaHazirligi(),
         acikGiris: const KapaliAcikGiris(),
@@ -32,8 +37,14 @@ final PlatformBaglantilari platformBaglantilari = Platform.isAndroid
         acilistaKilit: true,
         denizPayAcici: _denizPayAc,
         uygulamaSurumu: const AndroidUygulamaSurumu(),
+        pinKapisi: _pin,
       )
     : kapaliBaglantilar;
+
+/// Ekran kilidi olmayan telefonda kart kasasının PIN'i (`PinKasasi.kt`).
+final _pin = PinKapisi(
+  kapat: () => guvenlikKanali.invokeMethod<void>('pin.kapat'),
+);
 
 /// DenizPay ekranının bıraktığı ve tahsilat servisinin yazdığı sonuçların tek kutusu.
 final _kutu = AndroidSonucKutusu();

@@ -51,6 +51,9 @@
   Android testleri yalnız emülatörde: `bash tools/android_test.sh emulator-NNNN`
   (gerçek telefona kurmayın; kullanıcının telefonu USB'de bağlı olabilir).
   Kart kasası kuralları `lib/data/kasa/` (web JS ile aynı sözleşme).
+  Ekran kilidi olmayan cihazda (Zebra el terminali, kullanıcı kararı 27 Ekim)
+  kasa uygulama PIN'iyle korunur: `PinKasasi.kt`, `docs/ANDROID_KURULUM.md`.
+  10 yanlış PIN kasayı siler; bu sınırı gevşetmeyin.
   Android'de DenizPay uygulama içinde (WebView); sonuç kaynağı `uygulama`,
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.

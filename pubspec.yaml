@@ -1,7 +1,7 @@
 name: bup_sanal_pos
 description: "BUP Sanal POS — bağımsız, telefon odaklı cari ve kart çalışma alanı."
 publish_to: 'none'
-version: 0.11.0+19
+version: 0.11.1+20
 
 environment:
   sdk: ^3.11.0

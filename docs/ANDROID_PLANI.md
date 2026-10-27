@@ -391,6 +391,22 @@ yöntemi [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
   Sıradaki: Aşama 4 gerçek telefon kabulü.
   Ertelenen: yönetimde "kim hangi sürümde" (kural değişikliği ister).
 
+**Uygulama PIN'i (0.11.1, 27 Ekim 2026).** Kullanıcı kararı: ekran kilidi
+olmayan cihazlarda (şirketin Zebra el terminali; LED işlemleri burada) uygulama
+kendi PIN'ini sorsun. §6.2 "kilitsiz telefonda kart saklanmaz" kuralının
+yerine geçer; kilitli telefonda davranış aynı. Kotlin `PinKasasi.kt` (iki katman,
+kalıcı sayaç denemeden önce artar, 5'ten sonra bekleme, 10'da kasa silinir,
+anahtar yalnız bellekte 15 dk/kilit/çıkış), kanal `pin.durum/kur/dogrula/kapat`;
+`kasa.sifrele/coz` PIN kasası varsa ona gider. Dart: `domain/uygulama_pin.dart`
+(kolay PIN reddi), `application/pin_kapisi.dart` (açık ekran pencereyi gösterir),
+`data/android/kart_kasasi.dart` akışı, `ui/pin_penceresi.dart`. Ayrıntı
+`ANDROID_KURULUM.md`. Testler: Dart `uygulama_pin_test` 9 (kanal taklidiyle
+akış; testte bulunan hata: `pin.kur` boş yanıtı hata sayılıyordu, telefonda PIN
+hiç kurulamazdı — düzeltildi); Kotlin `PinKasasiTest` 3 (kilitsiz emülatörde:
+kurulum, oturum, ek veri bağı, sayaç, bekleme, 10'da silme); uçtan uca
+`android_pin_test` (kilitsiz emülatör: PIN belirleme, kolay PIN reddi, dosyalarda
+PIN/kart yok, kilit sonrası yanlış/doğru PIN). Zebra cihazda denenmedi.
+
 ## Aşama 3 — başlangıç kararları ve ayrıntılı iş listesi (27 Ekim 2026)
 
 Kullanıcı Aşama 3'e geçişi onayladı; inceleme yapıldı, **kod yazılmadı**. Kullanıcı

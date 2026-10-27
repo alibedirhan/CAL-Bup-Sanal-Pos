@@ -55,22 +55,31 @@ object KasaAnahtari {
     }
 
     private fun kilitVarMi(ctx: Context) {
-        val km = ctx.getSystemService(KeyguardManager::class.java)
-        if (km == null || !km.isDeviceSecure) throw GuvenlikHatasi("ekran_kilidi")
+        if (!kilitli(ctx)) throw GuvenlikHatasi("ekran_kilidi")
     }
+
+    /** Telefonda ekran kilidi (PIN/desen/şifre) var mı. */
+    fun kilitli(ctx: Context): Boolean =
+        ctx.getSystemService(KeyguardManager::class.java)?.isDeviceSecure == true
+
+    fun anahtarVar(takma: String): Boolean = keystore().containsAlias(takma)
 
     internal fun keystore(): KeyStore = KeyStore.getInstance(DEPO).apply { load(null) }
 
-    private fun anahtar(takma: String) = keystore().getKey(takma, null) as SecretKey?
+    internal fun anahtar(takma: String) = keystore().getKey(takma, null) as SecretKey?
 
-    private fun uret(takma: String): SecretKey {
+    /**
+     * [kilitGerekli]: anahtar yalnız telefonun kilidi açıkken kullanılır. Ekran
+     * kilidi olmayan telefonda (uygulama PIN'i, PinKasasi) bu koşul konamaz.
+     */
+    internal fun uret(takma: String, kilitGerekli: Boolean = true): SecretKey {
         fun ozellik(guvenlikYongasi: Boolean) =
             KeyGenParameterSpec.Builder(takma, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
                 .setRandomizedEncryptionRequired(true)
-                .setUnlockedDeviceRequired(true)
+                .setUnlockedDeviceRequired(kilitGerekli)
                 .setIsStrongBoxBacked(guvenlikYongasi)
                 .build()
         val uretici = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, DEPO)

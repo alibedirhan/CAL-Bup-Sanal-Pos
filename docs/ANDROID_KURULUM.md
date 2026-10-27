@@ -6,7 +6,8 @@ yönetici ve geliştirici içindir.
 
 ## Çalışan için (özet)
 
-1. Telefonda ekran kilidi (PIN/desen/şifre) olmalı; yoksa kart saklanmaz.
+1. Telefonda ekran kilidi (PIN/desen/şifre) önerilir. Yoksa (el terminali)
+   ilk kartta 6 haneli uygulama PIN'i belirlenir (0.11.1; aşağıda).
 2. İndirme sayfasından "Uygulamayı indir" → Chrome uyarısında "Yine de indir".
 3. "Aç" → "Bilinmeyen uygulamalar" izni (yalnız Chrome için) → "Yükle".
 4. Play Koruma uyarısı: "Ayrıntılar" → "Yine de yükle" (Play'siz dağıtım; normal).
@@ -14,6 +15,23 @@ yönetici ve geliştirici içindir.
 6. Kartlar bir kez yeniden eklenir (web kartları telefona taşınmaz, bilinçli).
 
 iPhone'a uygulama yoktur; iPhone web sürümünü kullanır.
+
+## Ekran kilidi olmayan telefon: uygulama PIN'i (0.11.1)
+
+Kullanıcı kararı (27 Ekim 2026; el terminali). Telefonda ekran kilidi varsa
+değişen bir şey yok: kartlar telefon kilidine bağlı Keystore anahtarıyla
+korunur. Kilit yoksa ilk kartta 6 haneli PIN belirlenir (111111, 123456 gibi
+kolay PIN'ler reddedilir). Kart iki katmanla şifrelenir: PIN'den türetilen
+anahtar (PBKDF2-HMAC-SHA256, 310 000 tur) ve telefona bağlı Keystore anahtarı.
+PIN telefonda saklanmaz. Kart açılırken/doldurulurken PIN sorulur; uygulama
+kilitlenene, çıkış yapılana veya 15 dk dolana kadar yeniden sorulmaz.
+5. yanlıştan sonra 30 sn'den başlayıp katlanan bekleme, **10. yanlışta bu
+telefondaki kart bilgileri silinir** (sunucudaki cariler/kart özetleri kalır,
+kartlar yeniden eklenir). PIN unutulursa da çözüm kartları yeniden eklemektir.
+Sınır: telefon kilidinden zayıftır (telefonun geri kalanı korumasızdır,
+parmak iziyle açma olmaz, uygulama her açılışta hesap şifresini ister).
+Kasa telefon kilidiyle kurulduktan sonra kilit kaldırılırsa kartlar açılmaz;
+uygulama bunu söyler (kilidi geri aç ya da kartları silip yeniden ekle).
 
 ## Güncelleme nasıl çalışır
 
@@ -25,6 +43,9 @@ iPhone'a uygulama yoktur; iPhone web sürümünü kullanır.
     kaldığı yerden devam eder.
   - sürüm < `son` → ana ekranda "Yeni sürüm hazır" notu.
   - belge okunamaz/bozuk/çevrimdışı → engellemez.
+- Kendiliğinden kurulmaz: Play Store dışı uygulamayı Android sessizce
+  güncellemeye izin vermez. Kişi bildirimdeki "İndir"e dokunur ve üstüne kurar.
+  (MDM'li cihazlarda — ör. Zebra StageNow/EMM — yönetici sessiz kurabilir.)
 - Güncelleme her zaman **üstüne kurulur**. Uygulamayı kaldırmak telefondaki
   kartları siler. Aynı imza anahtarı şarttır: anahtar kaybolursa telefonlar
   yeni sürümü kabul etmez (kaldırıp kurmak ve kartları yeniden eklemek gerekir).

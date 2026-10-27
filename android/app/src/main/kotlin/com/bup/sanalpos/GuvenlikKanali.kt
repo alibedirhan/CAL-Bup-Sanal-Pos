@@ -33,16 +33,31 @@ class GuvenlikKanali(
             "klasor" -> sonuc.success(ctx.noBackupFilesDir.absolutePath)
             // Sürüm denetimi (lib/domain/surum.dart): kurulu APK'nın versionCode'u.
             "surum" -> sonuc.success(BuildConfig.VERSION_CODE)
+            // Kasa uygulama PIN'iyle kurulmuşsa (ekran kilidi olmayan telefon) PinKasasi.
             "kasa.sifrele" -> arkada(sonuc) {
-                val (iv, veri) = KasaAnahtari.sifrele(
-                    ctx, cagri.metin("uid"), cagri.bayt("ekVeri"), cagri.bayt("duz"),
-                    cagri.argument<Boolean>("olustur") == true,
-                )
+                val uid = cagri.metin("uid")
+                val (iv, veri) = if (PinKasasi.kurulu(ctx, uid)) {
+                    PinKasasi.sifrele(uid, cagri.bayt("ekVeri"), cagri.bayt("duz"))
+                } else {
+                    KasaAnahtari.sifrele(
+                        ctx, uid, cagri.bayt("ekVeri"), cagri.bayt("duz"),
+                        cagri.argument<Boolean>("olustur") == true,
+                    )
+                }
                 mapOf("iv" to iv, "veri" to veri)
             }
             "kasa.coz" -> arkada(sonuc) {
-                KasaAnahtari.coz(ctx, cagri.metin("uid"), cagri.bayt("ekVeri"), cagri.bayt("iv"), cagri.bayt("veri"))
+                val uid = cagri.metin("uid")
+                if (PinKasasi.kurulu(ctx, uid)) {
+                    PinKasasi.coz(uid, cagri.bayt("ekVeri"), cagri.bayt("iv"), cagri.bayt("veri"))
+                } else {
+                    KasaAnahtari.coz(ctx, uid, cagri.bayt("ekVeri"), cagri.bayt("iv"), cagri.bayt("veri"))
+                }
             }
+            "pin.durum" -> arkada(sonuc) { PinKasasi.durum(ctx, cagri.metin("uid")) }
+            "pin.kur" -> arkada(sonuc) { PinKasasi.kur(ctx, cagri.metin("uid"), cagri.metin("pin")) }
+            "pin.dogrula" -> arkada(sonuc) { PinKasasi.dogrula(ctx, cagri.metin("uid"), cagri.metin("pin")) }
+            "pin.kapat" -> arkada(sonuc) { PinKasasi.kapat() }
             "biyo.durum" -> arkada(sonuc) {
                 mapOf("destekli" to BiyometriAnahtari.destekli(ctx), "acilis" to BiyometriAnahtari.acilis(ctx))
             }

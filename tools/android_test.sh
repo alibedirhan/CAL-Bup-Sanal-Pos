@@ -8,9 +8,10 @@
 # 1. Kotlin Keystore testleri (ekran kilidi PIN'i geçici olarak açılır ve
 #    telefon PIN'le açılır: anahtar yalnız kilit açıkken kullanılır)
 # 2. Telefon kilitliyken anahtarın kullanılamadığı
-# 3. Ekran kilidi yokken kart saklanmadığı (PIN kaldırılır)
+# 3. Ekran kilidi yokken: telefon kilidi anahtarı kullanılmaz, kasa uygulama
+#    PIN'iyle korunur (PIN kaldırılır)
 # 4. Uçtan uca uygulama testleri (giriş, cari, kart kasası, kilit, DenizPay,
-#    sürüm denetimi)
+#    sürüm denetimi; son olarak ekran kilidi kaldırılıp uygulama PIN'i)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 cihaz="${1:?Kullanım: bash tools/android_test.sh emulator-NNNN}"
@@ -76,7 +77,7 @@ kilidi_ac
 
 echo '== Ekran kilidi yokken'
 pin_kaldir
-calistir -e class com.bup.sanalpos.EkranKilidiYokTest
+calistir -e class com.bup.sanalpos.EkranKilidiYokTest,com.bup.sanalpos.PinKasasiTest
 
 echo '== Uçtan uca (Firebase emülatörü + taklit DenizPay)'
 pin_ayarla
@@ -92,4 +93,6 @@ firebase emulators:exec --only auth,firestore --project demo-bup-pos \
   "node tools/sunucu-test/android_hazirla.mjs \
    && $temizle && flutter test integration_test/android_akis_test.dart -d $cihaz --no-pub $tanim \
    && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim \
-   && $temizle && flutter test integration_test/android_surum_test.dart -d $cihaz --no-pub $tanim"
+   && $temizle && flutter test integration_test/android_surum_test.dart -d $cihaz --no-pub $tanim \
+   && ($adb_yolu shell locksettings clear --old $PIN >/dev/null) \
+   && $temizle && flutter test integration_test/android_pin_test.dart -d $cihaz --no-pub $tanim"

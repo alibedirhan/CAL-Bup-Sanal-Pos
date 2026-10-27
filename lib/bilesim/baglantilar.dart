@@ -1,5 +1,6 @@
 import '../application/biyometrik_kilit.dart';
 import '../application/kart_kasasi.dart';
+import '../application/pin_kapisi.dart';
 import '../application/portlar.dart';
 import '../application/surum_denetimi.dart';
 import '../application/tahsilat_servisi.dart';
@@ -20,6 +21,7 @@ class PlatformBaglantilari {
     this.acilistaKilit = false,
     this.denizPayAcici,
     this.uygulamaSurumu = const KapaliUygulamaSurumu(),
+    this.pinKapisi,
   });
   final KartKasasi kartKasasi;
   final PosGirisKapisi girisKapisi;
@@ -38,4 +40,8 @@ class PlatformBaglantilari {
 
   /// Kurulu uygulamanın sürümü (Android); web'de sürüm denetimi yoktur.
   final UygulamaSurumuPortu uygulamaSurumu;
+
+  /// Ekran kilidi olmayan Android telefonda kart kasasının uygulama PIN'i;
+  /// açık uygulama ekranı pencereyi gösterir. Web'de yok.
+  final PinKapisi? pinKapisi;
 }

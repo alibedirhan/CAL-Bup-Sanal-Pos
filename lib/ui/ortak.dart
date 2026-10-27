@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'tema.dart';
 
 /// Ekranda gösterilen sürüm; `pubspec.yaml` ile aynı olmalı (test denetler).
-const surumAdi = '0.11.0';
+const surumAdi = '0.11.1';
 
 /// Android uygulaması mı (web sürümü değil). Yalnız metinlerin kullanıcının
 /// diliyle söylenmesi için: "bu telefonda" / "bu tarayıcıda".

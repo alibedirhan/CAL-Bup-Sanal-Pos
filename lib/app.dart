@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'application/pin_kapisi.dart';
 import 'application/pos_servisi.dart';
 import 'data/demo_deposu.dart';
 import 'data/demo_islemleri.dart';
@@ -9,6 +10,7 @@ import 'ui/ana_ekran.dart';
 import 'ui/denizpay_ekrani.dart';
 import 'ui/karsilama.dart';
 import 'ui/oturum_modeli.dart';
+import 'ui/pin_penceresi.dart';
 import 'ui/tema.dart';
 import 'application/hesap_portu.dart';
 import 'domain/kullanici.dart';
@@ -84,6 +86,14 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
       _kutu = tahsilat.kutu.degisimler.listen((_) => _kutuyuIsle());
       unawaited(_kutuyuIsle());
     }
+    platformBaglantilari.pinKapisi?.baglan(_pinGoster);
+  }
+
+  /// Uygulama PIN'i (ekran kilidi olmayan Android telefon): pencere bu
+  /// uygulamanın en üstteki ekranında (DenizPay dahil) açılır.
+  Future<String?> _pinGoster(PinIstegi istek) async {
+    final c = _navigator.currentState?.overlay?.context;
+    return c == null || !c.mounted ? null : pinPenceresiAc(c, istek);
   }
 
   Future<void> _kutuyuIsle() async {
@@ -118,6 +128,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
     FocusManager.instance.primaryFocus?.unfocus();
     _navigator.currentState?.popUntil((route) => route.isFirst);
     _model.kilitle(bekleyenIsiSil: bekleyenIsiSil);
+    unawaited(platformBaglantilari.pinKapisi?.kapat());
     widget.canliKilit?.call();
   }
 
@@ -152,6 +163,10 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _zamanlayici?.cancel();
     _kutu?.cancel();
+    // Çıkış veya kilit (Android'de ekran kaldırılır): PIN yeniden sorulur.
+    platformBaglantilari.pinKapisi
+      ?..ayir(_pinGoster)
+      ..kapat();
     _model.dispose();
     super.dispose();
   }
