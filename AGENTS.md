@@ -55,8 +55,10 @@
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.
   Kartsız giriş (kart bilgileri elle) kullanıcı isteğidir, kaldırmayın.
-  **Devam noktası:** Aşama 3 kodu bitti (0.11.0+19), yayın kullanıcı onayı
-  bekliyor — `docs/ANDROID_PLANI.md` "Aşama 3 (a–d)", `docs/ANDROID_KURULUM.md`.
+  **Devam noktası:** Aşama 3 yayında (Android + web 0.11.0+19, 27 Ekim); APK
+  açık depo `alibedirhan/bup-sanal-pos-android` sürüm ekinde (Spark .apk yasak),
+  sayfa https://bup-sanal-pos-indir.web.app/ . Sıradaki Aşama 4 (gerçek telefon
+  kabulü) — `docs/ANDROID_PLANI.md`, `docs/ANDROID_KURULUM.md`.
   Android yayını yalnız `tools/android_yayin.sh --yayinla` (varsayılan deneme);
   web yalnız `tools/yayin.sh` (`hosting:web`). Her yayından önce kullanıcıya sorun.
   Ekrandaki sürüm `lib/ui/ortak.dart surumAdi` = pubspec (test zorlar).

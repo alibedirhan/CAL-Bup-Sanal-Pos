@@ -105,9 +105,15 @@ SHA-256: $sha"
 gelen=$(curl -fsSL "$apk_adresi" | sha256sum | cut -d' ' -f1)
 [ "$gelen" = "$sha" ] || { echo "Yayındaki APK özeti farklı: $gelen" >&2; exit 1; }
 firebase deploy --only hosting:indir --project "$PROJE"
-sayfa=$(curl -fsSL -H 'Cache-Control: no-cache' "$INDIRME")
-grep -q "$sha" <<<"$sayfa" && grep -qF "$apk_adresi" <<<"$sayfa" \
-  || { echo 'Yayındaki kurulum sayfası bu sürümü göstermiyor' >&2; exit 1; }
+# Yeni sürümün bütün sunuculara ulaşması birkaç saniye sürebilir (ilk yayında
+# sayfa ~1 dk 404 verdi): en çok 2 dakika beklenir.
+sayfa_tamam=false
+for _ in $(seq 1 24); do
+  sayfa=$(curl -fsSL -H 'Cache-Control: no-cache' "$INDIRME" || true)
+  if grep -q "$sha" <<<"$sayfa" && grep -qF "$apk_adresi" <<<"$sayfa"; then sayfa_tamam=true; break; fi
+  sleep 5
+done
+$sayfa_tamam || { echo 'Yayındaki kurulum sayfası bu sürümü göstermiyor' >&2; exit 1; }
 secenek=()
 $zorunlu && secenek=(--zorunlu)
 node tools/sunucu-test/android_surum_yaz.mjs "$kod" "$ad" "$sha" "$INDIRME" "${secenek[@]}"

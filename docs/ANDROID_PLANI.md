@@ -381,6 +381,14 @@ yöntemi [ANDROID_KURULUM.md](ANDROID_KURULUM.md).
   çalıştırılabilir dosyayı yasaklıyor (kurallar zaten yayındaydı; site sürümü
   yayınlanmadı, `ayarlar/android` yazılmadı). Kullanıcı kararı: APK ayrı açık
   depo `alibedirhan/bup-sanal-pos-android` sürüm eki; sayfa Hosting'de.
+  İkinci çalıştırma: kurallar, GitHub `v0.11.0` eki (indirilen SHA-256 doğru),
+  `hosting:indir` yayınlandı; sayfa doğrulaması yeni sitede ~1 dk 404 yüzünden
+  düştü (betiğe 2 dk bekleme eklendi), elle doğrulandı. Firebase Admin SDK özel
+  kimlikle Firestore'a bağlanmadığı için `android_surum_yaz.mjs` REST'e
+  (`cloudFetch`, updateTime/exists önkoşulu) çevrildi ve çalıştırıldı.
+  **Yayında:** 0.11.0 (19), SHA-256 `60c797c8d078cd734d82d6bf05a26976c0b501b87b1c921fed2e0257c4b0b78b`; `ayarlar/android`
+  enDusuk 19 / son 19 (geri okundu; oturumsuz okuma 403).
+  Sıradaki: Aşama 4 gerçek telefon kabulü.
   Ertelenen: yönetimde "kim hangi sürümde" (kural değişikliği ister).
 
 ## Aşama 3 — başlangıç kararları ve ayrıntılı iş listesi (27 Ekim 2026)
