@@ -1,12 +1,14 @@
-# 27 Ekim 2026 — 0.11.1: ekran kilidi olmayan cihazda uygulama PIN'i (yayında değil)
+# 27 Ekim 2026 — 0.11.1: ekran kilidi olmayan cihazda uygulama PIN'i (YAYINDA)
 
 Kullanıcı, şirketin Zebra el terminalinde (LED işlemleri burada; APK'yı kendisi
 kurdu) kart eklerken "ekran kilidi gerekli" uyarısı aldı ve uygulamanın kendi
 PIN'ini seçti (seçenekler soruldu; telefon kilidine yönlendirme önerildi,
 kullanıcı PIN'i seçti). Ayrıntı `ANDROID_PLANI.md` "Uygulama PIN'i",
-`ANDROID_KURULUM.md`. Sürüm 0.11.1+20, commit'li; **yayınlanmadı** (yayından
-önce sorulacak: `android_yayin.sh --yayinla`; web değişmedi, web yayını
-gerekmez). Testler: 216 Dart, Android takımı (Kotlin 12, uçtan uca 4) geçti.
+`ANDROID_KURULUM.md`. Sürüm 0.11.1+20. **Yayında** (kullanıcı onayıyla
+`android_yayin.sh --yayinla`, bütün doğrulamalar betikte geçti): GitHub `v0.11.1`,
+SHA-256 `4bc73489adb631928e88cc43dce1cf6e50e1c1c083df6141aa93e9d8e6fd4049`,
+`ayarlar/android` enDusuk 19 / son 20 (0.11.0 açılır, not gösterir). Web
+değişmedi; web 0.11.0'da kalır (ekrandaki sürüm etiketi web'de 0.11.0). Testler: 216 Dart, Android takımı (Kotlin 12, uçtan uca 4) geçti.
 Zebra terminal bilgisayarda USB'de görünmedi (lsusb'de yok: kablo/USB modu/USB
 hata ayıklama); cihazda hiçbir şey denenmedi. Kullanıcı sordu: güncelleme
 kendiliğinden kurulmaz (Play'siz Android izin vermez); bildirim + üstüne kurma.

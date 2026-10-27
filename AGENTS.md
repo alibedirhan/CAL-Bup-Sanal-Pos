@@ -58,7 +58,7 @@
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.
   Kartsız giriş (kart bilgileri elle) kullanıcı isteğidir, kaldırmayın.
-  **Devam noktası:** Aşama 3 yayında (Android + web 0.11.0+19, 27 Ekim); APK
+  **Devam noktası:** Aşama 3 yayında (Android 0.11.1+20, web 0.11.0, 27 Ekim); APK
   açık depo `alibedirhan/bup-sanal-pos-android` sürüm ekinde (Spark .apk yasak),
   sayfa https://bup-sanal-pos-indir.web.app/ . Sıradaki Aşama 4 (gerçek telefon
   kabulü) — `docs/ANDROID_PLANI.md`, `docs/ANDROID_KURULUM.md`.
