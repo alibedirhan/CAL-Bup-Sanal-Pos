@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'tema.dart';
 
 /// Ekranda gösterilen sürüm; `pubspec.yaml` ile aynı olmalı (test denetler).
-const surumAdi = '0.12.0';
+const surumAdi = '0.12.1';
 
 /// Karakter sayacı ("0/80") gösterilmez; sınır yine uygulanır. Küçük ekranda
 /// her kutunun altında kalabalık yapıyordu (arayüz gözden geçirmesi, 0.12.0).

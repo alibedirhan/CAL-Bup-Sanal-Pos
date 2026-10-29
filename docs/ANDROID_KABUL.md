@@ -40,10 +40,10 @@ Durum: ✅ geçti · ❌ sorun (not) · ⏳ yapılmadı · — uygulanamaz
 ## E. DenizPay ve tahsilat
 | # | Adım | Beklenen | Durum |
 |---|------|----------|-------|
-| E1 | Cari → "Ödeme sitesine geç" → onay | DenizPay uygulama içinde, carinin VKN'siyle giriş | ⏳ |
+| E1 | Cari → "Ödeme sitesine geç" → onay | DenizPay uygulama içinde, carinin VKN'siyle giriş | ✅ 29 Ekim (0.12.0) |
 | E2 | Kart sayfasında "Kartı doldur" (PIN istenebilir) | Numara/ad/SKT dolar; CVV ve tutar boş | ⏳ |
-| E3 | Gerçek ödeme (kullanıcının kararıyla, küçük tutar) | 3D Secure/SMS sayfası uygulama içinde açılır | ⏳ |
-| E4 | Sonuç ekranı → "Bu cariye kaydet" | Kayıt; "Gün sonu"nda görünür | ⏳ |
+| E3 | Gerçek ödeme (kullanıcının kararıyla, küçük tutar) | 3D Secure/SMS sayfası uygulama içinde açılır | ✅ 29 Ekim (0.12.0; başarılı çekim, sonuç ekranı doğru okundu) |
+| E4 | Sonuç ekranı açılınca kayıt kendiliğinden (0.12.1) | "Kaydedildi"; "Gün sonu"nda görünür | ❌ 29 Ekim 0.12.0: düğmeye basılmadı → kayıt yok, elle kaydedildi; düzeltme 0.12.1 (otomatik kayıt), yeniden ⏳ |
 | E5 | Aynı kaydı web sürümünde (yönetici) görmek | Gün sonunda aynı satır | ⏳ |
 | E6 | Kartsız cari ile DenizPay'e giriş | Giriş olur; kart bilgileri elle | ⏳ |
 

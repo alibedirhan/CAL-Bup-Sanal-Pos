@@ -2,9 +2,15 @@
 
 Kullanıcı Zebra TC15'te 0.12.0 ile ilk gerçek DenizPay çekimini yaptı (başarılı;
 uygulama içi DenizPay + sonuç okuma doğru). "Bu cariye kaydet"e basılmadığı için
-kayıt oluşmadı; kullanıcı cari profilinden elle kaydetti. Bulgular (0.12.1 adayı,
-henüz yapılmadı): Android'de başarılı sonuç kendiliğinden kaydedilsin (düğme yedek);
-gün sonu uyarısı Android'de "BUP Doldur" yerine "Bu cariye kaydet" demeli.
+kayıt oluşmadı; kullanıcı cari profilinden elle kaydetti.
+**0.12.1+22 (kullanıcı "4. maddeye başla"; YAYINDA DEĞİL):** uygulama içinde okunan
+sonuç (başarılı ve başarısız) düğme beklemeden bırakılır; aynı sonuç ekranı yeniden
+yüklenirse ikinci kez bırakılmaz (oturumda belge kimliğiyle), bırakma sürerken
+sayfa değişse de ekran takılmaz; "Bu cariye kaydet" yalnız bırakma başarısızsa
+(yeniden dene). Onay metinleri "kendiliğinden kaydedilir"; gün sonu uyarısı
+Android'de "Ödeme sonucunu elle kaydet" der (web metni aynı, `GunSonuSayfasi.uygulamaIci`).
+Testler: 237 Dart; Android takımı emülatörde geçti (uçtan uca DenizPay: düğmesiz
+"Kaydedildi"). Kabul E1/E3 ✅, E4 ❌→0.12.1. Yayın kullanıcı onayı bekliyor.
 Kullanıcıya kurumsal kullanım listesi sunuldu (sıra: imza yedeği, 0.12.1, kabul
 listesi, API anahtarı kısıtı, iData T1 Android 10 denemesi, kişiye özel hesaplar,
 mutabakat; yönetimle: PCI/banka, KVKK, müşteri talimatı, MDM, sahiplik).

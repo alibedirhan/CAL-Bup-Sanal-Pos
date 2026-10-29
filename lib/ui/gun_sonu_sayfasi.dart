@@ -16,9 +16,13 @@ class GunSonuSayfasi extends StatefulWidget {
     required this.servis,
     this.yonetici = false,
     this.deneme = false,
+    this.uygulamaIci = false,
   });
   final TahsilatServisi servis;
   final bool yonetici, deneme;
+
+  /// DenizPay uygulama içinde açılıyor (Android): yer imi yok.
+  final bool uygulamaIci;
   @override
   State<GunSonuSayfasi> createState() => _GunSonuSayfasiState();
 }
@@ -191,9 +195,13 @@ class _GunSonuSayfasiState extends State<GunSonuSayfasi> {
     const SizedBox(height: 12),
     for (final c in g.sonucBekleyenler) ...[
       DurumNotu(
-        '${c.cariAd}: son DenizPay girişinin sonucu kaydedilmedi. Ödeme '
-        'yapıldıysa sonuç ekranında “BUP Doldur”a dokun ya da cari '
-        'profilinden elle kaydet.',
+        widget.uygulamaIci
+            ? '${c.cariAd}: son DenizPay girişinin sonucu kaydedilmedi. Ödeme '
+                  'yapıldıysa cari profilinden “Ödeme sonucunu elle kaydet” '
+                  'ile kaydet.'
+            : '${c.cariAd}: son DenizPay girişinin sonucu kaydedilmedi. Ödeme '
+                  'yapıldıysa sonuç ekranında “BUP Doldur”a dokun ya da cari '
+                  'profilinden elle kaydet.',
         hata: true,
         simge: Icons.pending_actions_outlined,
       ),

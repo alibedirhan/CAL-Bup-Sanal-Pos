@@ -113,7 +113,7 @@ void main() {
   });
 
   testWidgets(
-    'Sonuç onayla kaydedilir; yanıt gösterilir; kapanınca oturum silinir',
+    'Sonuç düğmesiz kaydedilir; yanıt gösterilir; kapanınca oturum silinir',
     (tester) async {
       final o = await ac(tester);
       t.ozet = sonucSayfasi();
@@ -123,22 +123,13 @@ void main() {
         find.textContaining('Ödeme başarılı · 4.500,00 TL'),
         findsOneWidget,
       );
-      // Kaydetmeden kapatma onay ister; vazgeçince ekran kalır.
-      await tester.tap(find.byTooltip('DenizPay’i kapat'));
-      await tester.pumpAndSettle();
-      expect(
-        find.textContaining('Sonucu henüz bu cariye kaydetmedin'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Vazgeç'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Bu cariye kaydet: Örnek Market'));
-      await tester.pumpAndSettle();
       expect(b.birakilan.single['posSiparisNo'], 'VP10000000000000001');
+      expect(find.text('Kaydediliyor…'), findsOneWidget);
+      expect(find.textContaining('Bu cariye kaydet'), findsNothing);
       b.yanitla('VP10000000000000001', true, 'Kaydedildi: Örnek Market');
       await tester.pumpAndSettle();
       expect(find.text('Kaydedildi: Örnek Market'), findsOneWidget);
-      expect(find.textContaining('Bu cariye kaydet'), findsNothing);
+      // Kaydedilen sonuçta kapatma onay istemez.
       t.olaylar.clear();
       await tester.tap(find.byTooltip('DenizPay’i kapat'));
       await tester.pumpAndSettle();
@@ -146,6 +137,30 @@ void main() {
       expect(t.olaylar, ['temizle']);
     },
   );
+
+  testWidgets('Kayıt telefonda saklanamazsa düğme ve kapatma uyarısı çıkar', (
+    tester,
+  ) async {
+    final o = await ac(tester);
+    b.hata = StateError('depo');
+    t.ozet = sonucSayfasi();
+    await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
+    await tester.pump();
+    expect(find.textContaining('telefonda saklanamadı'), findsOneWidget);
+    await tester.tap(find.byTooltip('DenizPay’i kapat'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Sonuç bu cariye kaydedilemedi'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Vazgeç'));
+    await tester.pumpAndSettle();
+    b.hata = null;
+    await tester.tap(find.text('Bu cariye kaydet: Örnek Market'));
+    await tester.pumpAndSettle();
+    expect(b.birakilan, hasLength(1));
+    expect(find.textContaining('Bu cariye kaydet'), findsNothing);
+  });
 
   testWidgets('Başarısız sonuç açıklamasıyla gösterilir', (tester) async {
     final o = await ac(tester);

@@ -86,7 +86,8 @@ eşleştirmesi ve "hangi cari?" belirsizliği ortadan kalkar.
    engellenir. Kart doldurma ve sonuç okuma **yalnız DenizPay kökeninde** çalışır,
    banka sayfalarına hiçbir betik eklenmez.
 6. Sonuç ekranı (Onay/Hata Formu) yüklenince sayfa özeti okunur, Dart'ta çözülür,
-   ekranda gösterilir; kişi "Bu cariye kaydet"e basar → doğrudan sunucuya
+   ekranda gösterilir ve düğme beklemeden bu cariye bırakılır (0.12.1; 29 Ekim
+   kabulünde düğme unutuldu; "Bu cariye kaydet" yalnız bırakma başarısızsa) → sunucuya
    (`kaynak: uygulama`, `eslesme: uygulama_ici`). Sunucuda görülene kadar şifreli
    bekleyen kutuda kalır (internet yoksa sonra kendiliğinden). Kimlik kuralı
    (`-h`), çift kayıt ve "farklı tutar" denetimleri bugünküyle aynıdır.
@@ -308,7 +309,8 @@ sürümleri, üretici farkları; kullanıcı kabulü Aşama 4'tedir.
 - `application/denizpay_oturumu.dart`: `DenizPayOturumu` (açılışta önceki oturumu
   silip carinin bilgileriyle POST; banka sayfasında betik yok; kart yalnız
   "Kartı doldur"la, firma numarası görünür ve aynıysa, kart sunucuda yeniden
-  doğrulanınca; sonuç yalnız "Bu cariye kaydet"le; kapanınca oturum hemen
+  doğrulanınca; sonuç ekranı açılınca kendiliğinden, aynı sonuç oturumda bir
+  kez — 0.12.1; kapanınca oturum hemen
   silinir), `DenizPayTarayicisi` ve `SonucBirakmaPortu` portları.
   `PosServisi.uygulamaIciGirisHazirla` seçim süresini denetler, giriş kaydını
   hazırlar.

@@ -49,12 +49,16 @@ class SahteTarayici implements DenizPayTarayicisi {
 
 class SahteBirakma implements SonucBirakmaPortu {
   final birakilan = <Map<String, Object?>>[];
+
+  /// Doluysa bırakma bu hatayla başarısız olur (telefonda saklanamadı).
+  Object? hata;
   final _yanit =
       StreamController<({String kimlik, bool tamam, String mesaj})>.broadcast(
         sync: true,
       );
   @override
   Future<String> birak(Map<String, Object?> kayit) async {
+    if (hata case final h?) throw h;
     birakilan.add(kayit);
     return 'ok';
   }
@@ -232,16 +236,16 @@ void main() {
   );
 
   test(
-    'Sonuç ekranı okunur; onayla bu cariye v3 kayıt bırakılır, yanıt gösterilir',
+    'Sonuç ekranı okunur; düğme beklemeden bu cariye v3 kayıt bırakılır',
     () async {
       final o = oturum(secili: kart);
       t.ozet = sonucSayfasi();
       await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
       expect(o.durum.sayfa, DenizPaySayfasi.sonuc);
       expect(o.durum.sonuc!.tutarKurus, 450000);
-      expect(b.birakilan, isEmpty, reason: 'onaysız kaydedilmez');
-      await o.sonucuKaydet();
-      await o.sonucuKaydet(); // ikinci basış ikinci kayıt bırakmaz
+      expect(b.birakilan, hasLength(1), reason: 'kendiliğinden kaydedilir');
+      expect(o.durum.birakildi, isTrue);
+      await o.sonucuKaydet(); // düğmeye yine basılsa ikinci kayıt yok
       expect(b.birakilan, hasLength(1));
       final k = b.birakilan.single;
       expect(k['v'], 3);
@@ -273,7 +277,6 @@ void main() {
     };
     await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
     expect(o.durum.sonuc!.sonuc, IslemSonucu.hata);
-    await o.sonucuKaydet();
     expect(b.birakilan.single['kartSonDort'], '');
     b.yanitla('VP2000-h', false, 'bekliyor');
     expect(o.durum.kayitNotu, 'bekliyor');
@@ -292,6 +295,79 @@ void main() {
     await o.sonucuKaydet();
     expect(b.birakilan, isEmpty);
   });
+
+  test(
+    'Aynı sonuç ekranı yeniden yüklenirse ikinci kez bırakılmaz, not kalır',
+    () async {
+      final o = oturum(secili: kart);
+      t.ozet = sonucSayfasi();
+      await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
+      b.yanitla('VP10000000000000001', true, 'Kaydedildi: Örnek Market');
+      await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
+      expect(b.birakilan, hasLength(1));
+      expect(o.durum.birakildi, isTrue);
+      expect(o.durum.kayitNotu, 'Kaydedildi: Örnek Market');
+      expect(o.durum.kayitTamam, isTrue);
+      // Aynı numarada ama başarısız sonuç ayrı belgedir ("-h"): bırakılır.
+      t.ozet = {
+        ...sonucSayfasi(form: 'Hata Formu'),
+        'alanlar': [
+          ['Açıklama', 'Yetersiz bakiye'],
+          ['Pos Sipariş Numarası', 'VP10000000000000001'],
+          ['Tutar', '4.500,00'],
+        ],
+      };
+      await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
+      expect(b.birakilan, hasLength(2));
+      expect(b.birakilan.last['sonuc'], 'hata');
+    },
+  );
+
+  test(
+    'Bırakma başarısızsa düğme kalır, uyarı görünür; yeniden denenir',
+    () async {
+      final o = oturum(secili: kart);
+      b.hata = StateError('depo');
+      t.ozet = sonucSayfasi();
+      await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
+      expect(b.birakilan, isEmpty);
+      expect(o.durum.birakildi, isFalse);
+      expect(o.durum.kayitHata, isTrue);
+      expect(o.durum.kayitNotu, contains('elle kaydet'));
+      expect(o.durum.mesgul, isFalse);
+      b.hata = null;
+      await o.sonucuKaydet();
+      expect(b.birakilan, hasLength(1));
+      expect(o.durum.birakildi, isTrue);
+    },
+  );
+
+  test(
+    'Bırakma sürerken başka sayfa açılırsa sonuç yine bırakılır, ekran takılmaz',
+    () async {
+      final o = oturum(secili: kart);
+      final yavas = Completer<String>();
+      final ara = _YavasBirakma(b, yavas);
+      final o2 = DenizPayOturumu(
+        baglam: o.baglam,
+        tarayici: t,
+        adres: koken,
+        birakma: ara,
+        kartiOku: () async => null,
+      );
+      t.ozet = sonucSayfasi();
+      final ilk = o2.sayfaYuklendi(sayfa('/sonuc.aspx'));
+      await Future<void>.delayed(Duration.zero);
+      t.ozet = kartSayfasi();
+      await o2.sayfaYuklendi(sayfa('/odeme.aspx'));
+      yavas.complete('ok');
+      await ilk;
+      expect(ara.birakilan, hasLength(1));
+      expect(o2.durum.sayfa, DenizPaySayfasi.kart);
+      expect(o2.durum.mesgul, isFalse);
+      expect(o2.durum.kayitNotu, isNull);
+    },
+  );
 
   test('Üst üste yüklenen sayfalarda yalnız sonuncusu geçerli', () async {
     final o = oturum(secili: kart);
@@ -318,4 +394,20 @@ void main() {
     await o.sayfaYuklendi(sayfa('/sonuc.aspx'));
     expect(gorulen, isEmpty);
   });
+}
+
+class _YavasBirakma implements SonucBirakmaPortu {
+  _YavasBirakma(this._b, this._yanit);
+  final SahteBirakma _b;
+  final Completer<String> _yanit;
+  final birakilan = <Map<String, Object?>>[];
+  @override
+  Future<String> birak(Map<String, Object?> kayit) async {
+    birakilan.add(kayit);
+    return _yanit.future;
+  }
+
+  @override
+  Stream<({String kimlik, bool tamam, String mesaj})> get yanitlar =>
+      _b.yanitlar;
 }

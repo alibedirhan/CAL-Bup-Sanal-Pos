@@ -114,7 +114,8 @@ class DenizPayDurumu {
 /// temizlenir: açılan DenizPay hesabı yalnız bu carinindir. Kart yalnız kişi
 /// "Kartı doldur"a basınca, sayfadaki firma numarası carininkiyle aynıysa ve
 /// kart sunucuda yeniden doğrulanınca yazılır. CVV, tutar ve ödeme düğmesine
-/// dokunulmaz. Sonuç yalnız kişi onaylayınca bu cariye kaydedilir.
+/// dokunulmaz. Okunan sonuç beklemeden bu cariye kaydedilir: oturum bu cariyle
+/// açıldı ve sayfa başka firmanın değil. Düğme yalnız bırakma başarısızsa.
 class DenizPayOturumu {
   DenizPayOturumu({
     required this.baglam,
@@ -142,6 +143,10 @@ class DenizPayOturumu {
   int _sayfaNesli = 0;
   bool _kapali = false;
 
+  /// Bu oturumda bırakılan sonuçların son kayıt durumu (belge kimliğiyle):
+  /// aynı sonuç ekranı yeniden yüklenirse ikinci kez bırakılmaz.
+  final _birakilanlar = <String, DenizPayDurumu>{};
+
   DenizPayDurumu get durum => _durum;
   Stream<DenizPayDurumu> get durumlar => _durumlar.stream;
 
@@ -154,6 +159,10 @@ class DenizPayOturumu {
   void _yay(DenizPayDurumu d) {
     if (_kapali) return;
     _durum = d;
+    final s = d.sonuc;
+    if (s != null && d.birakildi) {
+      _birakilanlar[belgeKimligi(s.posSiparisNo, s.sonuc)] = d;
+    }
     _durumlar.add(d);
   }
 
@@ -219,20 +228,25 @@ class DenizPayOturumu {
       _yay(temel.kopya(sayfa: DenizPaySayfasi.denizPay, firmaUyumsuz: uyumsuz));
       return;
     }
+    final sonuc = uyumsuz ? null : r.sonuc;
+    final once = sonuc == null
+        ? null
+        : _birakilanlar[belgeKimligi(sonuc.posSiparisNo, sonuc.sonuc)];
     _yay(
       temel.kopya(
         sayfa: DenizPaySayfasi.sonuc,
         firmaUyumsuz: uyumsuz,
-        sonuc: () => uyumsuz ? null : r.sonuc,
+        sonuc: () => sonuc,
         sonucHatasi: () => uyumsuz
             ? 'Bu sonuç ekranı seçili cariye ait değil; kaydedilmedi. DenizPay’de kontrol edip yöneticine bildir.'
             : r.hata,
-        birakildi: false,
-        kayitNotu: () => null,
-        kayitTamam: false,
-        kayitHata: false,
+        birakildi: once != null,
+        kayitNotu: () => once?.kayitNotu,
+        kayitTamam: once?.kayitTamam ?? false,
+        kayitHata: once?.kayitHata ?? false,
       ),
     );
+    await sonucuKaydet();
   }
 
   /// "Kartı doldur": kart sunucuda doğrulanıp kasadan çözülür, yalnız açık
@@ -280,8 +294,9 @@ class DenizPayOturumu {
     _yay(_durum.kopya(mesgul: false, not: () => mesaj, notHata: hata));
   }
 
-  /// "Bu cariye kaydet": sonuç bu cihazın bekleyen kutusuna bırakılır; kutuyu
-  /// işleyen servis sunucuya yazar, internet yoksa sonra yeniden dener.
+  /// Sonuç bu cihazın bekleyen kutusuna bırakılır; kutuyu işleyen servis
+  /// sunucuya yazar, internet yoksa sonra yeniden dener. Sonuç ekranı
+  /// yüklenince kendiliğinden çağrılır; "Bu cariye kaydet" yeniden denemedir.
   Future<void> sonucuKaydet() async {
     final s = _durum.sonuc;
     if (s == null || _durum.birakildi || _durum.mesgul) return;
@@ -305,6 +320,11 @@ class DenizPayOturumu {
     };
     try {
       final r = await birakma.birak(kayit);
+      // Bu arada başka sayfa açıldıysa sonuç yine bırakıldı; ekran yeni sayfada.
+      if (!identical(_durum.sonuc, s)) {
+        _yay(_durum.kopya(mesgul: false));
+        return;
+      }
       _yay(
         _durum.kopya(
           mesgul: false,
@@ -314,6 +334,17 @@ class DenizPayOturumu {
         ),
       );
     } catch (_) {
+      if (!identical(_durum.sonuc, s)) {
+        _yay(
+          _durum.kopya(
+            mesgul: false,
+            not: () =>
+                'Son ödeme sonucu telefonda saklanamadı. Cari profilinden “Ödeme sonucunu elle kaydet” ile kaydet.',
+            notHata: true,
+          ),
+        );
+        return;
+      }
       _yay(
         _durum.kopya(
           mesgul: false,

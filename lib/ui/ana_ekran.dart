@@ -130,6 +130,7 @@ class _AnaEkranState extends State<AnaEkran> {
                           servis: m.servis.tahsilat!,
                           yonetici: widget.kullanici?.yonetici ?? false,
                           deneme: m.deneme,
+                          uygulamaIci: m.uygulamaIciDenizPay,
                         )
                       : BilgiSayfasi(
                           kilitle: widget.kilitle,

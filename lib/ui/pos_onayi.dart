@@ -122,9 +122,9 @@ class _PosOnayiState extends State<PosOnayi> {
                 m.deneme
                     ? 'Cari ve kart seçimi doğrulandı. Gerçek POS açılmadı; ödeme veya SMS işlemi yapılmadı.'
                     : m.uygulamaIciDenizPay && _sonuc?.kart != null
-                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince sonuç ekranında “Bu cariye kaydet”e bas. Burada ödeme yapılmadı.'
+                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince sonuç bu cariye kendiliğinden kaydedilir. Burada ödeme yapılmadı.'
                     : m.uygulamaIciDenizPay
-                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince sonuç ekranında “Bu cariye kaydet”e bas. Burada ödeme yapılmadı.'
+                    ? 'DenizPay bu uygulamanın içinde, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince sonuç bu cariye kendiliğinden kaydedilir. Burada ödeme yapılmadı.'
                     : m.otomatikGiris && _sonuc?.kart != null
                     ? 'DenizPay yeni sekmede bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “BUP Doldur” yer imine dokun; kart numarası, ad ve son kullanma yazılır. CVV ve tutarı sen gir. Burada ödeme yapılmadı.'
                     : m.otomatikGiris
@@ -222,9 +222,9 @@ class _PosOnayiState extends State<PosOnayi> {
               const SizedBox(height: 22),
               DurumNotu(
                 tekAdim && m.seciliKart != null
-                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince “Bu cariye kaydet”e bas.'
+                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart sayfasında “Kartı doldur”a bas; CVV ve tutarı sen yaz. Ödeme bitince sonuç kendiliğinden kaydedilir.'
                     : tekAdim
-                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince “Bu cariye kaydet”e bas.'
+                    ? 'DenizPay bu uygulamada, bu carinin VKN / TC ve POS şifresiyle açılır. Kart bilgilerini, CVV’yi ve tutarı DenizPay’de kendin yaz. Ödeme bitince sonuç kendiliğinden kaydedilir.'
                     : m.deneme
                     ? 'Bu adım yalnızca geçiş denemesidir. Gerçek POS bağlantısı sağlayıcı doğrulamasından sonra açılacak.'
                     : m.otomatikGiris

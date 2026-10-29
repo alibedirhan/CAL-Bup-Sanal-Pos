@@ -72,7 +72,7 @@ class _DenizPayEkraniState extends State<DenizPayEkrani> {
             title: const Text('DenizPay kapatılsın mı?'),
             content: Text(
               sonucBekliyor
-                  ? 'Sonucu henüz bu cariye kaydetmedin. Kapatırsan cari profilinden elle kaydetmen gerekir.'
+                  ? 'Sonuç bu cariye kaydedilemedi. Kapatırsan cari profilinden elle kaydetmen gerekir.'
                   : 'Ödeme sürüyorsa yarıda kalır. DenizPay oturumu bu telefondan silinir.',
             ),
             actions: [

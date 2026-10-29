@@ -5,6 +5,7 @@ import 'package:bup_sanal_pos/data/demo_deposu.dart';
 import 'package:bup_sanal_pos/data/demo_islemleri.dart';
 import 'package:bup_sanal_pos/domain/kart_bilgileri.dart';
 import 'package:bup_sanal_pos/domain/tahsilat.dart';
+import 'package:bup_sanal_pos/ui/gun_sonu_sayfasi.dart';
 import 'package:bup_sanal_pos/ui/oturum_modeli.dart';
 import 'package:bup_sanal_pos/domain/hata.dart';
 import 'package:bup_sanal_pos/ui/pos_onayi.dart';
@@ -93,6 +94,7 @@ void main() {
       ),
       findsOneWidget,
     );
+    expect(find.textContaining('kendiliğinden kaydedilir'), findsOneWidget);
     expect(find.text('DenizPay’i tarayıcıda aç (yedek)'), findsOneWidget);
     await girisYap(tester);
     final a = acilan.single;
@@ -106,6 +108,24 @@ void main() {
     final gun = await islemler.gun(Gun.ani(DateTime.now()));
     expect(gun.girisler.map((g) => g.id), contains(a.baglam.kayit.id));
     expect(find.text('onay'), findsOneWidget);
+    // Sonuç gelmediyse gün sonu Android'e uygun yolu söyler (yer imi yok).
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: GunSonuSayfasi(
+            servis: model.servis.tahsilat!,
+            uygulamaIci: model.uygulamaIciDenizPay,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('son DenizPay girişinin sonucu kaydedilmedi'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('“Ödeme sonucunu elle kaydet”'), findsOneWidget);
+    expect(find.textContaining('BUP Doldur'), findsNothing);
   });
 
   testWidgets('Kart seçilince bağlam kartı taşır ve kart sayfası anlatılır', (

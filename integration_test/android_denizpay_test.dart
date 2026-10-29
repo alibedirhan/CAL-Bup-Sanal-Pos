@@ -109,10 +109,10 @@ Future<void> _akis(WidgetTester t) async {
   // 3) Kişi ödemeyi gönderir → taklit 3D Secure (başka köken) → sonuç ekranı.
   await _js(t, 'document.getElementById("f").submit(); "ok"');
   await bekle(t, find.text('Banka sayfası: 10.0.2.2'));
-  await bekle(t, find.text('Bu cariye kaydet: Örnek Kartlı Cari'));
-  expect(find.textContaining('Ödeme başarılı · 4.500,00 TL'), findsOneWidget);
-  await bas(t, find.text('Bu cariye kaydet: Örnek Kartlı Cari'));
+  await bekle(t, find.textContaining('Ödeme başarılı · 4.500,00 TL'));
+  // Düğmeye basılmadan kaydedilir (29 Ekim kabulünde düğme unutuldu).
   await bekle(t, find.textContaining('Kaydedildi: Örnek Kartlı Cari'));
+  expect(find.textContaining('Bu cariye kaydet'), findsNothing);
   await bas(t, find.byTooltip('DenizPay’i kapat'));
   await bekle(t, find.text('Kart ekle'));
 
