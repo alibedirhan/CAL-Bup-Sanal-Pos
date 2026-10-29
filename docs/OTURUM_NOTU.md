@@ -1,3 +1,30 @@
+# 29 Ekim 2026 — Zebra'da ilk gerçek ödeme; imza anahtarı yedeklendi
+
+Kullanıcı Zebra TC15'te 0.12.0 ile ilk gerçek DenizPay çekimini yaptı (başarılı;
+uygulama içi DenizPay + sonuç okuma doğru). "Bu cariye kaydet"e basılmadığı için
+kayıt oluşmadı; kullanıcı cari profilinden elle kaydetti. Bulgular (0.12.1 adayı,
+henüz yapılmadı): Android'de başarılı sonuç kendiliğinden kaydedilsin (düğme yedek);
+gün sonu uyarısı Android'de "BUP Doldur" yerine "Bu cariye kaydet" demeli.
+Kullanıcıya kurumsal kullanım listesi sunuldu (sıra: imza yedeği, 0.12.1, kabul
+listesi, API anahtarı kısıtı, iData T1 Android 10 denemesi, kişiye özel hesaplar,
+mutabakat; yönetimle: PCI/banka, KVKK, müşteri talimatı, MDM, sahiplik).
+**İmza anahtarı yedeği alındı** (kullanıcı isteğiyle): harici SSD
+`/media/ali/Extreme SSD/BUP/sanal-pos-imza-anahtari/` (surum.jks + key.properties
++ OKU_BENI.txt); SHA-256 asıllarıyla aynı, yedek anahtar şifreyle açılıyor ve
+sertifika parmak izi yayındaki APK ile aynı (`0c7696fc…47db`). SSD şifresiz ext4.
+
+---
+
+# 28 Ekim 2026 — kullanıcının telefonuna 0.12.0 kuruldu
+
+Kullanıcının kendi telefonu (Redmi Note 8, Android 11, seri `1890816f`)
+bağlandı; kullanıcı isteğiyle yayındaki APK (SHA-256 `bb502fe7…`, eşleşti)
+`adb install` ile kuruldu: versionCode 21 / 0.12.0, açılış çökmesiz. MIUI'de ilk
+deneme `INSTALL_FAILED_USER_RESTRICTED` verdi; kullanıcı Geliştirici seçenekleri →
+"USB üzerinden yükle"yi açınca geçti. Telefonda önceden uygulama yoktu.
+
+---
+
 # 27–28 Ekim 2026 — 0.12.0: NFC/kamera ile kart okuma, arayüz sadeleştirme (YAYINDA)
 
 Kullanıcı istekleri: temassız (NFC) ve kamerayla kart okuma; Aşama 4'ü titizce
