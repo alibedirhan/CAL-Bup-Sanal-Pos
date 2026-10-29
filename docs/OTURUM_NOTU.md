@@ -15,6 +15,19 @@ Testler: 237 Dart; Android takımı emülatörde geçti (uçtan uca DenizPay: d�
 için doğrudan): GitHub `v0.12.1`, SHA-256 `95330cd855519206a5627ed96f9bfce499daa2138c231ff8b154035117445e1b`
 (indirilen dosyayla eşleşti), `ayarlar/android` enDusuk 19 / son 22. Web değişmedi.
 Sıradaki: Zebra'da 0.12.1 güncellemesi + E4 yeniden; kabul listesinin kalanı.
+**API anahtarı kısıtlaması (YAPILMADI, kullanıcı kararı "bugün bırakalım"):**
+Kullanıcı Cloud Console'da doğru projeye (`BUP Sanal POS`; önce yanlışlıkla
+`bup-siparis` açıktı — orada hiçbir şey değiştirilmedi) geçti, iki anahtar var
+(Browser `…dv7U`, Android `…i-lM`, ikisi de 25 API, uygulama kısıtı yok; yabancı
+referrer'dan 200 ölçüldü). **Web anahtarına "Websites" kısıtı KONMAMALI**: site
+`Referrer-Policy: no-referrer` (firebase.json + index/sonuc/doldur/kurulum meta)
+gönderiyor → Google referrer göremez, web girişi tamamen durur. Kaydetmeden
+iptal edildi. Önce web'de politika `strict-origin` gibi bir değere alınmalı
+(DenizPay formu zaten `rel=noreferrer`), test + yayın, sonra kısıt. Android
+anahtarı güvenle kısıtlanabilir (yerel firebase_auth/cloud_firestore paket +
+SHA-1 başlığı gönderir): `com.bup.sanalpos`, SHA-1
+`3B:19:62:A5:43:45:FE:2B:58:7A:17:25:07:6A:E7:B4:91:CC:89:3C` (keystore'dan
+doğrulandı). Sonra curl ile başlıksız 403 / başlıklı 200 doğrulanır.
 Kullanıcıya kurumsal kullanım listesi sunuldu (sıra: imza yedeği, 0.12.1, kabul
 listesi, API anahtarı kısıtı, iData T1 Android 10 denemesi, kişiye özel hesaplar,
 mutabakat; yönetimle: PCI/banka, KVKK, müşteri talimatı, MDM, sahiplik).
