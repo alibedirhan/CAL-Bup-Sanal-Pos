@@ -10,7 +10,11 @@ sayfa değişse de ekran takılmaz; "Bu cariye kaydet" yalnız bırakma başarı
 (yeniden dene). Onay metinleri "kendiliğinden kaydedilir"; gün sonu uyarısı
 Android'de "Ödeme sonucunu elle kaydet" der (web metni aynı, `GunSonuSayfasi.uygulamaIci`).
 Testler: 237 Dart; Android takımı emülatörde geçti (uçtan uca DenizPay: düğmesiz
-"Kaydedildi"). Kabul E1/E3 ✅, E4 ❌→0.12.1. Yayın kullanıcı onayı bekliyor.
+"Kaydedildi"). Kabul E1/E3 ✅, E4 ❌→0.12.1. **Yayında** (kullanıcı "yayınlayalım";
+`android_yayin.sh --yayinla`; deneme kipi otomatik izin denetiminde engellendiği
+için doğrudan): GitHub `v0.12.1`, SHA-256 `95330cd855519206a5627ed96f9bfce499daa2138c231ff8b154035117445e1b`
+(indirilen dosyayla eşleşti), `ayarlar/android` enDusuk 19 / son 22. Web değişmedi.
+Sıradaki: Zebra'da 0.12.1 güncellemesi + E4 yeniden; kabul listesinin kalanı.
 Kullanıcıya kurumsal kullanım listesi sunuldu (sıra: imza yedeği, 0.12.1, kabul
 listesi, API anahtarı kısıtı, iData T1 Android 10 denemesi, kişiye özel hesaplar,
 mutabakat; yönetimle: PCI/banka, KVKK, müşteri talimatı, MDM, sahiplik).

@@ -61,7 +61,7 @@
   eşleşme `uygulama_ici`; sonuç okuma `domain/denizpay.dart` web
   `sonuc_coz.js` ile aynı örneklerle sınanır — birini değiştirirseniz ikisini de.
   Kartsız giriş (kart bilgileri elle) kullanıcı isteğidir, kaldırmayın.
-  **Devam noktası:** Android 0.12.0+21 yayında (28 Ekim; NFC/kamera okuma, PIN,
+  **Devam noktası:** Android 0.12.1+22 yayında (29 Ekim; otomatik sonuç kaydı; 0.12.0: NFC/kamera, PIN,
   sade arayüz), web 0.11.0. Aşama 4: `docs/ANDROID_KABUL.md` (Zebra'da kullanıcı
   eliyle). CVV hiçbir biçimde saklanmaz (kullanıcı kararı 28 Ekim). APK
   açık depo `alibedirhan/bup-sanal-pos-android` sürüm ekinde (Spark .apk yasak),
