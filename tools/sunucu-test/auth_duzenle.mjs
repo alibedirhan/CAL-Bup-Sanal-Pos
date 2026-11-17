@@ -5,7 +5,9 @@ const once=await cloudFetch(url);
 assert.equal(once.status,200,'Önce Firebase konsolunda Authentication → Başlayın işlemini tamamlayın.');
 const r=await cloudFetch(`${url}?updateMask=signIn.email,signIn.anonymous,signIn.phoneNumber,passwordPolicyConfig,emailPrivacyConfig,authorizedDomains`,{
   method:'PATCH',body:{
-    signIn:{email:{enabled:true,passwordRequired:true},anonymous:{enabled:false},phoneNumber:{enabled:false}},
+    // Anonim giriş yalnız rota terminal kimliği içindir (docs/ROTA_MIMARI.md M2, 17 Kasım 2026 Ali'nin
+    // onayıyla açıldı). Anonim hesabın Sanal POS verisine erişimi yoktur (kurallar profil ister).
+    signIn:{email:{enabled:true,passwordRequired:true},anonymous:{enabled:true},phoneNumber:{enabled:false}},
     passwordPolicyConfig:{passwordPolicyEnforcementState:'ENFORCE',forceUpgradeOnSignin:true,
       passwordPolicyVersions:[{customStrengthOptions:{minPasswordLength:6,maxPasswordLength:128}}]},
     emailPrivacyConfig:{enableImprovedEmailPrivacy:true},

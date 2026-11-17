@@ -12,6 +12,9 @@ const auth=await cloudFetch(`https://identitytoolkit.googleapis.com/admin/v2/pro
 assert.equal(auth.status,200,'Firebase Authentication ilk kurulumu gerekiyor: konsolda Başlayın → E-posta/Şifre.');
 assert.equal(auth.data.signIn?.email?.enabled,true,'E-posta/Şifre yöntemi etkin değil.');
 assert.equal(auth.data.signIn?.email?.passwordRequired,true,'E-posta ve şifre yöntemi kullanılmalı.');
+// Rota terminalleri anonim kimlikle yazar (docs/ROTA_MIMARI.md M2); kapanırsa takip sessizce durur.
+assert.equal(auth.data.signIn?.anonymous?.enabled,true,'Anonim giriş (rota terminalleri) kapalı.');
+assert.notEqual(auth.data.signIn?.phoneNumber?.enabled,true,'Telefonla giriş açık olmamalı.');
 assert.equal(auth.data.emailPrivacyConfig?.enableImprovedEmailPrivacy,true,'Hesap gizliliği etkin olmalı.');
 assert.equal(auth.data.passwordPolicyConfig?.passwordPolicyEnforcementState,'ENFORCE','Sunucu şifre politikası uygulanmalı.');
 assert.equal(auth.data.passwordPolicyConfig?.passwordPolicyVersions?.[0]?.customStrengthOptions?.minPasswordLength,6);
