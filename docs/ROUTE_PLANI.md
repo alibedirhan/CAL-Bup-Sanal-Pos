@@ -48,6 +48,10 @@ kullanılıyor; GPS bilgisi bu uygulama içinden toplanır. Harita **CAL_bup**
 | K27 | **Bölge dışı alarmı:** terminal İzmir, Aydın ve Manisa dışına çıkınca merkeze **basit, bildirim tarzında bir alarm** (17 Kasım 2026). Plasiyer görmez (K24). |
 | K28 | **Alarm önce yalnız CAL_bup açıkken:** sayfa içi uyarı + tarayıcı bildirimi; CAL_bup kapalıyken telefona bildirim sonra (17 Kasım 2026, Ali önerileri kabul etti). |
 | K29 | **Terminal kaydı merkezde onaylanır** (K17'nin inceltmesi, 17 Kasım 2026; Ali "sana güveniyorum" dedi): terminal kendiliğinden bir başvuru bırakır, Ali CAL_bup'ta onaylar ve aracı orada seçer. Terminal ekranında araç listesi yok. Rota yetkisi yalnız Google girişli hesaplarda; terminaldeki Ali oturumu rota verisine dokunamaz. Teknik ayrıntı `ROTA_MIMARI.md`. |
+| K30 | **Rota sekmesini önce yalnız Ali görür;** yönetimin sırası gelince onlara yalnız haritayı gösteren ayrı sayfa (CAL_bup'ın diğer araçları açılmaz) (17 Kasım 2026, `ROTA_ASAMA2_ANALIZ.md` §3.2 yol A→C). |
+| K31 | **Gönderim 2 dk'da bir, ücretsiz plan** (noktalar yine 15 sn'de bir alınır; canlı gecikme en çok 2 dk; billing kapalı kalır). Merkezden ayarlanabilir → terminal 0.13.1 (§3.6). |
+| K32 | **İlk sürümde yalnız sokak haritası** (OpenStreetMap); uydu sonra, lisansı netleşince (§3.4). |
+| K33 | **Canlı ayarlar onaylandı, gerektiğinde yapılacak:** Sanal POS projesinde Google girişi, `cal-bup-ali.web.app` yetkili alan, Ali'nin Gmail'i ilk rota yöneticisi. CAL_bup yayını ayrıca sorulur. |
 | K8 | Harita **CAL_bup** içinde olacak. Not: Sanal POS bugüne kadar CAL_bup'tan bağımsızdı; bu özellik ikisi arasında **yalnız okuma** yönünde bir bağ kurar (CAL_bup, Sanal POS'un konum kayıtlarını okur ve takip ayarını yazar). |
 
 ## 3. Genel yapı

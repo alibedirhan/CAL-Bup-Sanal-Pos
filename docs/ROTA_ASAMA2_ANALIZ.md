@@ -202,6 +202,9 @@ projesindeki Google sağlayıcısı ve yetkili alan ayarları (Ali onayı) yapı
 
 ## 4. Ali'nin kararları
 
+> **17 Kasım 2026 gece cevaplandı:** 1 → önce yalnız Ali (K30), 2 → 2 dk ücretsiz (K31), 3 → yalnız sokak (K32),
+> 4 → evet, gerektiğinde (K33). 5 (araç bilgileri) sonra.
+
 1. **Yönetim erişimi:** önce yalnız Ali (A), sonra yönetime ayrı Rota sayfası (C)? (§3.2)
 2. **Gönderim aralığı:** ücretsiz kalıp en çok 2 dk gecikme (A) mi, yoksa ücretli plan (C) mı? (§3.6)
 3. **Uydu görüntüsü:** ilk sürümde yalnız sokak haritası (ücretsiz, OpenStreetMap) mı, yoksa ücretli bir uydu sağlayıcısı mı? Ücretsiz uydu seçeneklerinin şirket kullanımı ya kapalı ya belirsiz. (§3.4)
