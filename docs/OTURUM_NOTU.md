@@ -1,3 +1,28 @@
+# 17 Kasım 2026 — Route: Aşama 0 cevapları (kod yok)
+
+Ali "yalnız rotaya odaklan" dedi. Cevaplar `ROUTE_PLANI.md`'ye işlendi: depo adresi Bornova (K25),
+haritayı Ali + yönetim ekibi görür (K26), bölge İzmir + Aydın + **Manisa** (K6), bu üçünün dışına
+çıkınca merkeze basit alarm (K27). Araç takip bilgilerini Ali sonra gönderecek. Taslağın harita
+sınırı Manisa'yı kapsayacak şekilde genişletildi. Açık: §8 soru 2, 3b, 5b, 5c, 5d (depoya
+bırakanlar), 6, 8b, 9.
+
+---
+
+# 16 Kasım 2026 — Route çizgisi: plan + görsel taslak (kod yok)
+
+Yöneticinin isteği: plasiyerlerin rotası, anlık konumu, duraklar, km/hız/yakıt; harita CAL_bup'ta
+**"Rota" sekmesi**, canlı. Bütün kararlar (K1–K24), açık sorular ve aşamalar `docs/ROUTE_PLANI.md`.
+Özet: KVKK şirket + plasiyer imzalı; 6 plasiyer / 6 Zebra TC15; plasiyer **hiçbir şey görmez**
+(düğme yok, uyarılar yalnız merkezde; Android bildirimi izin kapatılarak gizlenir); merkezden
+aç/kapa; 24 saat arka plan GPS; kurulumda araç seçimi ("Araç 01 – Ad SOYAD"); depo bölgesi; 3 ay
+saklama; İzmir + Aydın sınırı; araç takip sistemi pahalı → terminalle değiştirme düşünülüyor, önce
+paralel karşılaştırma önerildi. Terminaller Sanal POS'a şimdilik Ali'nin hesabıyla giriyor (K19).
+**Görsel taslak:** `docs/route-taslak/rota-taslak.html` (uydurma verili, Leaflet + OSM; tarayıcıda açılır) — Ali beğendi, Rota sekmesi bu görünüme göre yapılacak.
+Ali: "geri döndüğümde başlarız" — sıradaki iş Aşama 0 (§8 açık sorular), sonra Aşama 1. Koda
+geçmeden önce sor.
+
+---
+
 # 29 Ekim 2026 — Zebra'da ilk gerçek ödeme; imza anahtarı yedeklendi
 
 Kullanıcı Zebra TC15'te 0.12.0 ile ilk gerçek DenizPay çekimini yaptı (başarılı;

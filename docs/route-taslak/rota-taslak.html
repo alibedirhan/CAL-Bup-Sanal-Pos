@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rota Taslağı</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#1d2330; --muted:#667085; --line:#e3e6ea;
+  --accent:#1f4e8c; --warn:#b54708; --warn-bg:#fff4e5; --bad:#b42318; --bad-bg:#fdecea;
+  --info:#175cd3; --info-bg:#eaf2ff; --ok:#067647; --ok-bg:#e7f6ec;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151b; --panel:#1b2029; --ink:#e7eaf0; --muted:#98a2b3; --line:#2c3340;
+    --accent:#7fb0ff; --warn:#fdb022; --warn-bg:#3a2a10; --bad:#f97066; --bad-bg:#3b1a18;
+    --info:#84adff; --info-bg:#172843; --ok:#47cd89; --ok-bg:#12301f;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:0 16px;height:52px;background:var(--panel);border-bottom:1px solid var(--line)}
+header .logo{font-weight:700;letter-spacing:.2px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav a{padding:8px 12px;border-radius:8px;color:var(--muted);text-decoration:none;white-space:nowrap}
+nav a.aktif{background:var(--accent);color:#fff}
+header .ornek{margin-left:auto;font-size:12px;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+.duzen{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px)}
+aside{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:14px 16px 24px}
+main{position:relative;min-height:420px}
+#harita{position:absolute;inset:0}
+
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 8px}
+h2:first-child{margin-top:4px}
+.ust{display:flex;gap:8px;align-items:center}
+.ust input[type=date]{flex:1;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+.canli{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-weight:600;font-size:12px}
+.canli i{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:nabiz 1.4s infinite}
+@keyframes nabiz{50%{opacity:.25}}
+
+.plasiyerler{display:flex;flex-direction:column;gap:6px}
+.pl{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel);text-align:left;color:inherit;font:inherit;width:100%}
+.pl:hover{border-color:var(--muted)}
+.pl.secili{outline:2px solid var(--renk);border-color:transparent}
+.pl .nokta{width:14px;height:14px;border-radius:50%;background:var(--renk)}
+.pl b{display:block;font-weight:600}
+.pl small{color:var(--muted)}
+.durum{font-size:11px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.d-hareket{background:var(--info-bg);color:var(--info)}
+.d-musteri{background:var(--ok-bg);color:var(--ok)}
+.d-depo{background:var(--line);color:var(--muted)}
+.d-yok{background:var(--bad-bg);color:var(--bad)}
+.tumu{border:1px dashed var(--line);background:none;color:var(--muted);padding:7px;border-radius:10px;cursor:pointer;font:inherit}
+
+.kartlar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kart{border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+.kart span{display:block;font-size:12px;color:var(--muted)}
+.kart b{font-size:19px;font-variant-numeric:tabular-nums}
+.kart.genis{grid-column:1/-1}
+.not{font-size:12px;color:var(--muted);margin:6px 0 0}
+
+.duraklar{list-style:none;margin:0;padding:0}
+.duraklar li{display:grid;grid-template-columns:26px 1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.duraklar li:hover{color:var(--accent)}
+.duraklar .no{width:22px;height:22px;border-radius:50%;background:var(--renk,#888);color:#fff;font-size:11px;display:grid;place-items:center;font-weight:700}
+.duraklar .sure{color:var(--muted);font-variant-numeric:tabular-nums}
+.duraklar .yabanci .no{background:var(--bad)}
+
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:12px}
+
+.uyarilar{position:absolute;z-index:500;top:12px;left:56px;right:12px;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.uyari{flex:none;display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--panel);border:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.12);cursor:pointer;color:var(--ink);font:inherit;font-size:13px}
+.uyari .seviye{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px}
+.s-kirmizi{background:var(--bad-bg);color:var(--bad)}
+.s-turuncu{background:var(--warn-bg);color:var(--warn)}
+.s-mavi{background:var(--info-bg);color:var(--info)}
+.uyari time{color:var(--muted);font-variant-numeric:tabular-nums}
+
+.zaman{position:absolute;z-index:500;left:12px;right:12px;bottom:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.zaman input{flex:1;accent-color:var(--accent)}
+.zaman b{font-variant-numeric:tabular-nums;min-width:48px}
+.zaman button,.katman button{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:8px;cursor:pointer;font:inherit}
+.katman{position:absolute;z-index:500;right:12px;top:62px;display:flex;flex-direction:column;gap:6px}
+.katman button.aktif{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.etiket{background:none;border:none}
+.etiket div{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);color:#fff;font:700 11px system-ui;display:grid;place-items:center}
+.depo-ikon div{width:30px;height:30px;border-radius:8px;background:#344054;color:#fff;border:2px solid #fff;font:700 10px system-ui;display:grid;place-items:center;box-shadow:0 1px 6px rgba(0,0,0,.4)}
+.leaflet-container{font:inherit}
+
+@media (max-width:860px){
+  .duzen{grid-template-columns:1fr;height:auto}
+  main{height:70vh;order:-1}
+  aside{border-right:none}
+  .uyarilar{left:12px;top:60px}
+  .katman{top:auto;bottom:80px}
+  header .ornek{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">CAL bup</span>
+  <nav>
+    <a href="#">Depo kontrol</a><a href="#">Bakiye</a><a href="#">Envanter</a><a href="#">Notlar</a><a href="#" class="aktif">Rota</a>
+  </nav>
+  <span class="ornek">TASLAK · örnek veriler</span>
+</header>
+
+<div class="duzen">
+  <aside>
+    <h2>Gün</h2>
+    <div class="ust">
+      <input type="date" value="2026-11-16" aria-label="Gün">
+      <span class="canli"><i></i>Canlı · 14:20</span>
+    </div>
+
+    <h2>Plasiyerler</h2>
+    <div class="plasiyerler" id="plasiyerler"></div>
+    <button class="tumu" id="tumu" style="margin-top:6px;width:100%">Tümünü göster</button>
+
+    <div id="ozet"></div>
+  </aside>
+
+  <main>
+    <div id="harita"></div>
+    <div class="uyarilar" id="uyarilar"></div>
+    <div class="katman">
+      <button id="kSokak" class="aktif">Sokak</button>
+      <button id="kUydu">Uydu</button>
+    </div>
+    <div class="zaman">
+      <button id="oynat" title="Rotayı oynat">▶</button>
+      <input type="range" id="kaydirici" min="300" max="860" value="860" aria-label="Saat">
+      <b id="saat">14:20</b>
+      <button id="simdi">Şimdi</button>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ---- TASLAK: bütün veriler uydurmadır ---- */
+const SIMDI = 14*60+20, YAKIT_FIYATI = 46.90;
+const DEPO = [38.4300, 27.2300];
+
+const ARACLAR = [
+  {no:'01', fazla:40, ad:'Plasiyer 1', renk:'#d62828', tuk:10.5, bas:7*60+50, donus:false, duraklar:[
+    [38.4625,27.2155,'Bornova Market',22],[38.4700,27.1650,'Bayraklı Şarküteri',18],
+    [38.4615,27.1180,'Karşıyaka Kasap',30],[38.4710,27.0950,'Mavişehir Market',15],
+    [38.4560,27.1050,'Bostanlı Restoran',25],[38.4800,27.1350,'Örnekköy Market',20]]},
+  {no:'02', fazla:25, ad:'Plasiyer 2', renk:'#1f6feb', tuk:9.8, bas:8*60, donus:false, duraklar:[
+    [38.3880,27.1750,'Buca Market',20],[38.3720,27.1150,'Karabağlar Kasap',25],
+    [38.3480,27.1240,'Uzundere Market',15],[38.3200,27.1330,'Gaziemir Restoran',20],
+    [38.3350,27.1500,null,34],[38.3050,27.1500,'Sarnıç Market',20]]},
+  {no:'03', fazla:15, ad:'Plasiyer 3', renk:'#2a9d3f', tuk:11.2, bas:8*60+10, donus:false, bosluk:[642,660], duraklar:[
+    [38.4950,27.0700,'Çiğli Market',20],[38.5300,27.0550,'Harmandalı Kasap',15],
+    [38.6070,27.0690,'Menemen Toptan',35],[38.5850,27.0400,'Seyrek Market',20],[38.6300,27.0100,'Emiralem Bakkal',25]]},
+  {no:'04', fazla:8, ad:'Plasiyer 4', renk:'#f08c00', tuk:10.0, bas:7*60+40, donus:false, duraklar:[
+    [38.4370,27.1430,'Alsancak Restoran',25],[38.4189,27.1287,'Konak Şarküteri',20],
+    [38.3890,27.0500,'Balçova Market',18],[38.3950,26.9990,'Narlıdere Kasap',22],[38.3230,26.7650,'Urla Market',30]]},
+  {no:'05', fazla:60, ad:'Plasiyer 5', renk:'#8e44ad', tuk:12.0, bas:5*60, donus:false, uzun:true, duraklar:[
+    [38.1550,27.3620,'Torbalı Toptan',30],[37.9510,27.3680,'Selçuk Market',25],
+    [37.8580,27.2610,'Kuşadası Otel',40],[37.8450,27.2900,'Kuşadası Market',20],[37.8400,27.4200,'Söke Yolu Market',25]]},
+  {no:'06', fazla:0, ad:'Plasiyer 6', renk:'#0b9aa8', tuk:9.5, bas:7*60+30, donus:true, duraklar:[
+    [38.4270,27.4170,'Kemalpaşa Market',25],[38.4500,27.3600,'Ulucak Kasap',20],[38.4400,27.3000,'Ansızca Market',15]]},
+];
+
+const UYARILAR = [
+  {arac:'03', saat:'10:42', seviye:'kirmizi', ad:'Veri kesildi', metin:'18 dk konum gelmedi (Menemen)', t:642},
+  {arac:'05', saat:'11:55', seviye:'mavi', ad:'Bölge', metin:'Aydın iline geçti', t:715},
+  {arac:'02', saat:'13:10', seviye:'turuncu', ad:'Beklenmedik duruş', metin:'34 dk müşteri dışı nokta', t:790},
+  {arac:'04', saat:'13:48', seviye:'kirmizi', ad:'Hız aşımı', metin:'112 km/s (Urla yolu)', t:828},
+  {arac:'06', saat:'12:41', seviye:'mavi', ad:'Depoda', metin:'Terminal depoya bırakıldı', t:761},
+];
+
+/* ---- yardımcılar ---- */
+const km = (a,b)=>{const R=6371,r=Math.PI/180,dl=(b[0]-a[0])*r,dg=(b[1]-a[1])*r;
+  const x=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x));};
+const saat = m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
+const sure = m=>{m=Math.round(m);return m>=60?Math.floor(m/60)+' sa '+(m%60)+' dk':m+' dk';};
+let tohum=7; const rnd=()=>{tohum=(tohum*9301+49297)%233280;return tohum/233280;};
+
+/* ---- rota üretimi (uydurma GPS izi) ---- */
+function uret(a){
+  const iz=[], durak=[]; let cur=DEPO.slice(), t=a.bas;
+  // örnek gün 14:20'den sonra bitsin diye durak süreleri ölçeklenir (iş saatini doldurur)
+  let surus=0, top=0, onceki=DEPO;
+  a.duraklar.forEach(d=>{const k=km(onceki,[d[0],d[1]]);surus+=k/(k>15?72:31)*60*1.15;top+=d[3];onceki=[d[0],d[1]];});
+  const carpan=a.donus?1:Math.max(1,(SIMDI+a.fazla-a.bas-surus)/top);
+  const hedefler=a.duraklar.map(d=>({p:[d[0],d[1]],ad:d[2],dk:Math.round(d[3]*carpan)}));
+  if(a.donus) hedefler.push({p:DEPO,ad:'__depo',dk:0});
+  iz.push({p:cur.slice(),t,v:0});
+  for(const h of hedefler){
+    const d=km(cur,h.p), hiz=d>15?72:31, dk=d/hiz*60, n=Math.max(5,Math.ceil(d/0.35));
+    const egim=(rnd()-0.5)*0.25, dx=h.p[0]-cur[0], dy=h.p[1]-cur[1];
+    for(let i=1;i<=n;i++){
+      const f=i/n, b=Math.sin(Math.PI*f)*egim;
+      const p=[cur[0]+dx*f-dy*b+(rnd()-0.5)*0.0006, cur[1]+dy*f+dx*b+(rnd()-0.5)*0.0006];
+      t+=dk/n; if(t>SIMDI) return {iz,durak};
+      iz.push({p,t,v:hiz*(0.75+rnd()*0.5)});
+    }
+    cur=h.p.slice();
+    if(h.ad==='__depo'){ a.depoda=t; break; }
+    const bas=t;
+    for(let k=0;k<h.dk;k+=4){ t+=4; if(t>SIMDI){durak.push({p:cur,ad:h.ad,bas,bit:SIMDI,surer:true});return {iz,durak};}
+      iz.push({p:[cur[0]+(rnd()-0.5)*0.00015,cur[1]+(rnd()-0.5)*0.00015],t,v:0}); }
+    durak.push({p:cur,ad:h.ad,bas,bit:t});
+  }
+  return {iz,durak};
+}
+ARACLAR.forEach(a=>{
+  Object.assign(a,uret(a));
+  if(a.bosluk) a.iz=a.iz.filter(n=>n.t<a.bosluk[0]||n.t>a.bosluk[1]);
+});
+
+function ozetHesapla(a){
+  let yol=0,surus=0,dur=0;
+  for(let i=1;i<a.iz.length;i++){const x=a.iz[i-1],y=a.iz[i],dt=y.t-x.t;
+    if(dt>10) continue; if(y.v>0){yol+=km(x.p,y.p);surus+=dt;} else dur+=dt;}
+  const L=yol*a.tuk/100;
+  const kayip=a.bosluk?a.bosluk[1]-a.bosluk[0]:0;
+  return {yol,surus,dur,ort:surus?yol/(surus/60):0,L,tl:L*YAKIT_FIYATI,musteri:a.durak.filter(d=>d.ad).length,kayip};
+}
+function durumu(a){
+  const son=a.iz[a.iz.length-1];
+  if(a.depoda) return ['Depoda','d-depo'];
+  if(SIMDI-son.t>10) return ['Veri yok','d-yok'];
+  const d=a.durak[a.durak.length-1]; if(d&&d.surer) return ['Müşteride','d-musteri'];
+  return ['Hareketli','d-hareket'];
+}
+
+/* ---- harita ---- */
+const SINIR = L.latLngBounds([37.35,26.20],[39.65,29.10]); // İzmir + Aydın + Manisa (yaklaşık)
+const harita = L.map('harita',{zoomControl:true,maxBounds:SINIR.pad(0.05),maxBoundsViscosity:1,minZoom:8,maxZoom:19})
+  .fitBounds([[38.25,26.95],[38.65,27.45]]);
+const sokak = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(harita);
+const uydu = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'});
+L.marker(DEPO,{icon:L.divIcon({className:'depo-ikon',html:'<div>DEPO</div>',iconSize:[30,30]})}).addTo(harita).bindTooltip('Depo (örnek konum)');
+L.circle(DEPO,{radius:150,color:'#344054',weight:1,dashArray:'4',fillOpacity:.06}).addTo(harita);
+
+ARACLAR.forEach(a=>{
+  a.katman=L.layerGroup().addTo(harita);
+  // kesinti varsa çizgiyi böl, araya kesik çizgi koy
+  let parca=[a.iz[0].p];
+  for(let i=1;i<a.iz.length;i++){
+    if(a.iz[i].t-a.iz[i-1].t>10){
+      L.polyline(parca,{color:a.renk,weight:4,opacity:.85}).addTo(a.katman);
+      L.polyline([a.iz[i-1].p,a.iz[i].p],{color:a.renk,weight:3,dashArray:'6 8',opacity:.9}).addTo(a.katman)
+        .bindTooltip('Veri yok: '+saat(a.iz[i-1].t)+'–'+saat(a.iz[i].t));
+      parca=[];
+    }
+    parca.push(a.iz[i].p);
+  }
+  L.polyline(parca,{color:a.renk,weight:4,opacity:.85}).addTo(a.katman);
+  a.durak.forEach((d,i)=>{
+    L.circleMarker(d.p,{radius:7,color:'#fff',weight:2,fillColor:d.ad?a.renk:'#b42318',fillOpacity:1})
+      .addTo(a.katman).bindTooltip(`<b>${i+1}. ${d.ad||'Müşteri dışı duruş'}</b><br>${saat(d.bas)}–${d.surer?'sürüyor':saat(d.bit)} · ${sure(d.bit-d.bas)}`);
+  });
+  a.imlec=L.marker(a.iz[a.iz.length-1].p,{zIndexOffset:1000,icon:L.divIcon({className:'etiket',iconSize:[28,28],
+    html:`<div style="background:${a.renk}">${a.no}</div>`})}).addTo(harita)
+    .bindTooltip(`Araç ${a.no} · ${a.ad}`);
+});
+
+/* ---- seçim ---- */
+let secili=null;
+function sec(no){
+  secili=no;
+  ARACLAR.forEach(a=>{
+    const on=!no||a.no===no;
+    a.katman.eachLayer(l=>l.setStyle&&l.setStyle({opacity:on?.9:.12,fillOpacity:on?1:.12}));
+    a.imlec.setOpacity(on?1:.35);
+  });
+  document.querySelectorAll('.pl').forEach(b=>b.classList.toggle('secili',b.dataset.no===no));
+  if(no){const a=ARACLAR.find(x=>x.no===no);harita.fitBounds(L.latLngBounds(a.iz.map(n=>n.p)).pad(.15));}
+  ozetCiz();
+}
+
+function listeCiz(){
+  document.getElementById('plasiyerler').innerHTML=ARACLAR.map(a=>{
+    const [d,c]=durumu(a);
+    return `<button class="pl" data-no="${a.no}" style="--renk:${a.renk}">
+      <span class="nokta"></span><span><b>Araç ${a.no} · ${a.ad}</b><small>${ozetHesapla(a).yol.toFixed(1)} km bugün</small></span>
+      <span class="durum ${c}">${d}</span></button>`;}).join('');
+  document.querySelectorAll('.pl').forEach(b=>b.onclick=()=>sec(secili===b.dataset.no?null:b.dataset.no));
+}
+document.getElementById('tumu').onclick=()=>{sec(null);harita.fitBounds([[38.25,26.95],[38.65,27.45]]);};
+
+function ozetCiz(){
+  const el=document.getElementById('ozet');
+  if(!secili){
+    const t=ARACLAR.map(ozetHesapla), top=k=>t.reduce((s,x)=>s+x[k],0);
+    el.innerHTML=`<h2>Bugün · tüm plasiyerler</h2>
+    <div class="kartlar">
+      <div class="kart"><span>Toplam yol</span><b>${top('yol').toFixed(1)} km</b></div>
+      <div class="kart"><span>Müşteri ziyareti</span><b>${top('musteri')}</b></div>
+      <div class="kart"><span>Tahmini yakıt</span><b>${top('L').toFixed(1)} L</b></div>
+      <div class="kart"><span>Yakıt tutarı</span><b>${top('tl').toLocaleString('tr-TR',{maximumFractionDigits:0})} ₺</b></div>
+    </div>
+    <h2>Karşılaştırma</h2>
+    <table><tr><th>Araç</th><th>km</th><th>Ort. hız</th><th>Müşteri</th><th>Yakıt</th></tr>
+    ${ARACLAR.map((a,i)=>`<tr><td><span style="color:${a.renk}">●</span> ${a.no}</td><td>${t[i].yol.toFixed(1)}</td><td>${t[i].ort.toFixed(0)}</td><td>${t[i].musteri}</td><td>${t[i].L.toFixed(1)} L</td></tr>`).join('')}
+    </table><p class="not">Bir plasiyere tıklayın: yalnız o öne çıkar, ayrıntısı burada açılır.</p>`;
+    return;
+  }
+  const a=ARACLAR.find(x=>x.no===secili), o=ozetHesapla(a);
+  const gecmis=[...Array(7)].map((_,i)=>{const k=o.yol*(0.8+((i*37+parseInt(a.no)*11)%40)/100);
+    return {g:['16 Kas','15 Kas','14 Kas','13 Kas','12 Kas','11 Kas','10 Kas'][i],km:i?k:o.yol,ort:i?o.ort*(0.9+(i%3)*0.07):o.ort,L:(i?k:o.yol)*a.tuk/100};});
+  el.innerHTML=`<h2 style="color:${a.renk}">Araç ${a.no} · ${a.ad} — bugün</h2>
+  <div class="kartlar">
+    <div class="kart"><span>Yol</span><b>${o.yol.toFixed(1)} km</b></div>
+    <div class="kart"><span>Ortalama hız</span><b>${o.ort.toFixed(0)} km/s</b></div>
+    <div class="kart"><span>Sürüş</span><b>${sure(o.surus)}</b></div>
+    <div class="kart"><span>Durak</span><b>${sure(o.dur)}</b></div>
+    <div class="kart"><span>Tahmini yakıt</span><b>${o.L.toFixed(1)} L</b></div>
+    <div class="kart"><span>Yakıt tutarı</span><b>${o.tl.toFixed(0)} ₺</b></div>
+    ${o.kayip?`<div class="kart genis" style="border-color:var(--bad)"><span>Kayıp süre (veri gelmedi)</span><b style="color:var(--bad)">${sure(o.kayip)}</b></div>`:''}
+  </div>
+  <p class="not">Yakıt: ${a.tuk} L/100 km × ${YAKIT_FIYATI.toFixed(2)} ₺/L (örnek değerler; merkezden girilir).</p>
+  <h2>Duraklar</h2>
+  <ul class="duraklar" style="--renk:${a.renk}">
+    ${a.durak.map((d,i)=>`<li class="${d.ad?'':'yabanci'}" data-i="${i}"><span class="no">${i+1}</span>
+      <span>${d.ad||'<b>Müşteri dışı duruş</b>'}<br><small class="sure">${saat(d.bas)}–${d.surer?'sürüyor':saat(d.bit)}</small></span>
+      <span class="sure">${sure(d.bit-d.bas)}</span></li>`).join('')}
+  </ul>
+  <h2>Son 7 gün</h2>
+  <table><tr><th>Gün</th><th>km</th><th>Ort. hız</th><th>Yakıt</th></tr>
+  ${gecmis.map(g=>`<tr><td>${g.g}</td><td>${g.km.toFixed(1)}</td><td>${g.ort.toFixed(0)}</td><td>${g.L.toFixed(1)} L</td></tr>`).join('')}
+  </table><p class="not">Kayıtlar 3 ay saklanır; tarih seçerek eski günler açılır.</p>`;
+  el.querySelectorAll('.duraklar li').forEach(li=>li.onclick=()=>harita.flyTo(a.durak[li.dataset.i].p,18));
+}
+
+/* ---- uyarılar ---- */
+document.getElementById('uyarilar').innerHTML=UYARILAR.sort((x,y)=>y.t-x.t).map((u,i)=>{
+  const a=ARACLAR.find(x=>x.no===u.arac);
+  return `<button class="uyari" data-i="${i}"><span class="seviye s-${u.seviye}">${u.ad}</span>
+   <span><span style="color:${a.renk}">●</span> Araç ${u.arac} · ${u.metin}</span><time>${u.saat}</time></button>`;}).join('');
+document.querySelectorAll('.uyari').forEach(b=>b.onclick=()=>{
+  const u=UYARILAR[b.dataset.i], a=ARACLAR.find(x=>x.no===u.arac);
+  const n=a.iz.reduce((s,x)=>x.t<=u.t?x:s,a.iz[0]);
+  sec(u.arac); harita.flyTo(n.p,15);
+});
+
+/* ---- zaman kaydırıcısı ---- */
+const kay=document.getElementById('kaydirici'), sa=document.getElementById('saat');
+function zamanaGit(m){
+  sa.textContent=saat(m);
+  ARACLAR.forEach(a=>{const n=a.iz.reduce((s,x)=>x.t<=m?x:s,a.iz[0]);a.imlec.setLatLng(n.p);});
+}
+kay.oninput=()=>zamanaGit(+kay.value);
+document.getElementById('simdi').onclick=()=>{kay.value=SIMDI;zamanaGit(SIMDI);};
+let oyn=null;
+document.getElementById('oynat').onclick=e=>{
+  if(oyn){clearInterval(oyn);oyn=null;e.target.textContent='▶';return;}
+  if(+kay.value>=SIMDI) kay.value=300;
+  e.target.textContent='❚❚';
+  oyn=setInterval(()=>{kay.value=+kay.value+3;zamanaGit(+kay.value);if(+kay.value>=SIMDI){clearInterval(oyn);oyn=null;e.target.textContent='▶';}},40);
+};
+
+/* ---- katman ---- */
+const kS=document.getElementById('kSokak'), kU=document.getElementById('kUydu');
+kS.onclick=()=>{harita.removeLayer(uydu);sokak.addTo(harita);kS.classList.add('aktif');kU.classList.remove('aktif');};
+kU.onclick=()=>{harita.removeLayer(sokak);uydu.addTo(harita);kU.classList.add('aktif');kS.classList.remove('aktif');};
+
+listeCiz(); ozetCiz();
+</script>
+</body>
+</html>
