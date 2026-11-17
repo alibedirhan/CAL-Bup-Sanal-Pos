@@ -2,6 +2,13 @@
 
 Önce `docs/OTURUM_NOTU.md`, ardından `docs/MIMARI.md` okuyun.
 
+**Rota (17 Kasım 2026, dal `rota`):** plasiyer konum takibi. Önce `docs/ROTA_MIMARI.md` (teknik
+kararlar M1–M18, şema, §11 durum) ve `docs/ROUTE_PLANI.md` (Ali'nin kararları K1–K29). Kotlin
+`android/app/src/main/kotlin/com/bup/sanalpos/rota/` (saf dosyalar Android bilmez, JVM testli);
+kurallar `firestore.rules` rota bölümü; testler `bash tools/rota_test.sh emulator-NNNN`.
+Sözleşme `docs/rota/sozlesme/` (Kotlin ve JS aynı örnekle sınanır). Terminalde görünür öğe yok
+(K24); bildirim izni eklemeyin (M17). Canlı Firebase/kurallar/APK için Ali'ye sorun.
+
 - Ayrı Flutter projesidir. CAL bup ve Sipariş uygulamasına bağımlı değildir.
 - Kullanıcı kararları: bağlantıdan açılan ve ana ekrana eklenen web sürümü
   (21 Ekim, 0.7.2: ana ekran simgesi Safari/Chrome içinde açılır — manifest

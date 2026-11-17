@@ -192,7 +192,9 @@ Uçak kipi doğrudan kayıt değildir; veri kesintisi ve olaylar CAL_bup'ta uyar
 | Sahte konum uygulaması | Android `isMock` işareti noktada saklanır, uyarı |
 | Kötü niyetli içerikle CAL_bup'a saldırı | M14: okuyucu doğrular, HTML basmaz; kural alan/uzunluk sınırları |
 | Kotanın aşırı yazmayla tüketilmesi | Parça başına 240 nokta sınırı; cihaz başına gönderim aralığı istemcide; CAL_bup'ta yazma hızı uyarısı |
-| Kayıp/çalınan terminal | Merkezden onay kaldırılır (belge silinir) → terminal yazamaz |
+| Kayıp/çalınan terminal | Merkezden onay kaldırılır (`aktif: false`) → terminal yazamaz |
+| API anahtarıyla çok sayıda anonim hesap açıp başvuru yağdırma | Firebase'in IP başına hesap açma sınırı; hesap başına tek başvuru belgesi; onaysız başvuru yönetici tarafından silinir; anonim hesap mevcut Sanal POS verisine erişemez (`uye()` profil ister). Gerekirse sonra App Check |
+| Bir terminalin kotayı tüketmesi | Kural düzeyinde hız sınırı: durum belgesi en çok 15 sn'de bir, parça yalnız durumla birlikte |
 
 ## 7. Test stratejisi
 
@@ -233,3 +235,29 @@ Uçak kipi doğrudan kayıt değildir; veri kesintisi ve olaylar CAL_bup'ta uyar
   arka plan konum izniyle; `tools/rota_test.sh` gerçek yeniden başlatma yapar). Android 13 (TC15) gerçek cihazda bakılacak.
 - TC15'te 24 saat GPS'in pil tüketimi (Aşama 1 sonu, gerçek ölçüm).
 - Anonymous ve Google sağlayıcılarının canlı projede açılması (Ali'nin onayıyla).
+
+## 11. Durum (17 Kasım 2026 akşam)
+
+Aşama 1'in kodu ve emülatör kanıtı tamam (dal `rota`, main'e alınmadı, yayın yok):
+
+| Madde | Durum | Kanıt |
+|-------|-------|-------|
+| 2. Kurallar | ✅ | 17 kural testi (`rota_kurallar.test.mjs`) + eski 28 test |
+| 3. Saf çekirdek | ✅ | 36 JVM testi; sözleşme örneği Kotlin = JS (`rota_sozlesme.test.mjs`, terminal kodu dahil) |
+| 4. Kuyruk | ✅ | 6 emülatör testi (yeniden açılış, taşma, sınır) |
+| 5. Hizmet | ✅ | Android 15 emülatörü; açılışta kendiliğinden başlama doğrulandı |
+| 6. Gizli kurulum | ✅ | 5 Dart ekran testi; 242 Dart testinin hepsi geçti |
+| 7. Uçtan uca | ✅ | `bash tools/rota_test.sh emulator-5584`: başvuru → onay → güzergâh → takip kapat → zorla durdur → yeniden başlat; 29 kayıt, boşluk/çift yok |
+| 8. Yönetici aracı | ✅ | `tools/sunucu-test/rota_yonet.mjs` (emülatörde denendi) |
+| Sürüm APK | ✅ derleme | R8 ile derlendi, `android_apk_denetle.py` geçti; çalışması gerçek telefonda görülecek |
+| 9. Ali'nin telefonu | ⏳ | Ali'nin onayını bekleyen adımlar aşağıda |
+
+**Ali'nin onayını bekleyenler (sırasıyla; hiçbiri yapılmadı):**
+1. Canlı Firebase'de **Anonymous** giriş sağlayıcısını açmak (Authentication → Sign-in method).
+2. Yeni Firestore kurallarını canlıya göndermek (yalnız `rota*` eklendi; eski bölümler aynı).
+3. `rota` dalını main'e almak, sürümü 0.13.0 yapmak ve APK'yı Ali'nin telefonuna kurmak
+   (adb ile ya da yayınla). Yayınlanırsa terminaller güncelleme görür; kurulum ekranında izin
+   verilmedikçe terminalde konum hizmeti **başlamaz**.
+4. Ali telefonda: Bilgi → "Yönetici kurulumu" → izinler → terminal kodu; bilgisayarda
+   `node tools/sunucu-test/rota_yonet.mjs onayla KOD "Ali telefon"` ve `takip KOD ac`.
+5. 24 saat sonra: `rota_yonet.mjs durum`; pil tüketimi, kesinti, boşluk ölçümü.

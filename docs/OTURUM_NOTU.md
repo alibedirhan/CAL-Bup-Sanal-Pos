@@ -1,3 +1,24 @@
+# 17 Kasım 2026 akşam — Rota Aşama 1 kodu bitti (dal `rota`, yayın yok)
+
+Ali: "yalnız rotaya odaklan; güvenli, sağlam temelli, mühendislik açısından iyi bir proje; sana
+güveniyorum". Teknik mimari `docs/ROTA_MIMARI.md` (M1–M18; durum ve Ali'nin onayını bekleyen
+adımlar §11). Kod `rota` dalında, 8 commit; main'e alınmadı, push dışında hiçbir yayın/canlı
+değişiklik yok. Özet: Firestore `rota*` kuralları (terminal anonim + yalnız ekler; merkez yalnız
+Google girişli `rotaYetkileri`; her merkez değişikliği denetim kaydıyla; hız sınırı), yerel Kotlin
+konum hizmeti (`android/.../rota/`: SQLite kuyruk, akıllı sıklık, olaylar, açılışta başlama),
+gizli "Yönetici kurulumu" (Bilgi sayfası, şifre yeniden sorulur), geçici yönetici aracı
+`tools/sunucu-test/rota_yonet.mjs`. Testler: `bash tools/rota_test.sh emulator-5584` (yeni AVD
+`BUP_Rota_Test35`, Android 15; eski AVD'ler silinmiş geçici klasörlerdeydi) hepsi geçti; `tools/kontrol.sh`
+242 Dart testi geçti; sürüm APK derlendi ve denetimden geçti. Testlerin yakaladığı iki gerçek hata
+düzeltildi (depoya girişte sayaç sıfırlanması; belirsiz gönderimden sonra kısmi çift parçada
+yeni noktaların silinmesi). APK izin listesine konum izinleri eklendi (bildirim izni yok, M17).
+K28 (alarm önce CAL_bup içi), K29 (kayıt merkezde onaylanır) `ROUTE_PLANI.md`'de.
+**Sıradaki:** Ali'nin onayıyla §11'deki adımlar (Anonymous sağlayıcı, kurallar, telefona kurulum,
+24 saat deneme); ardından Aşama 2 (CAL_bup Rota sekmesi; Google girişi Sanal POS projesine,
+CSP, `docs/rota/sozlesme/dogrula.mjs` kurallarının TS karşılığı).
+
+---
+
 # 17 Kasım 2026 — Route: Aşama 0 cevapları (kod yok)
 
 Ali "yalnız rotaya odaklan" dedi. Cevaplar `ROUTE_PLANI.md`'ye işlendi: depo adresi Bornova (K25),
