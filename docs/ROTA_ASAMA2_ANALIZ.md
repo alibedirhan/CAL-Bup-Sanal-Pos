@@ -232,3 +232,12 @@ Demo: 2c bitince — yayından önce — Ali'ye **kendi telefonunun gerçek veri
 - Xiaomi gibi telefonlarda "otomatik başlatma" elle açılmalı (Ali'nin telefonunda yapıldı); TC15'te
   gerekmez (Android standardı) ama Aşama 5'te bakılacak.
 - Yönetim ekibi erişimi (§3.2) CAL_bup'ın tek sahipli güvenlik modelini etkiler; C yolu bunu korur.
+
+## 7. Durum (17 Kasım 2026 gece)
+
+CAL_bup dal `rota` (yerelde, push/yayın yok): 2a çekirdek, 2b Firebase+önbellek, 2c ekran bitti.
+`#/rota/deneme` yapay verili örnek ekran; `#/rota` gerçek (Google girişi). Kanıt: `npm run kontrol`
+(1.882 test), `tests/tarayici/guzergah.spec.ts`, emülatörle uçtan uca `CAL_bup/tools/rotaEmulatorDenemesi.mjs`
+geçti. Ayrıntı `CAL_bup/docs/ROTA.md`. Kalan: tam tarayıcı test takımının sonucu (koşuyordu), 2d yönetim
+ekranları, 2e terminal gönderim aralığı (0.13.1), 2f canlı ayarlar (Google sağlayıcı konsoldan, yetkili
+alan, ilk yönetici) + CAL_bup yayını — Ali onayıyla.
