@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'application/pin_kapisi.dart';
 import 'application/pos_servisi.dart';
+import 'application/rota_kurulumu.dart';
 import 'data/demo_deposu.dart';
 import 'data/demo_islemleri.dart';
 import 'application/tahsilat_servisi.dart';
@@ -30,6 +31,7 @@ class BupPosApp extends StatefulWidget {
     this.canliKilit,
     this.denizPayAcici,
     this.guncelleme,
+    this.rotaKurulumu,
   });
   final bool deneme;
   final PosServisi? servis;
@@ -44,6 +46,9 @@ class BupPosApp extends StatefulWidget {
 
   /// Android'de daha yeni sürüm yayındaysa ana ekranda not gösterilir.
   final AndroidSurumu? guncelleme;
+
+  /// Android: yöneticinin gizli konum kurulumu (rota). Web ve denemede yok.
+  final RotaKurulumPortu? rotaKurulumu;
   @override
   State<BupPosApp> createState() => _BupPosAppState();
 }
@@ -226,6 +231,7 @@ class _BupPosAppState extends State<BupPosApp> with WidgetsBindingObserver {
             hesap: widget.hesap,
             yonetim: widget.yonetim,
             guncelleme: widget.guncelleme,
+            rotaKurulumu: widget.rotaKurulumu,
           ),
   );
 }

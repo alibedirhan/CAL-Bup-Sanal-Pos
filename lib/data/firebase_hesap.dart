@@ -45,6 +45,7 @@ class FirebaseHesap implements HesapPortu {
   @override
   Future<void> parolaSifirla(String eposta) =>
       _dene(() => auth.sendPasswordResetEmail(email: eposta.trim()));
+  @override
   Future<void> yenidenDogrula(String parola) => _dene(() async {
     final u = auth.currentUser;
     if (u == null || u.email == null) {

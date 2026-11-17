@@ -316,6 +316,7 @@ class _HesapKapisiState extends State<_HesapKapisi> {
             : null,
         canliKilit: _kilitle,
         guncelleme: _surum.durum == SurumDurumu.guncellemeVar ? surum : null,
+        rotaKurulumu: k.yonetici ? _platform.rotaKurulumu : null,
       );
     }
     return MaterialApp(

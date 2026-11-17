@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import com.bup.sanalpos.rota.RotaHizmeti
+import com.bup.sanalpos.rota.RotaKanali
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -11,6 +12,7 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterFragmentActivity() {
     private var kanal: GuvenlikKanali? = null
     private var nfc: NfcKanali? = null
+    private var rota: RotaKanali? = null
 
     // "Kaydet" penceresi (gün sonu CSV). Etkinlik başlamadan kaydedilmelidir.
     private val belge = registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) {
@@ -18,6 +20,13 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     fun belgeOlustur(ad: String) = belge.launch(ad)
+
+    // Konum kurulumu (rota, yalnız yönetici ekranından): izin penceresi.
+    private val konumIzni = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        rota?.izinSonucu(it)
+    }
+
+    fun konumIzniIste(izin: String) = konumIzni.launch(izin)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Ekran görüntüsü, ekran kaydı ve "son uygulamalar" önizlemesi kapalı
@@ -39,6 +48,7 @@ class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         kanal = GuvenlikKanali(flutterEngine.dartExecutor.binaryMessenger, this)
         nfc = NfcKanali(flutterEngine.dartExecutor.binaryMessenger, this)
+        rota = RotaKanali(flutterEngine.dartExecutor.binaryMessenger, this)
     }
 
     override fun onResume() {

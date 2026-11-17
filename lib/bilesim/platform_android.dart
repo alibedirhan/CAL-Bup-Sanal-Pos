@@ -11,6 +11,7 @@ import '../data/android/dosya_indirici.dart';
 import '../data/android/kamera_okuyucu.dart';
 import '../data/android/kanal.dart';
 import '../data/android/nfc_okuyucu.dart';
+import '../data/android/rota_kurulumu.dart';
 import '../data/android/kart_kasasi.dart';
 import '../data/android/sonuc_kutusu.dart';
 import '../data/android/uygulama_surumu.dart';
@@ -44,6 +45,7 @@ final PlatformBaglantilari platformBaglantilari = Platform.isAndroid
         uygulamaSurumu: const AndroidUygulamaSurumu(),
         pinKapisi: _pin,
         kartTarayici: KartTarayicilari(turler: _turler, ac: _tara),
+        rotaKurulumu: const AndroidRotaKurulumu(),
       )
     : kapaliBaglantilar;
 

@@ -34,6 +34,8 @@ class SahteHesap implements HesapPortu {
   }
 
   @override
+  Future<void> yenidenDogrula(String parola) async {}
+  @override
   Future<void> parolaDegistir(String mevcut, String yeni) async {
     parolaDegistirmeSayisi++;
   }

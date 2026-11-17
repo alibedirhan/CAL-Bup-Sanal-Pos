@@ -8,6 +8,9 @@ abstract interface class HesapPortu {
   Future<void> cikis();
   Future<void> parolaSifirla(String eposta);
   Future<void> parolaDegistir(String mevcut, String yeni);
+
+  /// Hassas yönetici işinden önce şifre yeniden sorulur (ör. konum kurulumu).
+  Future<void> yenidenDogrula(String parola);
   Future<Kullanici> profil();
   Stream<Kullanici?> profilIzle();
 }

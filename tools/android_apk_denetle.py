@@ -18,8 +18,14 @@ from pathlib import Path
 IMZA = '0c7696fc91b4ac71916937a0508eb54c02b3bc7ac114c353e8d36f48d70947db'
 PAKET = 'com.bup.sanalpos'
 # İzin listesi: yeni bir izin (eklenti güncellemesiyle gelen dahil) bilinçli
-# eklenmeden yayın durur. Konum, mikrofon, depolama, kişiler vb. yoktur.
+# eklenmeden yayın durur. Mikrofon, depolama, kişiler, bildirim vb. yoktur.
+# Konum ve ön plan hizmeti izinleri rota içindir (docs/ROTA_MIMARI.md; Ali'nin
+# 16–17 Kasım 2026 kararları K1–K29). Bildirim izni bilerek yok (M17).
 IZINLER = {
+    'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION',
+    'android.permission.ACCESS_BACKGROUND_LOCATION', 'android.permission.FOREGROUND_SERVICE',
+    'android.permission.FOREGROUND_SERVICE_LOCATION', 'android.permission.RECEIVE_BOOT_COMPLETED',
+    'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
     'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
     'android.permission.USE_BIOMETRIC', 'android.permission.USE_FINGERPRINT',
     'android.permission.NFC', 'android.permission.CAMERA',

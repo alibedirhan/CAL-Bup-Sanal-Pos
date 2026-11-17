@@ -83,6 +83,7 @@ class RotaHizmeti : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        calisiyor = true
         if (!basladi) {
             basladi = true
             konumH.post { basla(neden) }
@@ -93,6 +94,7 @@ class RotaHizmeti : Service() {
     }
 
     override fun onDestroy() {
+        calisiyor = false
         konumH.post { alici.durdur() }
         agH.post { dinleme?.remove() }
         runCatching { unregisterReceiver(olayAlicisi) }
@@ -314,6 +316,10 @@ class RotaHizmeti : Service() {
         private const val BAKIM_MS = 60 * 60_000L
         const val NEDEN = "neden"
         const val NEDEN_ACILIS = "acilis"
+
+        /** Kurulum ekranı için (aynı süreç). */
+        @Volatile var calisiyor = false
+            private set
 
         fun izinVar(c: Context): Boolean =
             c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED

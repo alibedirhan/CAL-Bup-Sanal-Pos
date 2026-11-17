@@ -10,6 +10,7 @@ import 'oturum_modeli.dart';
 import 'pos_onayi.dart';
 import 'tema.dart';
 import '../application/hesap_portu.dart';
+import '../application/rota_kurulumu.dart';
 import '../domain/kullanici.dart';
 import '../domain/surum.dart';
 
@@ -22,6 +23,7 @@ class AnaEkran extends StatefulWidget {
     this.hesap,
     this.yonetim,
     this.guncelleme,
+    this.rotaKurulumu,
   });
   final OturumModeli model;
   final VoidCallback kilitle;
@@ -29,6 +31,7 @@ class AnaEkran extends StatefulWidget {
   final HesapPortu? hesap;
   final YonetimPortu? yonetim;
   final AndroidSurumu? guncelleme;
+  final RotaKurulumPortu? rotaKurulumu;
   @override
   State<AnaEkran> createState() => _AnaEkranState();
 }
@@ -137,6 +140,7 @@ class _AnaEkranState extends State<AnaEkran> {
                           kullanici: widget.kullanici,
                           hesap: widget.hesap,
                           yonetim: widget.yonetim,
+                          rotaKurulumu: widget.rotaKurulumu,
                         ),
                 ),
               ],

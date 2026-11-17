@@ -2,6 +2,7 @@ import '../application/biyometrik_kilit.dart';
 import '../application/kart_kasasi.dart';
 import '../application/pin_kapisi.dart';
 import '../application/portlar.dart';
+import '../application/rota_kurulumu.dart';
 import '../application/surum_denetimi.dart';
 import '../application/tahsilat_servisi.dart';
 import '../ui/denizpay_ekrani.dart';
@@ -24,6 +25,7 @@ class PlatformBaglantilari {
     this.uygulamaSurumu = const KapaliUygulamaSurumu(),
     this.pinKapisi,
     this.kartTarayici,
+    this.rotaKurulumu,
   });
   final KartKasasi kartKasasi;
   final PosGirisKapisi girisKapisi;
@@ -49,4 +51,7 @@ class PlatformBaglantilari {
 
   /// Karttan okuma (Android: NFC, kamera). Web'de yapıştırma kutusu yeter.
   final KartTarayicilari? kartTarayici;
+
+  /// Konum kurulumu (Android rota hizmeti, docs/ROTA_MIMARI.md M16). Web'de yok.
+  final RotaKurulumPortu? rotaKurulumu;
 }

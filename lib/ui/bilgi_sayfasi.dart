@@ -3,7 +3,9 @@ import 'package:url_launcher/link.dart';
 import 'ortak.dart';
 import 'tema.dart';
 import '../application/hesap_portu.dart';
+import '../application/rota_kurulumu.dart';
 import '../domain/kullanici.dart';
+import 'konum_kurulumu.dart';
 import 'parola_sayfasi.dart';
 import 'yonetim_sayfasi.dart';
 
@@ -14,11 +16,16 @@ class BilgiSayfasi extends StatelessWidget {
     this.kullanici,
     this.hesap,
     this.yonetim,
+    this.rotaKurulumu,
   });
   final VoidCallback kilitle;
   final Kullanici? kullanici;
   final HesapPortu? hesap;
   final YonetimPortu? yonetim;
+
+  /// Yalnız Android ve yönetici: terminalin konum kurulumu (rota). Göze
+  /// çarpmayan bir düğmedir ve şifre yeniden sorulmadan açılmaz (M16).
+  final RotaKurulumPortu? rotaKurulumu;
   @override
   Widget build(BuildContext context) => ListView(
     children: [
@@ -94,6 +101,14 @@ class BilgiSayfasi extends StatelessWidget {
                   icon: const Icon(Icons.manage_accounts_outlined),
                   label: const Text('Kullanıcı yönetimi'),
                 ),
+              if (rotaKurulumu != null && kullanici?.yonetici == true) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () =>
+                      konumKurulumunuAc(context, hesap!, rotaKurulumu!),
+                  child: const Text('Yönetici kurulumu'),
+                ),
+              ],
               const SizedBox(height: 12),
               TextButton(
                 onPressed: hesap!.cikis,
