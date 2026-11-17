@@ -13,6 +13,19 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <!-- Rota (plasiyer konum takibi, docs/ROTA_MIMARI.md): arka planda konum, ön plan hizmeti,
+         açılışta yeniden başlama, pil iyileştirmesinden muafiyet isteği (kurulumda Ali verir).
+         Bildirim izni (POST_NOTIFICATIONS) bilinçli olarak İSTENMEZ: Android 13+'ta hizmetin
+         zorunlu bildirimi böylece çubukta görünmez (K24, M17). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <!-- Güvenlik ayarları: docs/ANDROID_PLANI.md §4. Yedek/aktarım kapalı, yalnız HTTPS. -->
     <application
         android:label="BUP Sanal POS"
@@ -45,6 +58,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service
+            android:name=".rota.RotaHizmeti"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+        <receiver
+            android:name=".rota.RotaAcilisAlici"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -3,6 +3,7 @@ package com.bup.sanalpos
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
+import com.bup.sanalpos.rota.RotaHizmeti
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -29,6 +30,9 @@ class MainActivity : FlutterFragmentActivity() {
             )
         }
         super.onCreate(savedInstanceState)
+        // Rota (docs/ROTA_MIMARI.md M12): hizmet çalışmıyorsa başlar. Yapılandırma ya da konum
+        // izni yoksa hiçbir şey yapmaz; ekranda hiçbir şey görünmez (K24).
+        RotaHizmeti.baslat(this, "uygulama")
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

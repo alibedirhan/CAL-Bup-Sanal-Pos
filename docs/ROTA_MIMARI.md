@@ -229,6 +229,7 @@ Uçak kipi doğrudan kayıt değildir; veri kesintisi ve olaylar CAL_bup'ta uyar
 ## 10. Doğrulanması gerekenler (varsayılmaz)
 
 - Firestore TTL'in Spark planında çalışması (M15).
-- Android 13/15'te `BOOT_COMPLETED` sonrası konum türü ön plan hizmetinin başlatılabilmesi.
+- ~~Android 15'te `BOOT_COMPLETED` sonrası konum hizmeti~~ → **emülatörde doğrulandı** (17 Kasım,
+  arka plan konum izniyle; `tools/rota_test.sh` gerçek yeniden başlatma yapar). Android 13 (TC15) gerçek cihazda bakılacak.
 - TC15'te 24 saat GPS'in pil tüketimi (Aşama 1 sonu, gerçek ölçüm).
 - Anonymous ve Google sağlayıcılarının canlı projede açılması (Ali'nin onayıyla).

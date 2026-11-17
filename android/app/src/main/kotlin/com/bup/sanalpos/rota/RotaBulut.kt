@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.MemoryCacheSettings
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -44,9 +45,12 @@ class RotaBulut private constructor(private val app: FirebaseApp) : RotaSunucusu
         if (!bekle(ref.get()).exists()) bekle(ref.set(belgeye(belge)))
     }
 
-    /** rotaCihazlar/{uid} dinlenir. Belge yoksa (onay yok) null verilir; okuma hatasında hiç çağrılmaz. */
-    fun cihazDinle(dinleyici: (TakipAyari?) -> Unit, hata: (Exception) -> Unit): ListenerRegistration =
-        db.collection("rotaCihazlar").document(uid()).addSnapshotListener { s, e ->
+    /**
+     * rotaCihazlar/{uid} dinlenir; çağrılar [yurutucu] üzerinde. Belge yoksa (onay yok) null verilir.
+     * Yetki hatasında dinleme biter ([hata] çağrılır; çağıran sonra yeniden kurar).
+     */
+    fun cihazDinle(yurutucu: Executor, dinleyici: (TakipAyari?) -> Unit, hata: (Exception) -> Unit): ListenerRegistration =
+        db.collection("rotaCihazlar").document(uid()).addSnapshotListener(yurutucu) { s, e ->
             if (e != null) hata(e) else if (s != null) dinleyici(ayar(s))
         }
 
