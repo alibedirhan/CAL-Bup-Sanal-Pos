@@ -139,7 +139,7 @@ test('Parça biçimi ve kimliği sıkı denetlenir', async () => {
     [parca(T1, 5, 1, { alindi: Timestamp.now() })],
     [parca(T1, 5, 1, { silinme: Timestamp.fromMillis(SIMDI + 365 * 864e5) })],
     [parca(T1, 5, 1, { bit: Timestamp.fromMillis(SIMDI + 3600e3) })],
-    [parca(T1, 5, 1, { bas: Timestamp.fromMillis(SIMDI - 40 * 864e5) })],
+    [parca(T1, 5, 1, { bas: Timestamp.fromMillis(SIMDI - 41 * 864e5) })],
   ];
   const cok = parca(T1, 5, 241);
   bozuk.push([cok]);

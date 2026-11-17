@@ -70,6 +70,10 @@ jobs:
       - name: Android test paketi derlenir
         working-directory: android
         run: ./gradlew -q :app:assembleDebugAndroidTest
+      # Rota çekirdeği (saf Kotlin, docs/ROTA_MIMARI.md §7): emülatör gerekmez.
+      - name: Kotlin birim testleri (rota çekirdeği)
+        working-directory: android
+        run: ./gradlew -q :app:testDebugUnitTest
       - name: Sürüm imzasız derlenmez
         run: |
           if flutter build apk --release --no-pub > surum.log 2>&1; then

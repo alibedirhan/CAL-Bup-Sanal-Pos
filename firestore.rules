@@ -289,7 +289,7 @@ service cloud.firestore {
           // parçalar arası boşluk okuyan tarafta kayıp olarak görülür.
           && d.son - d.ilk + 1 == d.n.size() + d.olaylar.size()
           && d.bas is timestamp && d.bit is timestamp && d.bas <= d.bit
-          && d.bit <= request.time + duration.value(10, 'm') && d.bas >= request.time - duration.value(30, 'd')
+          && d.bit <= request.time + duration.value(10, 'm') && d.bas >= request.time - duration.value(40, 'd')
           && d.alindi == request.time && d.silinme == d.bit + duration.value(90, 'd')
           && rotaSayi(d.cihazSaati, 1500000000000, 9999999999999)
           && rotaSayi(d.pil, 0, 100) && d.sarj is bool && rotaSayi(d.surum, 1, 99999999);

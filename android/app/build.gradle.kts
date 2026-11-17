@@ -105,4 +105,6 @@ dependencies {
         implementation("androidx.test.espresso:espresso-core:3.6.1")
     }
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    // Rota çekirdeği (saf Kotlin) JVM birim testleri: docs/ROTA_MIMARI.md §7.
+    testImplementation("junit:junit:4.13.2")
 }

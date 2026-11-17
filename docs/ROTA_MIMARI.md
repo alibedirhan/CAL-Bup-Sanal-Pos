@@ -89,7 +89,7 @@ Bütün zamanlar Firestore `timestamp`'tir; cihazın ürettiği zamanlar ayrıca
 | `s` | int | 1 |
 | `cihaz` | string | yazanın uid'si |
 | `ilk`, `son` | int | cihazdaki sıra numaraları, `ilk ≤ son`, kimlikteki `ilk` ile aynı |
-| `bas`, `bit` | timestamp | ilk/son noktanın GPS zamanı; `bit ≤ alım + 10 dk`, `bas ≥ alım − 30 gün` |
+| `bas`, `bit` | timestamp | ilk/son noktanın GPS zamanı; `bit ≤ alım + 10 dk`, `bas ≥ alım − 40 gün` (terminal 35 günden eski noktaları `kuyruk_tasti` olayıyla atar; kuyruk tıkanmaz) |
 | `alindi` | timestamp | `== request.time` |
 | `silinme` | timestamp | `alindi + 90 gün` (TTL) |
 | `cihazSaati` | int | gönderim anında cihaz saati (ms) |
@@ -165,8 +165,13 @@ izin verilince yeniden başlar).
 4. Belirsiz hata (zaman aşımı, ağ): aynı parça kimliğiyle yeniden denenir. `PERMISSION_DENIED`
    alınırsa parça okunur: varsa ve sıraları aynıysa gönderilmiş sayılır; yoksa (ör. onay
    kaldırılmış) kuyrukta kalır, geri çekilme süresiyle (1→2→4… en çok 15 dk) denenir.
-5. Kuyruk sınırı: 200.000 nokta (~1 ay çevrimdışı). Aşılırsa en eski noktalar silinir ve
-   `kuyruk_tasti` olayı yazılır (sessiz kayıp yok).
+5. Kuyruk sınırı: 200.000 kayıt veya 35 gün. Aşılırsa en eski kayıtlar silinir ve
+   `kuyruk_tasti` olayı (kaç kayıt, hangi sıralar) yazılır — sessiz kayıp yok, kural sınırına
+   (40 gün) takılıp kuyruğun tıkanması da yok.
+6. Zaman: noktanın zamanı GPS zamanıdır. Olayların zamanı cihaz saatidir, ama son GPS
+   konumundan öğrenilen saat farkıyla düzeltilir (cihaz saati ileri alınmışsa parça kuralın
+   "gelecekte" sınırına takılıp sonsuza dek reddedilmez); düzeltilmemiş cihaz saati parçanın
+   `cihazSaati` alanında ayrıca durur (kurcalama izi).
 
 **Merkez dinleme.** `rotaCihazlar/{uid}` anlık dinlenir. `takip` değişince GPS açılır/kapanır,
 olay yazılır. Sıklık ayarları politikaya aktarılır. Belge silinirse (onay kaldırıldı) takip durur.
