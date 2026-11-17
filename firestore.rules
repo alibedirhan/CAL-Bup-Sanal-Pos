@@ -156,6 +156,182 @@ service cloud.firestore {
           && (d.tutarKurus == null || (d.tutarKurus is int && d.tutarKurus >= 0 && d.tutarKurus <= 99999999999));
       }
     }
+    // ---------------------------------------------------------------------------------------------
+    // Rota (plasiyer konum takibi) — sözleşme ve gerekçe: docs/ROTA_MIMARI.md §4 (şema sürümü 1).
+    // Terminal: Kotlin'deki ayrı "rota" uygulamasının anonim oturumu (M2); yalnız onaylı (rotaCihazlar
+    // belgesi olan ve aktif) terminal yazar, yalnız ekler. Merkez: Google girişli ve rotaYetkileri'nde
+    // kaydı olan hesap (M4). Sanal POS'un parolalı hesapları (terminaldeki oturum dahil) rota verisine
+    // hiç erişemez. Merkezin her değişikliği aynı toplu yazmadaki taze bir rotaDenetim kaydına bağlıdır.
+    function rotaGoogle() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true && request.auth.token.email is string;
+    }
+    function rotaYetkiYolu() { return /databases/$(database)/documents/rotaYetkileri/$(request.auth.token.email); }
+    function rotaRol(roller) {
+      return rotaGoogle() && exists(rotaYetkiYolu()) && get(rotaYetkiYolu()).data.aktif == true
+        && get(rotaYetkiYolu()).data.rol in roller;
+    }
+    function rotaIzleyici() { return rotaRol(['yonetici', 'izleyici']); }
+    function rotaYoneticisi() { return rotaRol(['yonetici']); }
+    function rotaTerminal() { return request.auth != null && request.auth.token.firebase.sign_in_provider == 'anonymous'; }
+    function rotaCihazYolu(uid) { return /databases/$(database)/documents/rotaCihazlar/$(uid); }
+    function rotaOnayli() {
+      return rotaTerminal() && exists(rotaCihazYolu(request.auth.uid)) && get(rotaCihazYolu(request.auth.uid)).data.aktif == true;
+    }
+    function rotaIz(hedef) {
+      let d = request.resource.data;
+      return d.denetim is string && d.denetim.matches('^[A-Za-z0-9]{20}$')
+        && getAfter(/databases/$(database)/documents/rotaDenetim/$(d.denetim)).data.yazan == request.auth.uid
+        && getAfter(/databases/$(database)/documents/rotaDenetim/$(d.denetim)).data.hedef == hedef
+        && getAfter(/databases/$(database)/documents/rotaDenetim/$(d.denetim)).data.zaman == request.time;
+    }
+    function rotaDamga(d) { return d.guncelleme == request.time && d.guncelleyen == request.auth.uid; }
+    function rotaSayi(x, en, ust) { return x is int && x >= en && x <= ust; }
+    function rotaOlcu(x, en, ust) { return (x is int || x is float) && x >= en && x <= ust; }
+
+    match /rotaYetkileri/{eposta} {
+      // Belge kimliği küçük harfli e-postadır (Google jetonundaki e-posta ile birebir).
+      allow get: if (rotaGoogle() && request.auth.token.email == eposta) || rotaYoneticisi();
+      allow list: if rotaYoneticisi();
+      // Yönetici rolü yalnız yönetici aracıyla (admin SDK) verilir; kimse kendi kaydını değiştiremez.
+      allow create, update: if rotaYoneticisi() && eposta != request.auth.token.email
+        && eposta.matches('^[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,190}$')
+        && (resource == null || resource.data.rol == 'izleyici')
+        && request.resource.data.keys().hasOnly(['ad', 'rol', 'aktif', 'guncelleme', 'guncelleyen', 'denetim'])
+        && request.resource.data.keys().size() == 6
+        && metin(request.resource.data.ad, 2, 60) && request.resource.data.rol == 'izleyici'
+        && request.resource.data.aktif is bool && rotaDamga(request.resource.data)
+        && rotaIz('rotaYetkileri/' + eposta);
+      allow delete: if false;
+    }
+    match /rotaDenetim/{id} {
+      allow get, list: if rotaYoneticisi();
+      allow create: if rotaYoneticisi() && id.matches('^[A-Za-z0-9]{20}$')
+        && request.resource.data.keys().hasOnly(['yazan', 'eylem', 'hedef', 'zaman'])
+        && request.resource.data.keys().size() == 4
+        && request.resource.data.yazan == request.auth.uid && request.resource.data.zaman == request.time
+        && request.resource.data.eylem is string && request.resource.data.eylem.matches('^[a-z_]{3,30}$')
+        && metin(request.resource.data.hedef, 3, 200);
+      allow update, delete: if false;
+    }
+    match /rotaBasvurular/{uid} {
+      // Terminal kendi başvurusunun var olup olmadığına bakabilir (yoksa resource null'dır).
+      allow get: if (rotaTerminal() && request.auth.uid == uid) || rotaYoneticisi();
+      allow list: if rotaYoneticisi();
+      allow create: if rotaTerminal() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['s', 'kod', 'model', 'uretici', 'android', 'surum', 'olusturma'])
+        && request.resource.data.keys().size() == 7
+        && request.resource.data.s == 1 && request.resource.data.kod is string
+        && request.resource.data.kod.matches('^[A-HJ-NP-Z2-9]{6}$')
+        && metin(request.resource.data.model, 1, 60) && metin(request.resource.data.uretici, 1, 60)
+        && rotaSayi(request.resource.data.android, 21, 99) && rotaSayi(request.resource.data.surum, 1, 99999999)
+        && request.resource.data.olusturma == request.time;
+      allow update: if false;
+      // Onaylanmamış (gereksiz) başvuru silinebilir; onaylanmışın izi kalır.
+      allow delete: if rotaYoneticisi() && !exists(rotaCihazYolu(uid));
+    }
+    match /rotaCihazlar/{uid} {
+      allow get: if (rotaTerminal() && request.auth.uid == uid) || rotaIzleyici();
+      allow list: if rotaIzleyici();
+      allow create: if rotaYoneticisi() && exists(/databases/$(database)/documents/rotaBasvurular/$(uid))
+        && rotaCihazBicim(request.resource.data) && request.resource.data.olusturma == request.time
+        && rotaIz('rotaCihazlar/' + uid);
+      allow update: if rotaYoneticisi() && rotaCihazBicim(request.resource.data)
+        && request.resource.data.olusturma == resource.data.olusturma && rotaIz('rotaCihazlar/' + uid);
+      // Onay kaldırma silme değil "aktif: false"dır (geçmiş parçalar bu terminale bağlı kalır).
+      allow delete: if false;
+      function rotaCihazBicim(d) {
+        return d.keys().hasOnly(['ad', 'aktif', 'takip', 'hareketSn', 'durgunSn', 'depoSn', 'olusturma', 'guncelleme', 'guncelleyen', 'denetim'])
+          && d.keys().size() == 10
+          && metin(d.ad, 1, 40) && d.aktif is bool && d.takip is bool
+          && rotaSayi(d.hareketSn, 5, 3600) && rotaSayi(d.durgunSn, 5, 3600) && rotaSayi(d.depoSn, 5, 3600)
+          && d.olusturma is timestamp && rotaDamga(d);
+      }
+    }
+    match /rotaSonDurum/{uid} {
+      allow get, list: if rotaIzleyici();
+      // Hız sınırı: aynı terminal en çok 15 sn'de bir günceller (kota koruması). Parça yazımı da
+      // bu güncellemeye bağlı olduğu için parçalar da bu hızla sınırlıdır.
+      allow create: if rotaOnayli() && request.auth.uid == uid && rotaDurumBicim(request.resource.data);
+      allow update: if rotaOnayli() && request.auth.uid == uid && rotaDurumBicim(request.resource.data)
+        && request.time >= resource.data.guncelleme + duration.value(15, 's');
+      allow delete: if false;
+      function rotaDurumBicim(d) {
+        return d.keys().hasOnly(['s', 'z', 'en', 'boy', 'dog', 'hiz', 'yon', 'pil', 'sarj', 'durum', 'bekleyen', 'surum', 'guncelleme'])
+          && d.keys().size() == 13 && d.s == 1
+          && (d.z == null || rotaSayi(d.z, 1500000000000, 9999999999999))
+          && (d.en == null || rotaOlcu(d.en, -90, 90)) && (d.boy == null || rotaOlcu(d.boy, -180, 180))
+          && (d.dog == null || rotaOlcu(d.dog, 0, 100000))
+          && (d.hiz == null || rotaOlcu(d.hiz, 0, 200)) && (d.yon == null || rotaOlcu(d.yon, 0, 360))
+          && rotaSayi(d.pil, 0, 100) && d.sarj is bool
+          && d.durum in ['hareket', 'durgun', 'depoda', 'kapali', 'izin_yok', 'konum_kapali', 'onay_bekliyor']
+          && rotaSayi(d.bekleyen, 0, 10000000) && rotaSayi(d.surum, 1, 99999999)
+          && d.guncelleme == request.time;
+      }
+    }
+    match /rotaParcalar/{id} {
+      // Terminal yalnız kendi parçasının var olup olmadığına bakabilir (M6: belirsiz gönderimden sonra).
+      allow get: if (rotaTerminal() && id.matches('^[A-Za-z0-9]{1,128}_[0-9]{1,15}$')
+          && id.split('_')[0] == request.auth.uid) || rotaIzleyici();
+      allow list: if rotaIzleyici();
+      allow create: if rotaOnayli() && rotaParcaBicim(id, request.resource.data)
+        && getAfter(/databases/$(database)/documents/rotaSonDurum/$(request.auth.uid)).data.guncelleme == request.time;
+      allow update: if false;
+      // Saklama 90 gün (K14); TTL çalışmazsa yönetici temizliği (M15).
+      allow delete: if rotaYoneticisi() && resource.data.alindi < request.time - duration.value(90, 'd');
+      function rotaParcaBicim(id, d) {
+        return d.keys().hasOnly(['s', 'cihaz', 'ilk', 'son', 'bas', 'bit', 'alindi', 'silinme', 'cihazSaati', 'pil', 'sarj', 'surum', 'n', 'olaylar'])
+          && d.keys().size() == 14 && d.s == 1 && d.cihaz == request.auth.uid
+          && rotaSayi(d.ilk, 1, 999999999999999) && d.son is int && d.son >= d.ilk
+          && id == request.auth.uid + '_' + string(d.ilk)
+          && d.n is list && d.n.size() <= 240 && d.olaylar is list && d.olaylar.size() <= 50
+          // Noktalar ve olaylar aynı sıra numarasını paylaşır: parça içinde boşluk olamaz,
+          // parçalar arası boşluk okuyan tarafta kayıp olarak görülür.
+          && d.son - d.ilk + 1 == d.n.size() + d.olaylar.size()
+          && d.bas is timestamp && d.bit is timestamp && d.bas <= d.bit
+          && d.bit <= request.time + duration.value(10, 'm') && d.bas >= request.time - duration.value(30, 'd')
+          && d.alindi == request.time && d.silinme == d.bit + duration.value(90, 'd')
+          && rotaSayi(d.cihazSaati, 1500000000000, 9999999999999)
+          && rotaSayi(d.pil, 0, 100) && d.sarj is bool && rotaSayi(d.surum, 1, 99999999);
+      }
+    }
+    match /rotaAraclar/{aracId} {
+      allow get, list: if rotaIzleyici();
+      allow create, update: if rotaYoneticisi() && aracId.matches('^[A-Za-z0-9_-]{1,40}$')
+        && request.resource.data.keys().hasOnly(['no', 'plasiyer', 'renk', 'yakit', 'tuketim', 'aktif', 'guncelleme', 'guncelleyen', 'denetim'])
+        && request.resource.data.keys().size() == 9
+        && metin(request.resource.data.no, 1, 20) && metin(request.resource.data.plasiyer, 2, 60)
+        && request.resource.data.renk is string && request.resource.data.renk.matches('^#[0-9a-f]{6}$')
+        && request.resource.data.yakit in ['dizel', 'benzin', 'lpg', 'elektrik', 'bilinmiyor']
+        && (request.resource.data.tuketim == null || rotaOlcu(request.resource.data.tuketim, 1, 60))
+        && request.resource.data.aktif is bool && rotaDamga(request.resource.data)
+        && rotaIz('rotaAraclar/' + aracId);
+      allow delete: if false;
+    }
+    match /rotaAtamalar/{id} {
+      // Yalnız eklenir: yanlış atama, daha geç yazılmış bir düzeltme atamasıyla geçersiz kılınır.
+      allow get, list: if rotaIzleyici();
+      allow create: if rotaYoneticisi() && id.matches('^[A-Za-z0-9]{20}$')
+        && request.resource.data.keys().hasOnly(['cihaz', 'arac', 'bas', 'yazan', 'zaman'])
+        && request.resource.data.keys().size() == 5
+        && request.resource.data.cihaz is string && existsAfter(rotaCihazYolu(request.resource.data.cihaz))
+        && request.resource.data.arac is string
+        && existsAfter(/databases/$(database)/documents/rotaAraclar/$(request.resource.data.arac))
+        && request.resource.data.bas is timestamp && request.resource.data.bas <= request.time + duration.value(30, 'd')
+        && request.resource.data.yazan == request.auth.uid && request.resource.data.zaman == request.time;
+      allow update, delete: if false;
+    }
+    match /rotaAyar/{ad} {
+      allow get: if ad == 'genel' && (rotaOnayli() || rotaIzleyici());
+      allow create, update: if ad == 'genel' && rotaYoneticisi()
+        && request.resource.data.keys().hasOnly(['depolar', 'bolgeler', 'guncelleme', 'guncelleyen', 'denetim'])
+        && request.resource.data.keys().size() == 5
+        && request.resource.data.depolar is list && request.resource.data.depolar.size() <= 10
+        && request.resource.data.bolgeler is list && request.resource.data.bolgeler.size() <= 10
+        && rotaDamga(request.resource.data) && rotaIz('rotaAyar/' + ad);
+      allow delete: if false;
+    }
+    // ---------------------------------------------------------------------------------------------
     // Android sürüm denetimi (lib/domain/surum.dart): üyeler okur; yalnız yönetici
     // aracı (admin SDK, tools/android_yayin.sh) yazar.
     match /ayarlar/android { allow get: if uye(); }
