@@ -62,6 +62,8 @@ class GeriCekilme(private val ilkMs: Long = 1_000, private val enCokMs: Long = 1
     }
 
     fun denenebilir(simdiMs: Long): Boolean = simdiMs >= sonrakiDenemeMs
+
+    fun beklenecekMs(simdiMs: Long): Long = (sonrakiDenemeMs - simdiMs).coerceAtLeast(0)
 }
 
 /**

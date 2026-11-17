@@ -1,3 +1,4 @@
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -16,6 +17,28 @@ val imzaDosyasi = file(
 )
 val imza = Properties().apply {
     if (imzaDosyasi.isFile) imzaDosyasi.inputStream().use { load(it) }
+}
+
+// Rota hizmetinin Firebase yapılandırması (docs/ROTA_MIMARI.md M13): Flutter'a
+// --dart-define-from-file ile verilen aynı dosyadan. Flutter bu değerleri gradle'a
+// "dart-defines" özelliğiyle (virgüllü base64) geçirir. Yalnız güvenli karakterler
+// kabul edilir; eksikse (ör. doğrudan gradle ile test) rota kapalı derlenir.
+val dartTanimlari: Map<String, String> = HashMap<String, String>().apply {
+    val ham = (project.findProperty("dart-defines") as String?).orEmpty()
+    for (parca in ham.split(",")) {
+        val metin = try {
+            String(Base64.getDecoder().decode(parca))
+        } catch (e: IllegalArgumentException) {
+            continue
+        }
+        val esit = metin.indexOf('=')
+        if (esit > 0) put(metin.substring(0, esit), metin.substring(esit + 1))
+    }
+}
+fun rotaTanimi(ad: String): String {
+    val deger = dartTanimlari[ad].orEmpty()
+    require(Regex("^[A-Za-z0-9:._-]*$").matches(deger)) { "Geçersiz yapılandırma değeri: $ad" }
+    return deger
 }
 
 android {
@@ -46,6 +69,14 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Rota (M13). Deneme kipinde (BUP_DENEME=true) rota kapalıdır.
+        buildConfigField("String", "ROTA_API_KEY", "\"${rotaTanimi("FIREBASE_API_KEY")}\"")
+        buildConfigField("String", "ROTA_APP_ID", "\"${rotaTanimi("FIREBASE_APP_ID")}\"")
+        buildConfigField("String", "ROTA_PROJE", "\"${rotaTanimi("FIREBASE_PROJECT_ID")}\"")
+        buildConfigField("String", "ROTA_GONDEREN", "\"${rotaTanimi("FIREBASE_SENDER_ID")}\"")
+        buildConfigField("boolean", "ROTA_DENEME", (rotaTanimi("BUP_DENEME") != "false").toString())
+        buildConfigField("boolean", "ROTA_EMULATOR", (rotaTanimi("BUP_EMULATOR") == "true").toString())
+        buildConfigField("String", "ROTA_EMULATOR_ADRESI", "\"${rotaTanimi("BUP_EMULATOR_HOST")}\"")
     }
 
     signingConfigs {
@@ -105,6 +136,10 @@ dependencies {
         implementation("androidx.test.espresso:espresso-core:3.6.1")
     }
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    // Rota hizmeti (yerel Kotlin, M1/M2): FlutterFire ile aynı Firebase BoM; ayrı sürüm yok.
+    implementation(platform("com.google.firebase:firebase-bom:34.17.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
     // Rota çekirdeği (saf Kotlin) JVM birim testleri: docs/ROTA_MIMARI.md §7.
     testImplementation("junit:junit:4.13.2")
 }
