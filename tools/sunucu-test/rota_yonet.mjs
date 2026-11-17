@@ -35,10 +35,19 @@ async function yaz(yol, veri, eylem, birlestir = false) {
   b.set(db.doc(yol), { ...veri, guncelleme: FieldValue.serverTimestamp(), guncelleyen: YAZAN, denetim: id }, { merge: birlestir });
   await b.commit();
 }
+/** Terminal kodu (6 karakter) ya da kodlar çakışırsa uzun kimlik (uid). */
 async function koddan(kod) {
+  if (/^[A-Za-z0-9]{20,128}$/.test(kod ?? '')) {
+    const d = await db.doc(`rotaBasvurular/${kod}`).get();
+    if (!d.exists) throw Error('Bu kimlikle başvuru yok.');
+    return d;
+  }
   if (!/^[A-HJ-NP-Z2-9]{6}$/.test(kod ?? '')) throw Error('Kod 6 karakter olmalı (ör. K9WMEY).');
   const q = await db.collection('rotaBasvurular').where('kod', '==', kod).get();
-  if (q.size !== 1) throw Error(q.size ? `Bu kodla ${q.size} başvuru var; uid ile çalışın.` : 'Bu kodla başvuru yok.');
+  if (q.size !== 1) {
+    throw Error(q.size ? `Bu kodla ${q.size} başvuru var; kod yerine uzun kimliği yazın: ${q.docs.map(d => d.id).join(', ')}`
+      : 'Bu kodla başvuru yok.');
+  }
   return q.docs[0];
 }
 const tarih = t => t?.toDate?.().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }) ?? '—';
