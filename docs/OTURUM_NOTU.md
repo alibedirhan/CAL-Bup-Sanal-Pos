@@ -1,3 +1,16 @@
+# 17 Kasım 2026 gece — Rota: canlı adımlar 1–3 (Ali onayı), Ali'nin telefonunda 24 saat deneme başladı
+
+Ali "1–3. adımlara başla", sonra "ekrana bağlan, testleri sen yap" dedi. Yapılanlar ve kanıtlar
+`ROTA_MIMARI.md` §11: canlıda Anonymous açık, rota kuralları canlıda, 0.13.0+23 main'de (CI geçti),
+**yayın yok**; yalnız Ali'nin Redmi Note 8'ine USB ile kuruldu (veri korundu). Terminal 4G77NB
+onaylı, takip açık, veri canlıya geliyor. Gerçek telefonda mevcut bir hata bulundu ve düzeltildi
+(profil dinleyicisinin geçici hatası ekranı sıfırlıyordu). Yeni test: `integration_test/
+android_rota_kurulum_test.dart` (android_test.sh'e eklendi). Telefon ekranı: sürümde ekran görüntüsü
+engelli, `uiautomator dump` ile okunur. 24 saat sonra: `node tools/sunucu-test/rota_yonet.mjs durum`
+ve `parcalar 4G77NB`; pil tüketimi (Ayarlar → Pil), boşluk, açılışta başlama.
+
+---
+
 # 17 Kasım 2026 akşam — Rota Aşama 1 kodu bitti (dal `rota`, yayın yok)
 
 Ali: "yalnız rotaya odaklan; güvenli, sağlam temelli, mühendislik açısından iyi bir proje; sana

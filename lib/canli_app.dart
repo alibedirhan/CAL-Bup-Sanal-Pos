@@ -174,6 +174,12 @@ class _HesapKapisiState extends State<_HesapKapisi> {
             });
           },
           onError: (Object e) {
+            if (!profilHatasiOturumuKapatir(
+              e,
+              dogrulanmisKullaniciVar: _kullanici != null,
+            )) {
+              return;
+            }
             if (mounted) {
               setState(() {
                 _kontrol = false;

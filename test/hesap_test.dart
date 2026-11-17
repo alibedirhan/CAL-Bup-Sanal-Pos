@@ -71,6 +71,7 @@ Future<void> gir(WidgetTester t) async {
 }
 
 void main() {
+  profilHatasiTestleri();
   testWidgets('Şifre değişiminde beş karakter reddedilir, altı kabul edilir', (
     t,
   ) async {
@@ -210,5 +211,30 @@ void main() {
     );
     expect(c.duzenle(ad: 'Örnek Yeni Ad').kimlikNo, c.kimlikNo);
     expect(() => c.duzenle(kimlikNo: 'gecersiz'), throwsA(isA<PosHatasi>()));
+  });
+}
+
+void profilHatasiTestleri() {
+  test('Doğrulanmış kullanıcı geçici bağlantı hatasında ekrandan atılmaz', () {
+    const baglanti = PosHatasi('baglanti', 'Erişim sunucuda doğrulanıyor.');
+    expect(
+      profilHatasiOturumuKapatir(baglanti, dogrulanmisKullaniciVar: true),
+      isFalse,
+    );
+    // İlk doğrulama yoksa önbellek kaydı güvenilmez: oturum açılmaz.
+    expect(
+      profilHatasiOturumuKapatir(baglanti, dogrulanmisKullaniciVar: false),
+      isTrue,
+    );
+    // Başka her hata oturumu kapatır.
+    for (final h in [
+      const PosHatasi('yetki', 'Erişim yok.'),
+      StateError('x'),
+    ]) {
+      expect(
+        profilHatasiOturumuKapatir(h, dogrulanmisKullaniciVar: true),
+        isTrue,
+      );
+    }
   });
 }

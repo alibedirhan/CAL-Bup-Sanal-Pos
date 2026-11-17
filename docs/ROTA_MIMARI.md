@@ -252,7 +252,25 @@ Aşama 1'in kodu ve emülatör kanıtı tamam (dal `rota`, main'e alınmadı, ya
 | Sürüm APK | ✅ derleme | R8 ile derlendi, `android_apk_denetle.py` geçti; çalışması gerçek telefonda görülecek |
 | 9. Ali'nin telefonu | ⏳ | Ali'nin onayını bekleyen adımlar aşağıda |
 
-**Ali'nin onayını bekleyenler (sırasıyla; hiçbiri yapılmadı):**
+**17 Kasım akşam, Ali'nin onayıyla yapılanlar:** (1) canlıda Anonymous sağlayıcı açıldı (yalnız o
+alan; `auth_duzenle.mjs` ve `yayin_oncesi.mjs` buna göre); canlı duman testi: anonim hesap Sanal POS
+ve rota verisini okuyamadı, onaysız yazamadı. (2) Kurallar canlıda (`firestore:rules` yalnız; canlı
+önceki kural main ile birebirdi, fark yalnız eklenen rota bölümü). (3) 0.13.0+23 main'de (`0d31226`
+ve sonrası), CI geçti; **yayınlanmadı**, yalnız Ali'nin telefonuna (Redmi Note 8, Android 11) USB ile
+kuruldu. Telefonda kurulum ekranı, izinler, MIUI pil "Kısıtlama yok" ve **MIUI "Otomatik başlatma"**
+(Xiaomi'de açılışta başlama için şart) yapıldı; terminal kodu **4G77NB** onaylandı ("Ali telefon"),
+takip açık. Canlıya gelen parçalar sözleşmeyle doğrulandı (boşluk/çift yok); güncellemeden sonra
+hizmetin kendiliğinden yeniden başladığı görüldü.
+**Gerçek telefonda bulunan hata (mevcut, rotadan bağımsız):** profil dinleyicisi bağlantı bir an
+tazelenince (şifre yeniden doğrulama, tünel) önbellek kaydı yüzünden hata verip doğrulanmış
+kullanıcıyı ekrandan atıyor, açık sayfaları kaybettiriyordu. Geçici tanı kanalıyla kanıtlandı,
+`profilHatasiOturumuKapatir` (domain/kullanici.dart) ile düzeltildi, telefonda doğrulandı; tanı
+kanalı kaldırıldı. Not: sürüm derlemesi `print` çıktısını telefona yazmaz; ekran görüntüsü de
+FLAG_SECURE ile engelli (ekran erişilebilirlik ağacıyla okunur).
+**Yönetici aracı** artık Firestore REST'i kullanır (`rota_rest.mjs`; admin SDK'nın Firestore
+istemcisi CLI oturumuyla çalışmıyor); `parcalar KOD` komutu gelen veriyi doğrular.
+
+**Kalanlar:**
 1. Canlı Firebase'de **Anonymous** giriş sağlayıcısını açmak (Authentication → Sign-in method).
 2. Yeni Firestore kurallarını canlıya göndermek (yalnız `rota*` eklendi; eski bölümler aynı).
 3. `rota` dalını main'e almak, sürümü 0.13.0 yapmak ve APK'yı Ali'nin telefonuna kurmak

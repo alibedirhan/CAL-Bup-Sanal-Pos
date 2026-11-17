@@ -101,5 +101,6 @@ firebase emulators:exec --only auth,firestore --project demo-bup-pos \
    && $temizle && flutter test integration_test/android_denizpay_test.dart -d $cihaz --no-pub $tanim \
    && $temizle && flutter test integration_test/android_surum_test.dart -d $cihaz --no-pub $tanim \
    && $temizle && flutter test integration_test/android_kamera_test.dart -d $cihaz --no-pub $tanim \
+   && $temizle && flutter test integration_test/android_rota_kurulum_test.dart -d $cihaz --no-pub $tanim \
    && ($adb_yolu shell locksettings clear --old $PIN >/dev/null) \
    && $temizle && flutter test integration_test/android_pin_test.dart -d $cihaz --no-pub $tanim"
