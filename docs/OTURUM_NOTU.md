@@ -19,7 +19,8 @@ Ali "sitede yayınlayalım", sonra "bunları ben dönünce yaparız, başka eksi
 **Ali dönünce (sırayla, her biri onayla):** (1) Firebase konsolunda Google girişini açmak (Ali),
 (2) `node tools/sunucu-test/auth_duzenle.mjs` (yetkili alan), (3) `rota_yonet.mjs ilk-yonetici <Gmail>`,
 (4) `firestore:rules` (gonderimSn), (5) 0.13.1'i Ali'nin telefonuna USB ile kurmak (denemeyi yeniden
-başlatır; `rota-0.13.1` → main), (6) CAL_bup 1.45.0: `rota` → main, push, `yayin:ozel`.
+başlatır; `rota-0.13.1` → main). (6) **Yapıldı:** CAL_bup 1.45.0 canlıda (Ali "canlı sitede yayınlayalım",
+18 Kasım; `CAL_bup/docs/OTURUM_NOTU.md` en üstü). Rota sekmesi (1)–(3) yapılınca çalışır.
 
 ---
 
