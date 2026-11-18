@@ -1,3 +1,23 @@
+# 18 Kasım 2026 gece — Rota canlıda çalışıyor (kurallar, 0.13.1 Ali'nin telefonunda; uygulama yayını yok)
+
+Ali "yayınlayalım, telefona da kur ve test et" dedi (sonra uyumaya gitti). Yapılanlar:
+- **Kurallar** (`gonderimSn`) canlıda; canlı kaynak dosyayla birebir doğrulandı (50 kural testi önce geçti).
+- **0.13.1+24** sürüm APK'sı (deneme kipi, SHA-256 f8cbbb41…) Ali'nin Redmi'sine `adb install -r` ile kuruldu
+  (veri korundu). Telefonda: hizmet ön planda, iş bekçisi (15 dk, 4702) ve alarm bekçisi kurulu, pil muafiyeti
+  var; kurulumdan sonra hizmet kendiliğinden başladı; canlıya veri geliyor (`parcalar 4G77NB`: geçersiz 0,
+  boşluk 0, çift 0). Gerçek telefonda hizmet köksüz öldürülemediği için bekçinin yeniden başlatması yalnız
+  emülatörde kanıtlı (`am crash` hizmeti durdurmadı).
+- `rota-0.13.1` main'e alındı ve gönderildi (`aac1f78`); **APK yayını (`android_yayin.sh --yayinla`) yapılmadı**:
+  indirme sayfası hâlâ 0.12.1, terminaller güncelleme görmez.
+- CAL_bup 1.46.0 canlıda (Rota sekmesi Google girişiyle çalışır).
+**Yarın (Ali):** bir el terminaline kurulum. 0.13.1 indirme sayfasında yok → ya terminali bu bilgisayara USB ile
+bağlayıp `adb install -r build/android_surum/bup-sanal-pos-0.13.1.apk` (Ali'nin onayıyla; Zebra emanet ise
+önce sor) ya da Ali onaylarsa `android_yayin.sh --yayinla` (bütün terminaller güncellemeyi görür; rota yine
+yalnız kurulum ekranında izin verilen terminalde başlar). Sonra terminalde Bilgi → Yönetici kurulumu → izinler
+→ kod; CAL_bup Rota → Ayarlar'da onay ve takip.
+
+---
+
 # 18 Kasım 2026 akşam — Rota eksikleri kapandı (yerelde; yayın/canlı değişiklik yok)
 
 Ali "eksiklerimi bul, kapat; Google kısmına ben bakacağım" dedi. Bu depoda (dal `rota-0.13.1`):
