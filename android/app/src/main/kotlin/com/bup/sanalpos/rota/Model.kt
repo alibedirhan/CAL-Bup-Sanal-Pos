@@ -9,7 +9,10 @@ enum class NoktaKaynagi(val kod: String) { GPS("g"), AG("a") }
 /** Kuyruktaki bir konum noktası. [sira] noktalar ve olaylar arasında ortaktır, boşluksuz artar. */
 data class Nokta(
     val sira: Long,
-    /** GPS zamanı (epoch ms). Ağ konumunda cihazın verdiği zaman. */
+    /**
+     * GPS zamanı (epoch ms). Ağ konumunda cihaz saatiyle verilen zaman, gerçek zaman tahminine taşınmış
+     * olarak (SaatFarki, M21): cihaz saati yanlışsa parça sunucunun "gelecek" sınırına takılmasın.
+     */
     val zaman: Long,
     val enlem: Double,
     val boylam: Double,

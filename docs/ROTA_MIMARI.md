@@ -45,7 +45,7 @@
 | M17 | Android'in zorunlu bildirimi en düşük önemde, sessiz, düğmesiz kanaldadır; Android 13+'ta bildirim izni istenmediği için çubukta görünmez. | K24; TC15 Android 13 (SDK 33) — §8 soru 5b kapandı. |
 | M18 | Kurallar ve şema önce, kod sonra: her aşamada önce Firestore kuralı + emülatör testi yazılır. | En az yetkinin kodla değil sunucuyla sağlanması. |
 | M19 | **Bekçi** (0.13.1), iki katlı: (1) iş zamanlayıcısında kalıcı 15 dk'lık iş (`RotaBekci`, ayrıntı `bekci`); Android 12+'da yalnız pil muafiyeti varken başlatabilir (emülatörde ölçüldü: muafiyetsiz "Background started FGS: Disallowed"). (2) 15 dk'lık tam zamanlı alarm (`RotaBekciAlarmi`, ayrıntı `bekci_alarm`, `USE_EXACT_ALARM`; uygulama Play'de olmadığı için uygundur): muafiyet sonradan kalksa da başlatır ("Allowed … ALARM_MANAGER_WHILE_IDLE"); kendini yeniden kurar, duvar saatine göredir. Hizmet çalışıyorsa ikisi de hiçbir şey yapmaz. "Durmaya zorla" bekçiyi de siler; uygulama açılışı ya da telefon açılışı yeniden kurar. | 17 Kasım gecesi gerçek telefonda: Google Play Hizmetleri güncellenince Android uygulamayı kapattı ("stop com.google.android.gms due to installPackageLI"), START_STICKY işlemedi, 9 saat veri gelmedi. |
-| M21 | **Bilinen sınır — cihaz saati:** kural, bitişi sunucu saatinden 10 dk'dan ileri olan parçayı reddeder. GPS gelmeden önce yazılan kayıt (olay, ağ konumu) cihaz saatini taşır; cihaz saati 10 dk'dan fazla ilerideyse o kayıtları içeren parça, gerçek saat yetişene kadar (fark − 10 dk) gönderilemez, sonra kendiliğinden gider. Gün düzeyinde yanlış saatte gün düzeyinde takılır. Terminallerde otomatik saat açık olmalı. (Emülatörde saat 16 dk ileri bırakılınca görüldü, 18 Kasım.) | Kural gelecek tarihli sahte veriyi engeller; düzeltme ancak kayıt zamanını sunucuya göre yeniden yazmakla olur (sözleşme değişikliği), şimdilik yapılmadı. |
+| M21 | **Cihaz saati (0.13.1, 18 Kasım düzeltmesi).** Olay ve ağ konumu zamanları cihaz saatiyle değil **gerçek zaman tahminiyle** yazılır (`SaatFarki`): son GPS zamanı tekdüze saatle (`elapsedRealtime`, elle değiştirilemez) birlikte tutulur, `gerçek = gps + (tekdüze − tekdüze_gps)`; referans açılış sayısıyla (`Settings.Global.BOOT_COUNT`) saklanır, hizmet yeniden başlasa da (bekçi) aynı açılışta geçerlidir. GPS yokken ağ saati (Android 13+, `currentNetworkTimeClock`), o da yoksa cihaz saati. Ağ konumunun zamanı aynı yaşla gerçek zamana taşınır. Parçadaki `cihazSaati` ham kalır: CAL_bup 5 dk'dan büyük farkı "Terminal saati yanlış" diye gösterir. **Kalan sınır:** yeniden başlatmadan sonra GPS gelmeden, ağ saati olmayan (Android ≤12) cihazda saat 10 dk'dan fazla ileriyse ilk kayıtlar ilk GPS'e kadar bekler. Uçtan uca testte GPS yokken (konum kapalı) saat 30 dk ileri alındı: "saat değişti" olayı gerçek zamanla ve takılmadan gitti; ölen hizmetin yerine yeni süreçte yazılan "izin yok" olayı da gerçek zamanla. (Gözlem: konum kapalıyken Android konum hizmetinin başlamasına izin vermez; bekçi yalnız "izin yok" olayı yazar, konum açılınca hizmet bekçiyle kalkar. Merkezde bu süre "veri kesildi" olarak görünür.) **Dikkat:** emülatörün GPS zamanı cihaz saatini izler (gerçek GNSS uydu saatini verir); GPS zamanı sistem saatine bağlı bir cihazda ileri saat GPS noktalarını da ileri damgalar — TC15'te kabulde bakılacak (§10). | Eskiden fark GPS anında ölçülüp sabit tutuluyordu: saat GPS'ten *sonra* ileri alınınca olaylar da ileri kayıyor, kapalı alanda parça sunucunun 10 dk sınırına takılıyordu; fark hizmet ölünce de unutuluyordu (emülatörde 16 dk ileri saatle görüldü). |
 | M20 | **Gönderim aralığı** (0.13.1, K31): `rotaCihazlar.gonderimSn` (isteğe bağlı, 15–3600, yoksa 120). İki yazma arası en az bu; kuyrukta tam parça (240 nokta) birikmişse hız sınırıyla (16 sn) boşaltılır. Noktalar yine `hareketSn`'de alınır. | Spark'ın günlük 20.000 yazma sınırı (ROTA_ASAMA2_ANALIZ §3.6). |
 
 ## 3. Bileşenler
@@ -237,6 +237,7 @@ Uçak kipi doğrudan kayıt değildir; veri kesintisi ve olaylar CAL_bup'ta uyar
 - ~~Android 15'te `BOOT_COMPLETED` sonrası konum hizmeti~~ → **emülatörde doğrulandı** (17 Kasım,
   arka plan konum izniyle; `tools/rota_test.sh` gerçek yeniden başlatma yapar). Android 13 (TC15) gerçek cihazda bakılacak.
 - TC15'te 24 saat GPS'in pil tüketimi (Aşama 1 sonu, gerçek ölçüm).
+- TC15'te GPS noktası zamanının uydu saati olduğu (cihaz saati elle ileri alınınca `kay: g` noktaların zamanı değişmemeli; M21).
 - Anonymous ve Google sağlayıcılarının canlı projede açılması (Ali'nin onayıyla).
 
 ## 11. Durum (17 Kasım 2026 akşam)
@@ -278,7 +279,8 @@ Google Play Hizmetleri güncellemesiyle öldü ve geri gelmedi (`dumpsys activit
 com.google.android.gms due to installPackageLI"). Bekçi (M19) ve gönderim aralığı (M20) eklendi;
 `rota_test.sh` iki bekçiyi de sınar (yeniden başlatmadan sonra iş kayıtlı, durdurulan hizmeti iş bekçisi
 başlatır; pil muafiyeti kaldırılınca alarm bekçisi başlatır).
-Kural değişikliği yalnız isteğe bağlı `gonderimSn`; canlıya gönderilmedi. CAL_bup Ayarlar ekranı 120'yi
+Kural değişikliği yalnız isteğe bağlı `gonderimSn`; canlıya gönderilmedi. Aynı gün akşam (yayın yok):
+saat düzeltmesi tekdüze saate dayandı (M21), uçtan uca teste "saat 30 dk ileri" adımı eklendi. CAL_bup Ayarlar ekranı 120'yi
 yazmadığı için eski kuralla da çalışır.
 
 **Kalanlar (17 Kasım, 1–4 yapıldı):**

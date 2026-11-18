@@ -1,3 +1,20 @@
+# 18 Kasım 2026 akşam — Rota eksikleri kapandı (yerelde; yayın/canlı değişiklik yok)
+
+Ali "eksiklerimi bul, kapat; Google kısmına ben bakacağım" dedi. Bu depoda (dal `rota-0.13.1`):
+- **Saat düzeltmesi (M21):** olay ve ağ konumu zamanları tekdüze saate dayalı gerçek zaman tahminiyle;
+  referans açılış sayısıyla saklanır (bekçi yeniden başlatınca da geçerli), Android 13+'ta ağ saati yedek.
+  Eski kod saat GPS'ten sonra ileri alınınca olayları ileri yazıyor, parça ~20 dk takılıyordu.
+- Uçtan uca teste "GPS yokken saat 30 dk ileri" adımı. Kanıt: `bash tools/rota_test.sh emulator-5584`
+  (22 kural, Kotlin JVM, 6 kuyruk; uçtan uca ikinci koşuda tam geçti: 11 parça, 47 kayıt, boşluk/çift yok).
+- Gözlemler: emülatörün GPS zamanı cihaz saatini izler (TC15'te uydu saati doğrulanacak, ROTA_MIMARI §10);
+  konum kapalıyken bekçi hizmeti başlatamaz, yalnız "izin yok" olayı yazar.
+CAL_bup tarafı (1.46.0, dal `rota-eksikler`): canlı uyarılar, bekçi/saat uyarısı, tarayıcı bildirimi,
+başvuru silme, sürüm/kota, 90 gün temizliği, Excel — `CAL_bup/docs/OTURUM_NOTU.md` en üstü.
+**Ali'nin adımları değişmedi** (aşağıdaki kayıt): Google girişi (konsolda Ali) → yetkili alan → ilk yönetici
+→ kurallar → 0.13.1 telefona. 0.13.1 APK'sı saat düzeltmesiyle yeniden derlenmeli (deneme kipi).
+
+---
+
 # 18 Kasım 2026 sabah — Rota: bekçi + gönderim aralığı (0.13.1), CAL_bup Ayarlar ekranı (yayın yok)
 
 Ali "sitede yayınlayalım", sonra "bunları ben dönünce yaparız, başka eksiğimiz varsa ona geçelim" dedi.

@@ -154,6 +154,46 @@ await bekleyerek('bekçinin başlattığı hizmet ve sonrası nokta', 150, async
   return o && sonNokta.q > o.q ? ps : null;
 });
 
+console.log('== GPS yokken saat 30 dk ileri alınır (M21): olaylar gerçek zamanla, gönderim takılmaz');
+// Kapalı alan gibi: konum kapalı (GPS yok), cihaz saati ileri alınır. Eski kod "saat değişti" olayını ileri
+// saatle yazıyordu: parça sunucunun 10 dk "gelecek" sınırına takılıp ~20 dk gönderilemiyordu. Sonra hizmet
+// ölür; konum kapalıyken bekçi onu başlatamaz (Android), yalnız "izin yok" olayı yazılır — yeni süreçte de
+// saklanan referansla gerçek zamanla. Not: emülatörün GPS zamanı cihaz saatini izler (gerçek GNSS uydu
+// saatini verir); bu yüzden saat ileriyken GPS noktası alınmaz.
+adb('shell', 'cmd', 'location', 'set-location-enabled', 'false');
+await bekle(5000);
+const ileriAn = Date.now();
+adb('shell', 'cmd', 'alarm', 'set-time', String(Date.now() + 30 * 60_000));
+let olaylarIleri;
+try {
+  olaylarIleri = await bekleyerek('ileri saatteyken "saat değişti" sunucuda', 120, async () => {
+    const ps = await parcalar(uid);
+    const p = ps.find(x => x.olaylar.some(o => o.tur === 'saat_degisti' && o.z >= ileriAn - 60_000));
+    return p ? { p, o: p.olaylar.find(o => o.tur === 'saat_degisti') } : null;
+  });
+  assert.ok(Math.abs(olaylarIleri.o.z - Date.now()) < 3 * 60_000,
+    `"saat değişti" gerçek zamanla yazılmalı (fark ${Math.round((olaylarIleri.o.z - Date.now()) / 60_000)} dk)`);
+  assert.ok(Math.abs(olaylarIleri.p.cihazSaati - Date.now() - 30 * 60_000) < 3 * 60_000,
+    'Parçadaki ham cihaz saati ileri kalmalı (merkezdeki "saat yanlış" uyarısı için)');
+  try {
+    adb('shell', 'su', '0', 'am', 'stop-service', '-n', `${PAKET}/.rota.RotaHizmeti`);
+  } catch (e) {
+    assert.match(String(e.stdout) + String(e.stderr), /Service stopped/, 'Hizmet durdurulamadı');
+  }
+  await bekle(2000);
+  adb('shell', 'cmd', 'jobscheduler', 'run', '-f', PAKET, '4702');
+  await bekle(5000);
+} finally {
+  adb('shell', 'cmd', 'alarm', 'set-time', String(Date.now()));
+  adb('shell', 'cmd', 'location', 'set-location-enabled', 'true');
+}
+adb('shell', 'cmd', 'jobscheduler', 'run', '-f', PAKET, '4702');
+await yuru(10);
+const izinOlayi = await bekleyerek('saat ileriyken yazılan "izin yok" olayı sunucuda', 150, async () =>
+  (await parcalar(uid)).flatMap(p => p.olaylar).find(o => o.tur === 'izin_yok' && o.a === 'bekci' && o.z >= ileriAn - 60_000));
+assert.ok(izinOlayi.z < Date.now() + 60_000, `"izin yok" gerçek zamanla yazılmalı (fark ${Math.round((izinOlayi.z - Date.now()) / 60_000)} dk)`);
+console.log('   ileri saatte yazılan olaylar gerçek zamanla sunucuda; ham cihaz saati parçada');
+
 console.log('== Bütünlük');
 const son = await parcalar(uid);
 assert.deepEqual(bosluklar(son), [], 'Parçalar arası kayıp kayıt');

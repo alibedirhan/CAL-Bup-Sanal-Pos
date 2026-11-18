@@ -69,12 +69,47 @@ class GeriCekilmeTest {
 }
 
 class SaatFarkiTest {
-    @Test fun olayZamaniGpsSaatineGoreDuzeltilir() {
+    private val ileri = 7_200_000L // cihaz saati 2 saat ileri
+
+    @Test fun gpsYokkenAgSaatiYoksaCihazSaati() {
         val s = SaatFarki()
-        assertEquals(5_000L, s.duzelt(5_000L))
-        // Cihaz saati 2 saat ileri alınmış.
-        s.gpsGeldi(gpsZamaniMs = 1_000_000L, cihazSaatiMs = 1_000_000L + 7_200_000L)
-        assertEquals(1_000_500L, s.duzelt(1_000_500L + 7_200_000L))
+        assertEquals(5_000L, s.simdi(cihazSaatiMs = 5_000L, tekduzeMs = 10L))
+        assertEquals(4_000L, s.simdi(cihazSaatiMs = 5_000L, tekduzeMs = 10L, agSaatiMs = 4_000L))
+    }
+
+    @Test fun gpsSonrasiZamanTekduzeSaattenYurur() {
+        val s = SaatFarki()
+        s.gpsGeldi(gpsZamaniMs = 1_000_000L, tekduzeMs = 50_000L, acilis = 7)
+        // 500 ms sonra; cihaz saati 2 saat ileri, ağ saati de yanlış olsa GPS esastır.
+        assertEquals(1_000_500L, s.simdi(1_000_500L + ileri, 50_500L, agSaatiMs = 1L))
+        assertEquals(-ileri, s.fark(1_000_500L + ileri, 50_500L))
+    }
+
+    @Test fun cihazSaatiGpsdenSonraDegistirilseDeKaymaz() {
+        // Eski hata: fark GPS anında ölçülüp sabit tutuluyordu; saat sonradan ileri alınınca olay zamanları
+        // da ileri kayıyor, GPS gelmeyen kapalı alanda parça sunucunun "gelecek" sınırına takılıyordu.
+        val s = SaatFarki()
+        s.gpsGeldi(gpsZamaniMs = 1_000_000L, tekduzeMs = 50_000L, acilis = 7)
+        val birDkSonra = s.simdi(cihazSaatiMs = 1_060_000L + ileri, tekduzeMs = 110_000L)
+        assertEquals(1_060_000L, birDkSonra)
+    }
+
+    @Test fun agKonumuZamaniAyniYaslaTasinir() {
+        val s = SaatFarki()
+        s.gpsGeldi(gpsZamaniMs = 1_000_000L, tekduzeMs = 50_000L, acilis = 7)
+        // Konum 3 sn önce, ileri saatle damgalanmış.
+        assertEquals(1_007_000L, s.duzelt(1_007_000L + ileri, 1_010_000L + ileri, 60_000L))
+    }
+
+    @Test fun saklanmisReferansYalnizAyniAcilistaGecerli() {
+        val r = SaatFarki.Referans(gercekMs = 1_000_000L, tekduzeMs = 50_000L, acilis = 7)
+        val ayni = SaatFarki().apply { yukle(r, acilis = 7) }
+        assertEquals(1_010_000L, ayni.simdi(cihazSaatiMs = 9L, tekduzeMs = 60_000L))
+        val yeniAcilis = SaatFarki().apply { yukle(r, acilis = 8) }
+        assertEquals(9L, yeniAcilis.simdi(cihazSaatiMs = 9L, tekduzeMs = 60_000L))
+        val yeni = SaatFarki().apply { gpsGeldi(2_000_000L, 1L, 7) }
+        yeni.yukle(r, acilis = 7)
+        assertEquals("Taze GPS, saklanmış referansla ezilmez", 2_000_000L, yeni.simdi(0L, 1L))
     }
 }
 

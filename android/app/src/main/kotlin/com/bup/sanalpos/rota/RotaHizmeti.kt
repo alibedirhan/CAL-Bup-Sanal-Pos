@@ -71,6 +71,8 @@ class RotaHizmeti : Service() {
         agH = Handler(agIs.looper)
         kuyruk = NoktaKuyrugu.al(this)
         depo = AyarDeposu(this)
+        // Saat referansı (M21) her yolda geçerli olsun: izin yokken erken biten başlatmada da olay yazılır.
+        saat.yukle(depo.saatReferansi, acilisSayisi())
         lm = getSystemService(LocationManager::class.java)
         alici = KonumAlici(lm, konumIs.looper) { noktaGeldi(it) }
     }
@@ -178,19 +180,53 @@ class RotaHizmeti : Service() {
                     takibiUygula()
                 }
                 Intent.ACTION_BATTERY_LOW -> olay(OlayTuru.PIL_DUSUK, "%${pil().first}")
-                Intent.ACTION_TIME_CHANGED -> olay(OlayTuru.SAAT_DEGISTI, "GPS farkı ${saat.fark / 1000} sn")
+                Intent.ACTION_TIME_CHANGED -> olay(OlayTuru.SAAT_DEGISTI, "fark ${saatFarki() / 1000} sn")
                 Intent.ACTION_SHUTDOWN -> olay(OlayTuru.KAPANIS)
             }
         }
     }
 
     private fun olay(tur: OlayTuru, ayrinti: String? = null) {
-        kuyruk.ekle(tur, saat.duzelt(System.currentTimeMillis()), ayrinti)
+        kuyruk.ekle(tur, gercekZaman(), ayrinti)
     }
 
-    private fun noktaGeldi(n: Nokta) {
+    // --- saat (M21): olay ve ağ konumu zamanları cihaz saatiyle değil gerçek zaman tahminiyle ---
+    private var sonSaklama = Long.MIN_VALUE / 2
+
+    private fun gercekZaman(): Long =
+        saat.simdi(System.currentTimeMillis(), SystemClock.elapsedRealtime(), agSaati())
+
+    private fun saatFarki(): Long =
+        saat.fark(System.currentTimeMillis(), SystemClock.elapsedRealtime(), agSaati())
+
+    /** Ağ saati (operatör/NTP; Android 13+); bilinmiyorsa null. */
+    private fun agSaati(): Long? = if (Build.VERSION.SDK_INT >= 33) {
+        runCatching { SystemClock.currentNetworkTimeClock().millis() }.getOrNull()
+    } else {
+        null
+    }
+
+    private fun acilisSayisi(): Int =
+        runCatching { android.provider.Settings.Global.getInt(contentResolver, android.provider.Settings.Global.BOOT_COUNT) }
+            .getOrDefault(-1)
+
+    private fun noktaGeldi(gelen: Nokta) {
         if (!ayar.calisir) return
-        if (n.kaynak == NoktaKaynagi.GPS && !n.sahte) saat.gpsGeldi(n.zaman, System.currentTimeMillis())
+        val tekduze = SystemClock.elapsedRealtime()
+        val n = if (gelen.kaynak == NoktaKaynagi.GPS) {
+            gelen
+        } else {
+            // Ağ konumunun zamanı cihaz saatidir: aynı yaşla gerçek zamana taşınır (M21).
+            gelen.copy(zaman = saat.duzelt(gelen.zaman, System.currentTimeMillis(), tekduze, agSaati()))
+        }
+        if (n.kaynak == NoktaKaynagi.GPS && !n.sahte) {
+            saat.gpsGeldi(n.zaman, tekduze, acilisSayisi())
+            // Saklama seyrek (10 dk): tekdüze saatin kayması günde bir saniyenin altındadır.
+            if (tekduze - sonSaklama >= 10 * 60_000L) {
+                depo.saatReferansi = saat.referans
+                sonSaklama = tekduze
+            }
+        }
         if (n.sahte && !sonSahte) olay(OlayTuru.SAHTE_KONUM)
         sonSahte = n.sahte
         val k = kuyruk.ekle(n)
@@ -233,7 +269,7 @@ class RotaHizmeti : Service() {
 
     private val bakim: Runnable = object : Runnable {
         override fun run() {
-            kuyruk.bakim(saat.duzelt(System.currentTimeMillis()))
+            kuyruk.bakim(gercekZaman())
             konumH.postDelayed(this, BAKIM_MS)
         }
     }

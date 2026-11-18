@@ -41,6 +41,20 @@ class AyarDeposu(context: Context) {
             p.edit().putString("basvuru", v).apply()
         }
 
+    /** Saat referansı (M21): hizmet yeniden başlasa da (bekçi) aynı açılışta geçerli kalsın. */
+    var saatReferansi: SaatFarki.Referans?
+        get() = if (!p.contains("saatGercek")) null else SaatFarki.Referans(
+            p.getLong("saatGercek", 0), p.getLong("saatTekduze", 0), p.getInt("saatAcilis", -1),
+        )
+        set(r) {
+            if (r == null) {
+                p.edit().remove("saatGercek").remove("saatTekduze").remove("saatAcilis").apply()
+            } else {
+                p.edit().putLong("saatGercek", r.gercekMs).putLong("saatTekduze", r.tekduzeMs)
+                    .putInt("saatAcilis", r.acilis).apply()
+            }
+        }
+
     /** Son konumun açık olup olmadığı (açılışta "konum kapandı/açıldı" olayı için). */
     var konumAcikti: Boolean?
         get() = if (p.contains("konumAcik")) p.getBoolean("konumAcik", true) else null

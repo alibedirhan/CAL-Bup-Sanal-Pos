@@ -67,18 +67,38 @@ class GeriCekilme(private val ilkMs: Long = 1_000, private val enCokMs: Long = 1
 }
 
 /**
- * Cihaz saatinin GPS saatine göre farkı. Olay zamanları bununla düzeltilir (ROTA_MIMARI §5.6):
- * plasiyer cihaz saatini ileri/geri alsa da parçalar sunucu sınırlarına takılmaz.
+ * Gerçek zaman tahmini (ROTA_MIMARI §5.6, M21). Cihazın duvar saatine güvenilmez: elle ileri/geri alınabilir.
+ * Son güvenilir zaman (GPS uydusu) **tekdüze saatle** (açılıştan beri geçen süre; elle değiştirilemez)
+ * birlikte tutulur: `gerçek(şimdi) = gpsZamanı + (tekdüze(şimdi) − tekdüze(gps anı))`. Böylece cihaz saati
+ * GPS'ten *sonra* değiştirilse de olay ve ağ konumu zamanları kaymaz. Tekdüze saat yeniden başlatmada
+ * sıfırlanır: referans açılış sayısıyla birlikte saklanır ([Referans.acilis]), başka açılışta geçersizdir.
+ * GPS yokken (yeniden başlatmadan sonra kapalı alanda) ağ saati (Android 13+), o da yoksa cihaz saati kullanılır.
  */
 class SaatFarki {
-    @Volatile private var farkMs: Long = 0
+    data class Referans(val gercekMs: Long, val tekduzeMs: Long, val acilis: Int)
 
-    /** Yalnız uydu (GPS) zamanı güvenilirdir; ağ konumunun zamanı cihaz saatidir. */
-    fun gpsGeldi(gpsZamaniMs: Long, cihazSaatiMs: Long) {
-        farkMs = gpsZamaniMs - cihazSaatiMs
+    @Volatile var referans: Referans? = null
+        private set
+
+    /** Saklanmış referansı yükler; başka açılışa aitse yok sayılır. */
+    fun yukle(r: Referans?, acilis: Int) {
+        if (r != null && r.acilis == acilis && referans == null) referans = r
     }
 
-    fun duzelt(cihazSaatiMs: Long): Long = cihazSaatiMs + farkMs
+    /** Yalnız uydu (GPS) zamanı güvenilirdir; ağ konumunun zamanı cihaz saatidir. */
+    fun gpsGeldi(gpsZamaniMs: Long, tekduzeMs: Long, acilis: Int) {
+        referans = Referans(gpsZamaniMs, tekduzeMs, acilis)
+    }
 
-    val fark: Long get() = farkMs
+    /** Şimdiki gerçek zaman tahmini. [agSaatiMs] ağ saati (yoksa null). */
+    fun simdi(cihazSaatiMs: Long, tekduzeMs: Long, agSaatiMs: Long? = null): Long =
+        referans?.let { it.gercekMs + (tekduzeMs - it.tekduzeMs) } ?: agSaatiMs ?: cihazSaatiMs
+
+    /** Cihaz saatiyle alınmış geçmiş bir zamanı ([cihazZamaniMs]) aynı yaşla gerçek zamana taşır. */
+    fun duzelt(cihazZamaniMs: Long, cihazSaatiMs: Long, tekduzeMs: Long, agSaatiMs: Long? = null): Long =
+        simdi(cihazSaatiMs, tekduzeMs, agSaatiMs) - (cihazSaatiMs - cihazZamaniMs)
+
+    /** Cihaz saatinin gerçek zamandan farkı (− ileri, + geri). */
+    fun fark(cihazSaatiMs: Long, tekduzeMs: Long, agSaatiMs: Long? = null): Long =
+        simdi(cihazSaatiMs, tekduzeMs, agSaatiMs) - cihazSaatiMs
 }
