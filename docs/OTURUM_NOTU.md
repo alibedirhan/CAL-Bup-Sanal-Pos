@@ -1,3 +1,12 @@
+# 18 Kasım 2026 gece — 0.13.1 yayında (Ali "yeni sürümü yayınla, telefonlardaki uygulama güncellensin")
+
+`bash tools/android_yayin.sh --yayinla` (main `9ef4d13`): kurallar, GitHub `alibedirhan/bup-sanal-pos-android`
+v0.13.1 eki (60,7 MB, SHA-256 f8cbbb41…, yayındaki dosyanın özeti doğrulandı), indirme sayfası 0.13.1,
+`ayarlar/android` son=24, enDusuk=19 (zorunlu değil: eski sürümler açılır, açılışta güncelleme notu görür).
+Güncelleme sessiz değildir: terminalde not → indirme sayfası → Android kurulum onayı (kullanıcı dokunur).
+
+---
+
 # 18 Kasım 2026 gece — Rota canlıda çalışıyor (kurallar, 0.13.1 Ali'nin telefonunda; uygulama yayını yok)
 
 Ali "yayınlayalım, telefona da kur ve test et" dedi (sonra uyumaya gitti). Yapılanlar:
