@@ -272,7 +272,14 @@ FLAG_SECURE ile engelli (ekran erişilebilirlik ağacıyla okunur).
 **Yönetici aracı** artık Firestore REST'i kullanır (`rota_rest.mjs`; admin SDK'nın Firestore
 istemcisi CLI oturumuyla çalışmıyor); `parcalar KOD` komutu gelen veriyi doğrular.
 
-**Kalanlar:**
+**18 Kasım sabah (0.13.1, dal `rota-0.13.1`, yayın yok):** 24 saat denemesinde hizmet 17 Kasım 21:25'te
+Google Play Hizmetleri güncellemesiyle öldü ve geri gelmedi (`dumpsys activity exit-info`: "stop
+com.google.android.gms due to installPackageLI"). Bekçi (M19) ve gönderim aralığı (M20) eklendi;
+`rota_test.sh` bekçiyi sınar (yeniden başlatmadan sonra iş kayıtlı, durdurulan hizmeti bekçi başlatır).
+Kural değişikliği yalnız isteğe bağlı `gonderimSn`; canlıya gönderilmedi. CAL_bup Ayarlar ekranı 120'yi
+yazmadığı için eski kuralla da çalışır.
+
+**Kalanlar (17 Kasım, 1–4 yapıldı):**
 1. Canlı Firebase'de **Anonymous** giriş sağlayıcısını açmak (Authentication → Sign-in method).
 2. Yeni Firestore kurallarını canlıya göndermek (yalnız `rota*` eklendi; eski bölümler aynı).
 3. `rota` dalını main'e almak, sürümü 0.13.0 yapmak ve APK'yı Ali'nin telefonuna kurmak

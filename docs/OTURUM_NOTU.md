@@ -1,3 +1,24 @@
+# 18 Kasım 2026 sabah — Rota: bekçi + gönderim aralığı (0.13.1), CAL_bup Ayarlar ekranı (yayın yok)
+
+Ali "sitede yayınlayalım", sonra "bunları ben dönünce yaparız, başka eksiğimiz varsa ona geçelim" dedi.
+**Yayın adımları Ali'nin dönüşünü bekliyor** (aşağıda). Yapılanlar:
+- **24 saat denemesinde hata bulundu:** Ali'nin telefonundan 17 Kasım 21:25'ten beri veri yok. Neden:
+  Google Play Hizmetleri güncellenince Android uygulamayı kapattı, hizmet geri gelmedi (açılış/güncelleme
+  alıcısı yalnız o iki olayda çalışır). → **Bekçi** (ROTA_MIMARI M19).
+- **0.13.1** (dal `rota-0.13.1`, `7fb605c`): bekçi + merkezden gönderim aralığı (`gonderimSn`, varsayılan
+  120, M20, K31). Kanıt: `rota_test.sh` (22 kural, 39 Kotlin, 6 kuyruk, bekçi dahil uçtan uca), 243 Dart
+  testi, sürüm APK derlendi/denetlendi (`android_yayin.sh` deneme kipi). Telefona **kurulmadı**.
+- CAL_bup `rota` dalında **Ayarlar** ekranı (2d; `CAL_bup/docs/ROTA.md`).
+- Canlıda yalnız okuma yapıldı (giriş ayarı, `rota_yonet durum`). `auth_duzenle.mjs`'e yetkili alan eklendi
+  ama canlıya uygulanması otomatik izin denetiminde durdu; Ali'nin onayını bekliyor.
+
+**Ali dönünce (sırayla, her biri onayla):** (1) Firebase konsolunda Google girişini açmak (Ali),
+(2) `node tools/sunucu-test/auth_duzenle.mjs` (yetkili alan), (3) `rota_yonet.mjs ilk-yonetici <Gmail>`,
+(4) `firestore:rules` (gonderimSn), (5) 0.13.1'i Ali'nin telefonuna USB ile kurmak (denemeyi yeniden
+başlatır; `rota-0.13.1` → main), (6) CAL_bup 1.45.0: `rota` → main, push, `yayin:ozel`.
+
+---
+
 # 17 Kasım 2026 gece — Rota: canlı adımlar 1–3 (Ali onayı), Ali'nin telefonunda 24 saat deneme başladı
 
 Ali "1–3. adımlara başla", sonra "ekrana bağlan, testleri sen yap" dedi. Yapılanlar ve kanıtlar

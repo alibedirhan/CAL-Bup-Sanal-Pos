@@ -233,11 +233,15 @@ Demo: 2c bitince — yayından önce — Ali'ye **kendi telefonunun gerçek veri
   gerekmez (Android standardı) ama Aşama 5'te bakılacak.
 - Yönetim ekibi erişimi (§3.2) CAL_bup'ın tek sahipli güvenlik modelini etkiler; C yolu bunu korur.
 
-## 7. Durum (17 Kasım 2026 gece)
+## 7. Durum (18 Kasım 2026 sabah)
 
-CAL_bup dal `rota` (yerelde, push/yayın yok): 2a çekirdek, 2b Firebase+önbellek, 2c ekran bitti.
-`#/rota/deneme` yapay verili örnek ekran; `#/rota` gerçek (Google girişi). Kanıt: `npm run kontrol`
-(1.882 test), `tests/tarayici/guzergah.spec.ts`, emülatörle uçtan uca `CAL_bup/tools/rotaEmulatorDenemesi.mjs`
-geçti. Ayrıntı `CAL_bup/docs/ROTA.md`. Kalan: tam tarayıcı test takımının sonucu (koşuyordu), 2d yönetim
-ekranları, 2e terminal gönderim aralığı (0.13.1), 2f canlı ayarlar (Google sağlayıcı konsoldan, yetkili
-alan, ilk yönetici) + CAL_bup yayını — Ali onayıyla.
+CAL_bup dal `rota` (yerelde, push/yayın yok): 2a çekirdek, 2b Firebase+önbellek, 2c ekran, **2d yönetim
+ekranları** bitti (Rota → Ayarlar: onay, takip/aralıklar, araç ataması, araçlar, depo; izleyici yetkileri
+K30'a kadar yok). **2e** Sanal POS dal `rota-0.13.1` (yerelde, yayın yok): merkezden gönderim aralığı
+(`gonderimSn`, varsayılan 120) ve **bekçi** (Ali'nin telefonunda 17 Kasım 21:25'te Google Play Hizmetleri
+güncellemesiyle hizmet öldü, 9 saat veri gelmedi; ROTA_MIMARI M19). Kanıt: `bash tools/rota_test.sh
+emulator-5584` (bekçi dahil), emülatörde yönetim yazımları gerçek kurallarla
+(`CAL_bup/tools/rotaEmulatorDenemesi.mjs`), sürüm APK 0.13.1 derlendi ve denetlendi.
+Kalan **2f (Ali onayıyla)**: Google sağlayıcı (konsolda Ali), yetkili alan `cal-bup-ali.web.app`
+(`auth_duzenle.mjs`), ilk rota yöneticisi, yeni kuralların canlıya gönderilmesi, 0.13.1'in telefona
+kurulumu/yayını, CAL_bup 1.45.0 yayını.
