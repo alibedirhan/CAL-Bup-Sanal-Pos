@@ -9,6 +9,10 @@ Ali "sitede yayınlayalım", sonra "bunları ben dönünce yaparız, başka eksi
   120, M20, K31). Kanıt: `rota_test.sh` (22 kural, 39 Kotlin, 6 kuyruk, bekçi dahil uçtan uca), 243 Dart
   testi, sürüm APK derlendi/denetlendi (`android_yayin.sh` deneme kipi). Telefona **kurulmadı**.
 - CAL_bup `rota` dalında **Ayarlar** ekranı (2d; `CAL_bup/docs/ROTA.md`).
+- Ali dışarıdayken: pil muafiyeti olmadan iş bekçisinin hizmeti başlatamadığı ölçüldü → **alarm bekçisi**
+  eklendi (`USE_EXACT_ALARM`; M19), uçtan uca testte muafiyetsiz başlatma doğrulandı. Bilinen sınır M21
+  (cihaz saati 10 dk'dan fazla ileriyse kayıtlar gecikir; terminallerde otomatik saat açık olmalı).
+  CAL_bup Ayarlar'ın canlıdaki eski kuralla da çalıştığı emülatörde doğrulandı (`ROTA_ESKI_KURAL=1`).
 - Canlıda yalnız okuma yapıldı (giriş ayarı, `rota_yonet durum`). `auth_duzenle.mjs`'e yetkili alan eklendi
   ama canlıya uygulanması otomatik izin denetiminde durdu; Ali'nin onayını bekliyor.
 

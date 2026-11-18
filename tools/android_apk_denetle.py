@@ -26,6 +26,8 @@ IZINLER = {
     'android.permission.ACCESS_BACKGROUND_LOCATION', 'android.permission.FOREGROUND_SERVICE',
     'android.permission.FOREGROUND_SERVICE_LOCATION', 'android.permission.RECEIVE_BOOT_COMPLETED',
     'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+    # Alarm bekçisi (ROTA_MIMARI M19, 18 Kasım 2026).
+    'android.permission.USE_EXACT_ALARM', 'android.permission.SCHEDULE_EXACT_ALARM',
     'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
     'android.permission.USE_BIOMETRIC', 'android.permission.USE_FINGERPRINT',
     'android.permission.NFC', 'android.permission.CAMERA',

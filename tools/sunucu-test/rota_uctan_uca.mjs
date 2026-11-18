@@ -163,5 +163,29 @@ assert.equal(son[0].ilk, 1, 'İlk kayıt sıra 1');
 const zamanlar = son.flatMap(p => p.noktalar.map(n => n.z));
 assert.ok(zamanlar.every((z, i) => i === 0 || z >= zamanlar[i - 1]), 'Nokta zamanları sıralı');
 console.log(`   ${son.length} parça, ${siralar.length} kayıt (sıra 1–${son.at(-1).son}), boşluk yok, çift yok`);
+// Alarm bekçisi (yalnız cihazda doğrulanır): pil muafiyeti kalkmışken iş bekçisinin başlatması
+// reddedilir; tam zamanlı alarm istisnadır. Alarm 15 dk sonraya kurulu olduğu için saat 16 dk ileri
+// alınır, sonra geri getirilir (sunucu kuralı 10 dk'dan ileri zamanlı parçayı kabul etmez; bu yüzden
+// bütünlükten sonra ve sunucu denetimi olmadan).
+console.log('== Alarm bekçisi: pil muafiyeti yokken');
+adb('shell', 'dumpsys', 'deviceidle', 'whitelist', `-${PAKET}`);
+try {
+  adb('shell', 'su', '0', 'am', 'stop-service', '-n', `${PAKET}/.rota.RotaHizmeti`);
+} catch (e) {
+  assert.match(String(e.stdout) + String(e.stderr), /Service stopped/, 'Hizmet durdurulamadı');
+}
+await bekle(2000);
+assert.doesNotMatch(adb('shell', 'dumpsys', 'activity', 'services', PAKET), /app=ProcessRecord/, 'Hizmet durmalıydı');
+adb('logcat', '-c', '-b', 'all');
+const cihazSaati = Number(adb('shell', 'date', '+%s').trim()) * 1000;
+adb('shell', 'cmd', 'alarm', 'set-time', String(cihazSaati + 16 * 60_000));
+try {
+  await bekleyerek('alarm bekçisinin başlattığı hizmet', 60, async () =>
+    /app=ProcessRecord/.test(adb('shell', 'dumpsys', 'activity', 'services', PAKET)));
+  assert.match(adb('logcat', '-d', '-b', 'all'), /Background started FGS: Allowed \[callingPackage: com\.bup\.sanalpos;[^\]]*code:ALARM_MANAGER_WHILE_IDLE/,
+    'Hizmeti alarm istisnasıyla başlamalıydı');
+} finally {
+  adb('shell', 'cmd', 'alarm', 'set-time', String(Date.now()));
+}
 console.log(`ROTA UÇTAN UCA: GEÇTİ (${konumNo} emülatör konumu)`);
 process.exit(0);

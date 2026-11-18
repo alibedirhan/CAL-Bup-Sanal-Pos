@@ -24,6 +24,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <!-- Alarm bekçisi (M19): tam zamanlı alarm. Uygulama Play'de değil (GitHub APK); USE_EXACT_ALARM
+         Android 13+'ta kurulumla verilir, 12'de SCHEDULE_EXACT_ALARM varsayılan açıktır. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <!-- Güvenlik ayarları: docs/ANDROID_PLANI.md §4. Yedek/aktarım kapalı, yalnız HTTPS. -->
@@ -67,6 +71,9 @@
             android:name=".rota.RotaBekci"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <receiver
+            android:name=".rota.RotaBekci$RotaBekciAlarmi"
+            android:exported="false"/>
         <receiver
             android:name=".rota.RotaAcilisAlici"
             android:exported="true">

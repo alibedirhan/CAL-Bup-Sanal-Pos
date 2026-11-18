@@ -44,7 +44,8 @@
 | M16 | Terminalde **hiçbir görünür öğe** yok (K24). Yalnız Sanal POS'un yönetici bilgi sayfasında, **parola yeniden sorularak** açılan "Konum kurulumu" bölümü: izinleri ister, terminal kodunu ve hizmet durumunu gösterir. Kurulumu Ali bir kez yapar. | Android izinleri bir kez ekranda verilmek zorunda (StageNow ile verilene kadar). |
 | M17 | Android'in zorunlu bildirimi en düşük önemde, sessiz, düğmesiz kanaldadır; Android 13+'ta bildirim izni istenmediği için çubukta görünmez. | K24; TC15 Android 13 (SDK 33) — §8 soru 5b kapandı. |
 | M18 | Kurallar ve şema önce, kod sonra: her aşamada önce Firestore kuralı + emülatör testi yazılır. | En az yetkinin kodla değil sunucuyla sağlanması. |
-| M19 | **Bekçi** (0.13.1): sistemin iş zamanlayıcısında kalıcı, 15 dk'lık iş (`RotaBekci`); hizmet çalışmıyorsa yeniden başlatır (olay `hizmet_basladi`, ayrıntı `bekci`). Arka plandan başlatma Android 12+'da pil muafiyetine bağlıdır (kurulumda verilir). "Durmaya zorla" bekçiyi de siler; uygulama açılışı ya da telefon açılışı yeniden kurar. | 17 Kasım gecesi gerçek telefonda: Google Play Hizmetleri güncellenince Android uygulamayı kapattı ("stop com.google.android.gms due to installPackageLI"), START_STICKY işlemedi, 9 saat veri gelmedi. |
+| M19 | **Bekçi** (0.13.1), iki katlı: (1) iş zamanlayıcısında kalıcı 15 dk'lık iş (`RotaBekci`, ayrıntı `bekci`); Android 12+'da yalnız pil muafiyeti varken başlatabilir (emülatörde ölçüldü: muafiyetsiz "Background started FGS: Disallowed"). (2) 15 dk'lık tam zamanlı alarm (`RotaBekciAlarmi`, ayrıntı `bekci_alarm`, `USE_EXACT_ALARM`; uygulama Play'de olmadığı için uygundur): muafiyet sonradan kalksa da başlatır ("Allowed … ALARM_MANAGER_WHILE_IDLE"); kendini yeniden kurar, duvar saatine göredir. Hizmet çalışıyorsa ikisi de hiçbir şey yapmaz. "Durmaya zorla" bekçiyi de siler; uygulama açılışı ya da telefon açılışı yeniden kurar. | 17 Kasım gecesi gerçek telefonda: Google Play Hizmetleri güncellenince Android uygulamayı kapattı ("stop com.google.android.gms due to installPackageLI"), START_STICKY işlemedi, 9 saat veri gelmedi. |
+| M21 | **Bilinen sınır — cihaz saati:** kural, bitişi sunucu saatinden 10 dk'dan ileri olan parçayı reddeder. GPS gelmeden önce yazılan kayıt (olay, ağ konumu) cihaz saatini taşır; cihaz saati 10 dk'dan fazla ilerideyse o kayıtları içeren parça, gerçek saat yetişene kadar (fark − 10 dk) gönderilemez, sonra kendiliğinden gider. Gün düzeyinde yanlış saatte gün düzeyinde takılır. Terminallerde otomatik saat açık olmalı. (Emülatörde saat 16 dk ileri bırakılınca görüldü, 18 Kasım.) | Kural gelecek tarihli sahte veriyi engeller; düzeltme ancak kayıt zamanını sunucuya göre yeniden yazmakla olur (sözleşme değişikliği), şimdilik yapılmadı. |
 | M20 | **Gönderim aralığı** (0.13.1, K31): `rotaCihazlar.gonderimSn` (isteğe bağlı, 15–3600, yoksa 120). İki yazma arası en az bu; kuyrukta tam parça (240 nokta) birikmişse hız sınırıyla (16 sn) boşaltılır. Noktalar yine `hareketSn`'de alınır. | Spark'ın günlük 20.000 yazma sınırı (ROTA_ASAMA2_ANALIZ §3.6). |
 
 ## 3. Bileşenler
@@ -275,7 +276,8 @@ istemcisi CLI oturumuyla çalışmıyor); `parcalar KOD` komutu gelen veriyi do�
 **18 Kasım sabah (0.13.1, dal `rota-0.13.1`, yayın yok):** 24 saat denemesinde hizmet 17 Kasım 21:25'te
 Google Play Hizmetleri güncellemesiyle öldü ve geri gelmedi (`dumpsys activity exit-info`: "stop
 com.google.android.gms due to installPackageLI"). Bekçi (M19) ve gönderim aralığı (M20) eklendi;
-`rota_test.sh` bekçiyi sınar (yeniden başlatmadan sonra iş kayıtlı, durdurulan hizmeti bekçi başlatır).
+`rota_test.sh` iki bekçiyi de sınar (yeniden başlatmadan sonra iş kayıtlı, durdurulan hizmeti iş bekçisi
+başlatır; pil muafiyeti kaldırılınca alarm bekçisi başlatır).
 Kural değişikliği yalnız isteğe bağlı `gonderimSn`; canlıya gönderilmedi. CAL_bup Ayarlar ekranı 120'yi
 yazmadığı için eski kuralla da çalışır.
 
