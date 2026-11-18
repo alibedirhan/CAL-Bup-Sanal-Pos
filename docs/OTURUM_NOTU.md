@@ -4,6 +4,10 @@
 v0.13.1 eki (60,7 MB, SHA-256 f8cbbb41…, yayındaki dosyanın özeti doğrulandı), indirme sayfası 0.13.1,
 `ayarlar/android` son=24, enDusuk=19 (zorunlu değil: eski sürümler açılır, açılışta güncelleme notu görür).
 Güncelleme sessiz değildir: terminalde not → indirme sayfası → Android kurulum onayı (kullanıcı dokunur).
+**Yarın Ali'ye sorulacak / bakılacak:** (1) TC15'lerde SIM (mobil veri) var mı, yalnız Wi-Fi mi (yalnız Wi-Fi ise
+canlı harita depoya dönene kadar boş kalır); (2) güncelleme zorunlu yapılsın mı; (3) ilk TC15 kurulumu ve sahada
+5 dk dış mekân denemesi (kurulum ekranında konum "her zaman", pil "kısıtlama yok"); (4) CAL_bup gizli depo
+geçmişindeki kullanıcı dosyaları (`e7e68c3`) temizlensin mi.
 
 ---
 
