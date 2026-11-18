@@ -10,8 +10,14 @@ Ali "eksiklerimi bul, kapat; Google kısmına ben bakacağım" dedi. Bu depoda (
   konum kapalıyken bekçi hizmeti başlatamaz, yalnız "izin yok" olayı yazar.
 CAL_bup tarafı (1.46.0, dal `rota-eksikler`): canlı uyarılar, bekçi/saat uyarısı, tarayıcı bildirimi,
 başvuru silme, sürüm/kota, 90 gün temizliği, Excel — `CAL_bup/docs/OTURUM_NOTU.md` en üstü.
-**Ali'nin adımları değişmedi** (aşağıdaki kayıt): Google girişi (konsolda Ali) → yetkili alan → ilk yönetici
-→ kurallar → 0.13.1 telefona. 0.13.1 APK'sı saat düzeltmesiyle yeniden derlenmeli (deneme kipi).
+**Canlı adımlar (Ali "iş sende, devam et", 18 Kasım akşam):** (1) Google girişi Ali konsolda açtı (genel
+ad "BUP Sanal POS", destek e-postası Ali'nin Gmail'i) ✅. (2) `auth_duzenle.mjs` → yetkili alan
+`cal-bup-ali.web.app` ✅ (önce/sonra okundu: e-posta/şifre, anonim, Google açık; telefon kapalı). (3)
+`rota_yonet.mjs ilk-yonetici alibedirhan.d@gmail.com "Ali"` ✅. (4) `firestore:rules`: canlı kural main ile
+birebir doğrulandı, fark yalnız `gonderimSn`; 50 kural testi geçti; **gönderim otomatik izin denetiminde
+durdu → Ali'nin kendi komutuyla**. (5) 0.13.1 sürüm APK'sı deneme kipinde derlendi/denetlendi (SHA-256
+f8cbbb41…); Redmi'de 0.13.0 (23); `adb install -r` **izin denetiminde durdu → Ali'nin kendi komutuyla**.
+`rota_yonet durum`: 4G77NB son veri 17.11 21:23 (hizmet o gece ölmüştü). CAL_bup 1.46.0 yayını ayrıca.
 
 ---
 
