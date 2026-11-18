@@ -69,7 +69,7 @@ await bekle(5000);
 assert.equal((await db.collection('rotaParcalar').get()).size, 0, 'Onaysız terminal yazmamalı');
 
 console.log('== Merkez onaylar, takip açık (sıklık 5 sn)');
-const cihazAyari = takip => ({ ad: 'Terminal Test', aktif: true, takip, hareketSn: 5, durgunSn: 5, depoSn: 5,
+const cihazAyari = takip => ({ ad: 'Terminal Test', aktif: true, takip, hareketSn: 5, durgunSn: 5, depoSn: 5, gonderimSn: 15,
   olusturma: FieldValue.serverTimestamp(), guncelleme: FieldValue.serverTimestamp(), guncelleyen: 'test', denetim: 'X'.repeat(20) });
 await db.doc(`rotaCihazlar/${uid}`).set(cihazAyari(true));
 
@@ -130,6 +130,29 @@ const acilis = await bekleyerek('açılış olayı ve sonrası nokta', 180, asyn
 console.log(`   açılıştan sonra ${acilis.flatMap(p => p.noktalar).length} nokta (toplam)`);
 const sonAyrinti = acilis.flatMap(p => p.olaylar).filter(o => o.tur === 'hizmet_basladi').at(-1).a;
 assert.equal(sonAyrinti, 'acilis', 'Hizmeti açılış alıcısı başlatmalı');
+
+console.log('== Bekçi: hizmet ölür (17 Kasım gecesi gibi), bekçi yeniden başlatır');
+// Bekçi işi yeniden başlatmadan sonra da kayıtlı olmalı (kalıcı iş).
+assert.match(adb('shell', 'dumpsys', 'jobscheduler', PAKET), /RotaBekci/, 'Bekçi işi kayıtlı değil');
+// Kurulumdaki pil muafiyetinin karşılığı (Android 12+'da arka plandan başlatma buna bağlı).
+adb('shell', 'dumpsys', 'deviceidle', 'whitelist', `+${PAKET}`);
+// Kök yetkisiyle durdurulur: sistem (START_STICKY) yeniden başlatmaz; geri getiren yalnız bekçi olabilir.
+// "am stop-service" durdurduğunda da 255 döner; sonucu çıktısından ve hizmet listesinden okunur.
+try {
+  adb('shell', 'su', '0', 'am', 'stop-service', '-n', `${PAKET}/.rota.RotaHizmeti`);
+} catch (e) {
+  assert.match(String(e.stdout) + String(e.stderr), /Service stopped/, 'Hizmet durdurulamadı');
+}
+await yuru(3);
+assert.doesNotMatch(adb('shell', 'dumpsys', 'activity', 'services', PAKET), /RotaHizmeti/, 'Hizmet durmalıydı');
+adb('shell', 'cmd', 'jobscheduler', 'run', '-f', PAKET, '4702');
+await yuru(15);
+await bekleyerek('bekçinin başlattığı hizmet ve sonrası nokta', 150, async () => {
+  const ps = await parcalar(uid);
+  const o = ps.flatMap(p => p.olaylar).filter(x => x.tur === 'hizmet_basladi' && x.a === 'bekci').at(-1);
+  const sonNokta = ps.flatMap(p => p.noktalar).at(-1);
+  return o && sonNokta.q > o.q ? ps : null;
+});
 
 console.log('== Bütünlük');
 const son = await parcalar(uid);

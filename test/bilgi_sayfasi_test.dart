@@ -36,7 +36,7 @@ void main() {
       expect(link.uri!.hasFragment, isFalse);
       expect(find.text('BUP Doldur yer imini kur'), findsOneWidget);
       expect(find.text('Telefon denemesini aç'), findsNothing);
-      expect(find.text('BUP Sanal POS · 0.13.0'), findsOneWidget);
+      expect(find.text('BUP Sanal POS · 0.13.1'), findsOneWidget);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );

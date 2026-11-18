@@ -130,7 +130,7 @@ class RotaBulut private constructor(private val app: FirebaseApp) : RotaSunucusu
         }
 
         private fun ayar(s: DocumentSnapshot): TakipAyari? = if (!s.exists()) null else TakipAyari.guvenli(
-            s.get("aktif"), s.get("takip"), s.get("hareketSn"), s.get("durgunSn"), s.get("depoSn"),
+            s.get("aktif"), s.get("takip"), s.get("hareketSn"), s.get("durgunSn"), s.get("depoSn"), s.get("gonderimSn"),
         )
 
         internal fun belgeye(m: Map<String, Any?>): Map<String, Any?> = m.mapValues { donustur(it.value) }

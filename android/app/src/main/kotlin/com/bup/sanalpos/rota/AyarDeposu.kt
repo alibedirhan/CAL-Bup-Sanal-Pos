@@ -16,10 +16,11 @@ class AyarDeposu(context: Context) {
             hareketSn = p.getInt("hareketSn", TakipAyari.KAPALI.hareketSn),
             durgunSn = p.getInt("durgunSn", TakipAyari.KAPALI.durgunSn),
             depoSn = p.getInt("depoSn", TakipAyari.KAPALI.depoSn),
+            gonderimSn = p.getInt("gonderimSn", TakipAyari.VARSAYILAN_GONDERIM_SN),
         )
         set(a) {
             p.edit().putBoolean("aktif", a.aktif).putBoolean("takip", a.takip).putInt("hareketSn", a.hareketSn)
-                .putInt("durgunSn", a.durgunSn).putInt("depoSn", a.depoSn).apply()
+                .putInt("durgunSn", a.durgunSn).putInt("depoSn", a.depoSn).putInt("gonderimSn", a.gonderimSn).apply()
         }
 
     var depolar: List<Depo>

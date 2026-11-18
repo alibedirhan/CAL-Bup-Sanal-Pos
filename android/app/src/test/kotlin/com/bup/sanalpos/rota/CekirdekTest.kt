@@ -94,6 +94,16 @@ class AyarTest {
         assertTrue(a.calisir)
     }
 
+    @Test fun gonderimAraligiYoksaVeyaBozuksaIkiDakika() {
+        assertEquals(120, TakipAyari.guvenli(true, true, 15, 120, 300).gonderimSn)
+        assertEquals(120, TakipAyari.guvenli(true, true, 15, 120, 300, 14).gonderimSn)
+        assertEquals(120, TakipAyari.guvenli(true, true, 15, 120, 300, "60").gonderimSn)
+        assertEquals(120, TakipAyari.guvenli(true, true, 15, 120, 300, 3601L).gonderimSn)
+        assertEquals(15, TakipAyari.guvenli(true, true, 15, 120, 300, 15L).gonderimSn)
+        assertEquals(300, TakipAyari.guvenli(true, true, 15, 120, 300, 300.0).gonderimSn)
+        assertEquals(120, TakipAyari.KAPALI.gonderimSn)
+    }
+
     @Test fun depoListesiDogrulanir() {
         val ham = listOf(
             mapOf("ad" to "Bornova", "en" to 38.46, "boy" to 27.22, "yaricap" to 150),

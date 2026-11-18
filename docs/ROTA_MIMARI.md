@@ -44,6 +44,8 @@
 | M16 | Terminalde **hiçbir görünür öğe** yok (K24). Yalnız Sanal POS'un yönetici bilgi sayfasında, **parola yeniden sorularak** açılan "Konum kurulumu" bölümü: izinleri ister, terminal kodunu ve hizmet durumunu gösterir. Kurulumu Ali bir kez yapar. | Android izinleri bir kez ekranda verilmek zorunda (StageNow ile verilene kadar). |
 | M17 | Android'in zorunlu bildirimi en düşük önemde, sessiz, düğmesiz kanaldadır; Android 13+'ta bildirim izni istenmediği için çubukta görünmez. | K24; TC15 Android 13 (SDK 33) — §8 soru 5b kapandı. |
 | M18 | Kurallar ve şema önce, kod sonra: her aşamada önce Firestore kuralı + emülatör testi yazılır. | En az yetkinin kodla değil sunucuyla sağlanması. |
+| M19 | **Bekçi** (0.13.1): sistemin iş zamanlayıcısında kalıcı, 15 dk'lık iş (`RotaBekci`); hizmet çalışmıyorsa yeniden başlatır (olay `hizmet_basladi`, ayrıntı `bekci`). Arka plandan başlatma Android 12+'da pil muafiyetine bağlıdır (kurulumda verilir). "Durmaya zorla" bekçiyi de siler; uygulama açılışı ya da telefon açılışı yeniden kurar. | 17 Kasım gecesi gerçek telefonda: Google Play Hizmetleri güncellenince Android uygulamayı kapattı ("stop com.google.android.gms due to installPackageLI"), START_STICKY işlemedi, 9 saat veri gelmedi. |
+| M20 | **Gönderim aralığı** (0.13.1, K31): `rotaCihazlar.gonderimSn` (isteğe bağlı, 15–3600, yoksa 120). İki yazma arası en az bu; kuyrukta tam parça (240 nokta) birikmişse hız sınırıyla (16 sn) boşaltılır. Noktalar yine `hareketSn`'de alınır. | Spark'ın günlük 20.000 yazma sınırı (ROTA_ASAMA2_ANALIZ §3.6). |
 
 ## 3. Bileşenler
 
@@ -116,7 +118,7 @@ Olay (map): `q` sıra, `z` cihaz saati ms, `tur` (aşağıdaki listeden), `a` k�
 ### 4.2 Merkezin yazdıkları (yalnız Google girişli rota yöneticisi)
 
 - **`rotaCihazlar/{uid}`**: `ad` (ör. "Terminal 3"), `takip` (bool), `hareketSn`, `durgunSn`,
-  `depoSn` (int, 5–3600), `olusturma`, `guncelleme == request.time`, `guncelleyen == auth.uid`.
+  `depoSn` (int, 5–3600), isteğe bağlı `gonderimSn` (int, 15–3600; yoksa 120, M20), `olusturma`, `guncelleme == request.time`, `guncelleyen == auth.uid`.
   Terminal yalnız **kendi** belgesini okur.
 - **`rotaAraclar/{aracId}`**: `no`, `plasiyer`, `renk`, `yakit` (`dizel` | `benzin` | `lpg`),
   `tuketim` (L/100 km), `aktif`, `guncelleme`.

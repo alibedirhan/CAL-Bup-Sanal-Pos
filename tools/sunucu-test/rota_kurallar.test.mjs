@@ -218,6 +218,20 @@ test('Takip aç/kapa taze denetim kaydı ister; eski kayıt yeniden kullanılama
   await assertFails(deleteDoc(ref));
 });
 
+test('Gönderim aralığı (0.13.1) isteğe bağlı, 15–3600 sn tamsayı', async () => {
+  const db = yonetici();
+  const ayar = gonderimSn => ({ gonderimSn, guncelleme: serverTimestamp(), guncelleyen: gYazan });
+  for (const kotu of [14, 3601, '120', 120.5])
+    await assertFails(yonet(db, `rotaCihazlar/${T1}`, ayar(kotu), 'ayar', { guncelle: true }));
+  await assertSucceeds(yonet(db, `rotaCihazlar/${T1}`, ayar(120), 'ayar', { guncelle: true }));
+  await assertSucceeds(yonet(db, `rotaCihazlar/${T1}`, ayar(15), 'ayar', { guncelle: true }));
+  // Zorunlu alanlar yine eksik olamaz (sayı sınırı kalkınca hasAll bunu tutar).
+  const { depoSn, ...eksik } = cihaz({ gonderimSn: 120 });
+  await assertFails(yonet(db, `rotaCihazlar/${T2}`, eksik, 'onay'));
+  await assertFails(yonet(db, `rotaCihazlar/${T2}`, cihaz({ gonderimSn: 120, fazla: 1 }), 'onay'));
+  await assertSucceeds(yonet(db, `rotaCihazlar/${T2}`, cihaz({ gonderimSn: 120 }), 'onay'));
+});
+
 test('Denetim kayıtları değiştirilemez; yalnız yönetici yazar', async () => {
   await assertFails(updateDoc(doc(yonetici(), 'rotaDenetim', 'E'.repeat(20)), { eylem: 'baska' }));
   await assertFails(deleteDoc(doc(yonetici(), 'rotaDenetim', 'E'.repeat(20))));

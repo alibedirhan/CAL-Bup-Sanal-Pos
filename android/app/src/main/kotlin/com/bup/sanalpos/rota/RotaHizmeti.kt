@@ -53,6 +53,7 @@ class RotaHizmeti : Service() {
     @Volatile private var sonNokta: Nokta? = null
     @Volatile private var durum = TerminalDurumu.ONAY_BEKLIYOR
     @Volatile private var onayli = false
+    @Volatile private var gonderimMs = TakipAyari.VARSAYILAN_GONDERIM_SN * 1000L
 
     // --- ağ iş parçacığına ait ---
     private var bulut: RotaBulut? = null
@@ -84,6 +85,7 @@ class RotaHizmeti : Service() {
             return START_NOT_STICKY
         }
         calisiyor = true
+        RotaBekci.kur(this)
         if (!basladi) {
             basladi = true
             konumH.post { basla(neden) }
@@ -142,6 +144,7 @@ class RotaHizmeti : Service() {
         ayar = depo.ayar
         depolar = depo.depolar
         onayli = ayar.aktif
+        gonderimMs = ayar.gonderimSn * 1000L
         politika.ayarla(ayar, depolar)
         konumAcik = lm.isLocationEnabled
         val onceki = depo.konumAcikti
@@ -202,6 +205,7 @@ class RotaHizmeti : Service() {
         ayar = yeni
         depo.ayar = yeni
         onayli = yeni.aktif
+        gonderimMs = yeni.gonderimSn * 1000L
         politika.ayarla(yeni, depolar)
         takibiUygula()
         if (yeni.aktif) {
@@ -245,7 +249,7 @@ class RotaHizmeti : Service() {
                 depo.basvuruKimligi = uid
             }
             bulut = b
-            gonderici = Gonderici(uid, kuyruk, b)
+            gonderici = Gonderici(uid, kuyruk, b, gonderimMs = { gonderimMs })
             dinlemeKur()
             agGeri.basarili()
             gonderimiTetikle()

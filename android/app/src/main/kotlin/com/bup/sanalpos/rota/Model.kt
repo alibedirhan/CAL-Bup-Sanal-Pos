@@ -90,6 +90,8 @@ data class TakipAyari(
     val hareketSn: Int,
     val durgunSn: Int,
     val depoSn: Int,
+    /** Sunucuya en sık bu kadar saniyede bir yazılır (K31, ücretsiz kota); noktalar yine [hareketSn]'de alınır. */
+    val gonderimSn: Int = VARSAYILAN_GONDERIM_SN,
 ) {
     val calisir: Boolean get() = aktif && takip
 
@@ -98,14 +100,19 @@ data class TakipAyari(
         val KAPALI = TakipAyari(aktif = false, takip = false, hareketSn = 15, durgunSn = 120, depoSn = 300)
 
         /** Sunucudan gelen değerleri doğrular; bozuk değer güvenli varsayılana döner. */
-        fun guvenli(aktif: Any?, takip: Any?, hareketSn: Any?, durgunSn: Any?, depoSn: Any?): TakipAyari {
-            fun sn(x: Any?, varsayilan: Int) = (x as? Number)?.toLong()?.takeIf { it in 5L..3600L }?.toInt() ?: varsayilan
+        /** K31: 2 dakika. Alan merkezde yoksa (0.13.0 dönemi belgeleri) de bu geçerlidir. */
+        const val VARSAYILAN_GONDERIM_SN = 120
+
+        fun guvenli(aktif: Any?, takip: Any?, hareketSn: Any?, durgunSn: Any?, depoSn: Any?, gonderimSn: Any? = null): TakipAyari {
+            fun sn(x: Any?, varsayilan: Int, en: Long = 5L) = (x as? Number)?.toLong()?.takeIf { it in en..3600L }?.toInt() ?: varsayilan
             return TakipAyari(
                 aktif = aktif == true,
                 takip = takip == true,
                 hareketSn = sn(hareketSn, KAPALI.hareketSn),
                 durgunSn = sn(durgunSn, KAPALI.durgunSn),
                 depoSn = sn(depoSn, KAPALI.depoSn),
+                // Sunucunun hız sınırı 15 sn (kural da 15–3600 ister).
+                gonderimSn = sn(gonderimSn, VARSAYILAN_GONDERIM_SN, en = 15L),
             )
         }
     }

@@ -9,6 +9,7 @@
 //   node rota_yonet.mjs kaldir KOD                     (onayı kaldırır; kayıtlar kalır)
 //   node rota_yonet.mjs durum
 //   node rota_yonet.mjs parcalar KOD               (gelen veriyi sözleşmeyle doğrular)
+//   node rota_yonet.mjs gonderim KOD SANIYE    (gönderim aralığı, 15–3600; terminal 0.13.1+)
 //   node rota_yonet.mjs ilk-yonetici EPOSTA "Ad Soyad" (rota yöneticisi; yalnız hiç yokken)
 import { randomBytes } from 'node:crypto';
 import { rotaRest } from './rota_rest.mjs';
@@ -123,6 +124,17 @@ switch (komut) {
     }
     break;
   }
+  case 'gonderim': {
+    // Gönderim aralığı (K31; terminal 0.13.1+). Canlı kural bu alanı tanımalı (firestore.rules, 18 Kasım).
+    const [kod, sn] = arg;
+    const n = Number(sn);
+    if (!Number.isInteger(n) || n < 15 || n > 3600) throw Error('gonderim KOD SANIYE (15–3600; varsayılan 120)');
+    const b = await koddan(kod);
+    if (!(await db.al(`rotaCihazlar/${b.id}`))) throw Error('Önce onaylayın: onayla KOD "Ad"');
+    await yaz(`rotaCihazlar/${b.id}`, { gonderimSn: n }, 'ayar', { birlestir: true });
+    console.log(`${kod}: gönderim ${n} sn'de bir.`);
+    break;
+  }
   case 'ilk-yonetici': {
     const [eposta, ad] = arg;
     if (!/^[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,190}$/.test(eposta ?? '') || !ad) throw Error('ilk-yonetici küçük-harf-eposta "Ad Soyad"');
@@ -132,6 +144,6 @@ switch (komut) {
     break;
   }
   default:
-    console.log('Komutlar: basvurular | onayla KOD "Ad" | takip KOD ac|kapat | kaldir KOD | durum | parcalar KOD | ilk-yonetici EPOSTA "Ad"');
+    console.log('Komutlar: basvurular | onayla KOD "Ad" | takip KOD ac|kapat | kaldir KOD | durum | parcalar KOD | gonderim KOD SN | ilk-yonetici EPOSTA "Ad"');
     process.exitCode = 1;
 }

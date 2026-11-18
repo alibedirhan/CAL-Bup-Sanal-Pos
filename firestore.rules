@@ -241,10 +241,12 @@ service cloud.firestore {
       // Onay kaldırma silme değil "aktif: false"dır (geçmiş parçalar bu terminale bağlı kalır).
       allow delete: if false;
       function rotaCihazBicim(d) {
-        return d.keys().hasOnly(['ad', 'aktif', 'takip', 'hareketSn', 'durgunSn', 'depoSn', 'olusturma', 'guncelleme', 'guncelleyen', 'denetim'])
-          && d.keys().size() == 10
+        // gonderimSn (0.13.1, K31) isteğe bağlıdır: yoksa terminal 120 sn kullanır.
+        return d.keys().hasOnly(['ad', 'aktif', 'takip', 'hareketSn', 'durgunSn', 'depoSn', 'gonderimSn', 'olusturma', 'guncelleme', 'guncelleyen', 'denetim'])
+          && d.keys().hasAll(['ad', 'aktif', 'takip', 'hareketSn', 'durgunSn', 'depoSn', 'olusturma', 'guncelleme', 'guncelleyen', 'denetim'])
           && metin(d.ad, 1, 40) && d.aktif is bool && d.takip is bool
           && rotaSayi(d.hareketSn, 5, 3600) && rotaSayi(d.durgunSn, 5, 3600) && rotaSayi(d.depoSn, 5, 3600)
+          && (!('gonderimSn' in d) || rotaSayi(d.gonderimSn, 15, 3600))
           && d.olusturma is timestamp && rotaDamga(d);
       }
     }

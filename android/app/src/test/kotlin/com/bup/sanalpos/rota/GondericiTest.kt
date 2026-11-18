@@ -74,6 +74,43 @@ class GondericiTest {
         assertEquals(listOf(360L, 120L, 0L), s.durumlar.map { it["bekleyen"] })
     }
 
+    @Test fun gonderimAraligiIkiYazmaArasindaBeklenir() {
+        val k = BellekKuyrugu()
+        repeat(3) { k.nokta() }
+        val s = TaklitSunucu()
+        val g = Gonderici(uid, k, s, gonderimMs = { 120_000L })
+        val r1 = g.calis(0, anlik, "hareket", durumBelgesi("hareket"))
+        assertEquals(GonderimSonucu.TAMAM, r1.sonuc)
+        // Kuyruk boşken bir sonraki yoklama da gönderim aralığından önce olmaz.
+        assertEquals(120_000L, r1.sonrakiMs)
+        repeat(4) { k.nokta() }
+        val r2 = g.calis(60_000, anlik, "hareket", durumBelgesi("hareket"))
+        assertNull(r2.sonuc)
+        assertEquals(60_000L, r2.sonrakiMs)
+        // Durum değişse de erken yazılmaz.
+        assertNull(g.calis(90_000, anlik, "durgun", durumBelgesi("durgun")).sonuc)
+        val r3 = g.calis(120_000, anlik, "durgun", durumBelgesi("durgun"))
+        assertEquals(GonderimSonucu.TAMAM, r3.sonuc)
+        assertEquals(4, r3.gonderilenKayit)
+        assertEquals(2, s.gonderimSayisi)
+    }
+
+    @Test fun tamParcaBirikinceGonderimAraligiBeklenmez() {
+        val k = BellekKuyrugu()
+        repeat(600) { k.nokta() }
+        val s = TaklitSunucu()
+        val g = Gonderici(uid, k, s, gonderimMs = { 120_000L })
+        val r1 = g.calis(0, anlik, "hareket", durumBelgesi("hareket"))
+        // 360 kayıt kaldı (tam parçadan çok): hız sınırıyla devam.
+        assertEquals(Gonderici.EN_AZ_ARALIK_MS, r1.sonrakiMs)
+        val r2 = g.calis(r1.sonrakiMs, anlik, "hareket", durumBelgesi("hareket"))
+        assertEquals(GonderimSonucu.TAMAM, r2.sonuc)
+        // 120 kaldı: artık gönderim aralığı.
+        assertEquals(120_000L, r2.sonrakiMs)
+        assertNull(g.calis(r1.sonrakiMs + 60_000, anlik, "hareket", durumBelgesi("hareket")).sonuc)
+        assertEquals(2, s.gonderimSayisi)
+    }
+
     @Test fun hizSiniriIcindeIkinciYazmaYapilmaz() {
         val k = BellekKuyrugu()
         repeat(300) { k.nokta() }

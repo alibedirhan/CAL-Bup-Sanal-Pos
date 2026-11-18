@@ -44,12 +44,17 @@ data class Anlik(val cihazSaatiMs: Long, val pil: Int, val sarj: Boolean, val su
  * Kuyruktan sunucuya (ROTA_MIMARI §5 adım 3–4). Her [calis] çağrısı en çok bir yazma yapar ve bir
  * sonraki çağrının ne zaman yapılacağını söyler. Sunucunun hız sınırına (15 sn) uymak için iki
  * yazma arası en az [EN_AZ_ARALIK_MS]'dir. Saf: Android ve Firebase bilmez.
+ *
+ * [gonderimMs] merkezin gönderim aralığı (K31, varsayılan 2 dk; ücretsiz yazma kotası): iki yazma arası
+ * en az budur. Kuyrukta tam bir parçalık kayıt birikmişse (ör. kapsama dışından dönüş) beklemeden,
+ * hız sınırının izin verdiği sıklıkta gönderilir; böylece birikme kotayı zorlamadan erir.
  */
 class Gonderici(
     private val cihaz: String,
     private val kuyruk: KuyrukDeposu,
     private val sunucu: RotaSunucusu,
     private val geri: GeriCekilme = GeriCekilme(),
+    private val gonderimMs: () -> Long = { EN_AZ_ARALIK_MS },
 ) {
     private var sonYazmaMs = Long.MIN_VALUE / 2
     private var gonderilenDurum: String? = null
@@ -67,7 +72,8 @@ class Gonderici(
         durumKodu: String,
         durumBelgesi: (bekleyen: Long) -> Map<String, Any?>,
     ): Rapor {
-        if (simdiMs < sonYazmaMs + EN_AZ_ARALIK_MS) return Rapor(null, 0, sonYazmaMs + EN_AZ_ARALIK_MS - simdiMs)
+        val aralik = aralikMs()
+        if (simdiMs < sonYazmaMs + aralik) return Rapor(null, 0, sonYazmaMs + aralik - simdiMs)
         if (!geri.denenebilir(simdiMs)) return Rapor(null, 0, geri.beklenecekMs(simdiMs).coerceAtLeast(1_000))
         val parca = Parca.olustur(cihaz, kuyruk.bas(Parca.EN_COK_NOKTA + Parca.EN_COK_OLAY))
         // Parça üst üste reddediliyorsa arada yalnız durum yazılır: merkez terminali "sessiz" değil,
@@ -110,8 +116,8 @@ class Gonderici(
             GonderimSonucu.TAMAM, GonderimSonucu.ZATEN_VAR -> {
                 basarida()
                 geri.basarili()
-                // Birikmiş kayıt varsa hız sınırının izin verdiği en kısa sürede devam.
-                val sonraki = if (kuyruk.sayi() > 0) EN_AZ_ARALIK_MS else BOS_ARALIK_MS
+                // Birikmiş kayıt varsa gönderim aralığında (tam parça birikmişse hemen) devam.
+                val sonraki = if (kuyruk.sayi() > 0) aralikMs() else maxOf(BOS_ARALIK_MS, aralikMs())
                 Rapor(sonuc, adet, sonraki)
             }
             GonderimSonucu.REDDEDILDI, GonderimSonucu.GECICI -> {
@@ -121,6 +127,10 @@ class Gonderici(
                 Rapor(sonuc, 0, maxOf(EN_AZ_ARALIK_MS, geri.beklenecekMs(simdiMs)))
             }
         }
+
+    /** İki yazma arası: tam parça bekliyorsa hız sınırı, yoksa merkezin gönderim aralığı. */
+    private fun aralikMs(): Long =
+        if (kuyruk.sayi() >= Parca.EN_COK_NOKTA) EN_AZ_ARALIK_MS else maxOf(EN_AZ_ARALIK_MS, gonderimMs())
 
     companion object {
         /** Sunucu kuralı 15 sn; saat farkları için pay. */

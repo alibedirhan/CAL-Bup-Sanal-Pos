@@ -11,7 +11,8 @@ const r=await cloudFetch(`${url}?updateMask=signIn.email,signIn.anonymous,signIn
     passwordPolicyConfig:{passwordPolicyEnforcementState:'ENFORCE',forceUpgradeOnSignin:true,
       passwordPolicyVersions:[{customStrengthOptions:{minPasswordLength:6,maxPasswordLength:128}}]},
     emailPrivacyConfig:{enableImprovedEmailPrivacy:true},
-    authorizedDomains:[`${projectId}.web.app`,`${projectId}.firebaseapp.com`],
+    // cal-bup-ali.web.app: CAL_bup Rota sekmesinin Google girişi (ROUTE_PLANI K33, 18 Kasım 2026).
+    authorizedDomains:[`${projectId}.web.app`,`${projectId}.firebaseapp.com`,'cal-bup-ali.web.app'],
   },
 });
 assert.equal(r.status,200,`Giriş ayarları uygulanamadı: ${r.data.error?.status??r.status}`);
