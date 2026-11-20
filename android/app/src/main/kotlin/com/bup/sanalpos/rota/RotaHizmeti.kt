@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.SystemClock
 import com.bup.sanalpos.R
 import com.google.firebase.firestore.ListenerRegistration
@@ -39,6 +40,14 @@ class RotaHizmeti : Service() {
     private lateinit var depo: AyarDeposu
     private lateinit var lm: LocationManager
     private lateinit var alici: KonumAlici
+
+    /**
+     * Gönderim için kısa uyanıklık (0.13.2). Ekran kapalı ve şarjsızken işlemci uyur; Handler'ın
+     * gecikmeli işleri uyurken ilerlemeyen saate bağlıdır. 20 Kasım 2026 TC15'te gönderim 4–20 dk
+     * gecikiyordu. Konum gelince (işlemciyi sistem uyandırır) kilit alınır, gönderim denetimi bitince
+     * bırakılır; en çok [UYANIK_MS].
+     */
+    private lateinit var uyanik: PowerManager.WakeLock
     private var basladi = false
 
     // --- konum iş parçacığına ait ---
@@ -75,6 +84,9 @@ class RotaHizmeti : Service() {
         saat.yukle(depo.saatReferansi, acilisSayisi())
         lm = getSystemService(LocationManager::class.java)
         alici = KonumAlici(lm, konumIs.looper) { noktaGeldi(it) }
+        uyanik = getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bup:rota-gonderim")
+            .apply { setReferenceCounted(false) }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -104,6 +116,7 @@ class RotaHizmeti : Service() {
         runCatching { unregisterReceiver(olayAlicisi) }
         konumIs.quitSafely()
         agIs.quitSafely()
+        if (uyanik.isHeld) uyanik.release()
         super.onDestroy()
     }
 
@@ -233,6 +246,9 @@ class RotaHizmeti : Service() {
         sonNokta = k
         alici.baslat(politika.degerlendir(k).aralikSn)
         durum = durumHesapla()
+        // Uyurken zamanlayıcı ilerlemez: gönderim zamanı geldiyse şimdi (Gonderici tekdüze saatle sınırlar).
+        uyanik.acquire(UYANIK_MS)
+        gonderimiTetikle()
     }
 
     private fun ayarGeldi(a: TakipAyari?) {
@@ -317,7 +333,13 @@ class RotaHizmeti : Service() {
     }
 
     private val gonderim: Runnable = object : Runnable {
-        override fun run() {
+        override fun run() = try {
+            gonder()
+        } finally {
+            if (uyanik.isHeld) uyanik.release()
+        }
+
+        private fun gonder() {
             val g = gonderici ?: return
             if (!onayli) return
             val (pil, sarj) = pil()
@@ -354,6 +376,7 @@ class RotaHizmeti : Service() {
         private const val KANAL = "rota"
         private const val BILDIRIM_NO = 4701
         private const val BAKIM_MS = 60 * 60_000L
+        private const val UYANIK_MS = 30_000L
         const val NEDEN = "neden"
         const val NEDEN_ACILIS = "acilis"
 

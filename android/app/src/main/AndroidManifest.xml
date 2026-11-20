@@ -29,6 +29,8 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Rota gönderimi için kısa uyanıklık (0.13.2, RotaHizmeti.uyanik). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <!-- Güvenlik ayarları: docs/ANDROID_PLANI.md §4. Yedek/aktarım kapalı, yalnız HTTPS. -->
     <application

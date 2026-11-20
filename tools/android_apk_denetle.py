@@ -28,6 +28,8 @@ IZINLER = {
     'android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
     # Alarm bekçisi (ROTA_MIMARI M19, 18 Kasım 2026).
     'android.permission.USE_EXACT_ALARM', 'android.permission.SCHEDULE_EXACT_ALARM',
+    # Gönderim için kısa uyanıklık (0.13.2, 20 Kasım 2026: TC15 uykuda gönderim gecikmesi).
+    'android.permission.WAKE_LOCK',
     'android.permission.INTERNET', 'android.permission.ACCESS_NETWORK_STATE',
     'android.permission.USE_BIOMETRIC', 'android.permission.USE_FINGERPRINT',
     'android.permission.NFC', 'android.permission.CAMERA',
