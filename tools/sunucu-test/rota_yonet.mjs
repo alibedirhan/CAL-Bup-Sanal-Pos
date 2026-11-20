@@ -10,6 +10,8 @@
 //   node rota_yonet.mjs durum
 //   node rota_yonet.mjs parcalar KOD               (gelen veriyi sözleşmeyle doğrular)
 //   node rota_yonet.mjs gonderim KOD SANIYE    (gönderim aralığı, 15–3600; terminal 0.13.1+)
+//   node rota_yonet.mjs aralik KOD 15 120 300      (konum alma: hareket, durgun, depoda sn)
+//   node rota_yonet.mjs depo "Ad" ENLEM BOYLAM M    (depo bölgesi; aynı adlı güncellenir)
 //   node rota_yonet.mjs ilk-yonetici EPOSTA "Ad Soyad" (rota yöneticisi; yalnız hiç yokken)
 import { randomBytes } from 'node:crypto';
 import { rotaRest } from './rota_rest.mjs';
@@ -135,6 +137,33 @@ switch (komut) {
     console.log(`${kod}: gönderim ${n} sn'de bir.`);
     break;
   }
+  case 'aralik': {
+    // Konum alma aralıkları (CAL_bup Ayarlar → Terminaller ile aynı alanlar ve sınırlar).
+    const [kod, ...sn] = arg;
+    const [h, d, p] = sn.map(Number);
+    const gecerli = (x, en) => Number.isInteger(x) && x >= en && x <= 3600;
+    if (!gecerli(h, 5) || !gecerli(d, 5) || !gecerli(p, 5)) throw Error('aralik KOD HAREKET DURGUN DEPO (sn, 5–3600; varsayılan 15 120 300)');
+    const b = await koddan(kod);
+    if (!(await db.al(`rotaCihazlar/${b.id}`))) throw Error('Önce onaylayın: onayla KOD "Ad"');
+    await yaz(`rotaCihazlar/${b.id}`, { hareketSn: h, durgunSn: d, depoSn: p }, 'cihaz_ayar', { birlestir: true });
+    console.log(`${kod}: hareket ${h}, durgun ${d}, depoda ${p} sn.`);
+    break;
+  }
+  case 'depo': {
+    // Depo bölgesi (rotaAyar/genel; CAL_bup Ayarlar → Depo ile aynı biçim). Aynı adlı depo güncellenir.
+    const [ad, ...sayi] = arg;
+    const [en, boy, yaricap] = sayi.map(Number);
+    if (!ad?.trim() || ad.trim().length > 40 || !(Math.abs(en) <= 90) || !(Math.abs(boy) <= 180)
+      || !(yaricap >= 10 && yaricap <= 5000)) throw Error('depo "Ad" ENLEM BOYLAM YARICAP_M (10–5000)');
+    const eski = (await db.al('rotaAyar/genel'))?.veri;
+    const depolar = (Array.isArray(eski?.depolar) ? eski.depolar : []).filter(x => x.ad !== ad.trim());
+    if (depolar.length >= 10) throw Error('En çok 10 depo.');
+    depolar.push({ ad: ad.trim(), en, boy, yaricap });
+    const bolgeler = Array.isArray(eski?.bolgeler) ? eski.bolgeler : ['İzmir', 'Aydın', 'Manisa'];
+    await yaz('rotaAyar/genel', { depolar, bolgeler }, 'ayar');
+    console.log(`Depolar: ${depolar.map(x => `${x.ad} (${x.en}, ${x.boy}, ${x.yaricap} m)`).join('; ')}; bölgeler: ${bolgeler.join(', ')}.`);
+    break;
+  }
   case 'ilk-yonetici': {
     const [eposta, ad] = arg;
     if (!/^[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,190}$/.test(eposta ?? '') || !ad) throw Error('ilk-yonetici küçük-harf-eposta "Ad Soyad"');
@@ -144,6 +173,6 @@ switch (komut) {
     break;
   }
   default:
-    console.log('Komutlar: basvurular | onayla KOD "Ad" | takip KOD ac|kapat | kaldir KOD | durum | parcalar KOD | gonderim KOD SN | ilk-yonetici EPOSTA "Ad"');
+    console.log('Komutlar: basvurular | onayla KOD "Ad" | takip KOD ac|kapat | kaldir KOD | durum | parcalar KOD | gonderim KOD SN | aralik KOD H D P | depo "Ad" EN BOY M | ilk-yonetici EPOSTA "Ad"');
     process.exitCode = 1;
 }
