@@ -1,3 +1,45 @@
+# 20 Kasım 2026 gece — eksikler kapatıldı: depo canlıda, aralıklar, 0.13.2 (dal, yayın yok)
+
+Ali "eksikleri tespit et, düzelt" dedi (dışarıdaydı). Yapılanlar:
+- **Canlı ayar (Ali'nin "düzelt"iyle; geri alınabilir, `rotaDenetim`'de):** `rotaAyar/genel` = Bornova Depo
+  38.412102, 27.245362, 150 m (üç terminalin son 24 saatlik GPS ortancası; noktaların %95'i 48 m içinde),
+  bölgeler İzmir/Aydın/Manisa. Üç TC15'te `depoSn` 120 (= durgun; Ali depoda sıklık düşmesin istedi), CA3MWJ ve
+  RSFXKF `gonderimSn` 60. 22:19'da QDL9LS ve RSFXKF **"depoda"** ✓. Yönetici aracına `aralik` ve `depo` komutları
+  (emülatörde denendi).
+- **Bulgu — uyku:** TC15 şarjsız + kullanılmazken nokta saatte 3–4 (≈ 15 dk bekçi alarmı), gönderim 4–20 dk gecikmeli;
+  Araç 10 (CA3MWJ) 18:09'dan sonra seyrek, **20:44'ten beri hiç veri yok** (22:19 itibarıyla). Muafiyetli Redmi gece
+  2 dk'da bir nokta vermişti → TC15'lerde **pil muafiyeti verilmemiş olabilir**; kurulum ekranında elle bakılmalı.
+- **Uyku deneyi** (`tools/sunucu-test/rota_uyku_deneyi.mjs`, API 35 emülatör): derin uykuda muafiyetli/muafiyetsiz
+  ikisi de 4/5 nokta → uygulama tasarımı GPS'i kesmiyor; emülatör işlemciyi gerçekten uyutmadığı için TC15'i taklit etmez.
+- **0.13.2+25 (dal `rota-0.13.2`, `5df88e0`, push/yayın yok):** konum gelince gönderim denetimi + en çok 30 sn
+  uyanıklık kilidi (M22, `WAKE_LOCK` APK denetim listesine eklendi). `rota_test.sh` tam geçti (22 kural, 43 Kotlin,
+  6 kuyruk, uçtan uca 15 parça/48 kayıt).
+**Ali'ye (sabah, araçlar çıkmadan):** (1) Araç 10 terminali açık mı / uygulama çalışıyor mu; (2) üç TC15'te Sanal POS →
+Bilgi → Konum kurulumu: "Pil kısıtlaması kaldırıldı" ✓ mi (değilse "Kısıtlamayı kaldır"); (3) 0.13.2 yayını onayı
+(`android_yayin.sh --yayinla`; önce main'e alma). Araç kayıtları (rotaAraclar/atama) hâlâ yok — plasiyer/yakıt bilgisi Ali'de.
+**21 Kasım akşam:** `node rota_pil.mjs QDL9LS CA3MWJ RSFXKF` + sahadaki çizgi/gecikme raporu.
+
+---
+
+# 20 Kasım 2026 akşam — 3 TC15 kuruldu (Ali), eksik ayarlar, pil ölçümü
+
+Ali terminallere kendisi kurdu; canlıda (yalnız okuma): QDL9LS "DEPO TERMİNALİ" (19.11), CA3MWJ "ARAÇ 10",
+RSFXKF "ARAÇ 11" — onaylı, takip açık, sürüm 24, veri geliyor. Terminaller depoda; **21 Kasım araçlar sahaya çıkıyor.**
+- **Eksik (canlıda boş):** `rotaAyar/genel` yok (depo tanımlı değil → "depoda" kipi hiç çalışmıyor, depoda da 2 dk'da
+  bir GPS), `rotaAraclar` ve `rotaAtamalar` boş (km/yakıt/araç rengi yok). `gonderimSn` yok → 120 sn (canlı harita
+  en çok ~2 dk geride). Terminallerin depodaki konumu ≈ 38.4120, 27.2454.
+- **Pil (şarjsız, `tools/sunucu-test/rota_pil.mjs`, salt okunur, commit'siz):** QDL9LS depoda gece 21 sa saatte %0,8;
+  gündüz kullanımda %2,6–3,7; CA3MWJ depoda %1,4. **Redmi 4G77NB 18.11 gecesi evde saatte %18** (99→1, 5,4 sa;
+  durgun 120 sn GPS, doğruluk 15–50 m) — kapalı alanda GPS sürekli arıyor olabilir; 19.11'den beri kapalı.
+  KonumAlici GPS'i durgunken de açık tutar (minTime ile); sahada yüksek çıkarsa durgunda ağ konumu/hareket sensörü.
+- **Ali'nin cevapları (20.11 gece):** terminallerde SIM + internet var, GPS açık; depo terminali takipte kalsın;
+  araçlar depoya mal almaya gelip gidiyor → depoda sıklık düşmesin. Öneri: depo tanımlansın ama terminal ayarında
+  `depoSn` = `durgunSn` (120) — örnekleme bugünkü gibi kalır, depo giriş/çıkış raporu gelir. Ali "atamayı yaptım"
+  dedi; canlıda yalnız terminal adları (ARAÇ 10/11) var, `rotaAraclar`/`rotaAtamalar` boş, denetimde araç kaydı yok.
+- **21 Kasım akşam:** `node rota_pil.mjs QDL9LS CA3MWJ RSFXKF` ile sahada (hareket 15 sn) günlük pil raporu.
+
+---
+
 # 18 Kasım 2026 gece — 0.13.1 yayında (Ali "yeni sürümü yayınla, telefonlardaki uygulama güncellensin")
 
 `bash tools/android_yayin.sh --yayinla` (main `9ef4d13`): kurallar, GitHub `alibedirhan/bup-sanal-pos-android`
