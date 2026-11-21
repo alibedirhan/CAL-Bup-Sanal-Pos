@@ -1,3 +1,12 @@
+# 21 Kasım 2026 — 0.13.2 SESSİZ yayında (Ali'nin onayıyla)
+
+Ali "0.13.2'yi yayınla" ve **"terminallere bildirim gitmesin asla"** dedi. `rota-0.13.2` → main (ileri sarma,
+`767b55f`, GitHub'a gönderildi); `bash tools/android_yayin.sh --yayinla --sessiz` (yeni seçenek): kurallar (değişmedi),
+APK `alibedirhan/bup-sanal-pos-android` v0.13.2, kurulum sayfası https://bup-sanal-pos-indir.web.app/ 0.13.2
+(SHA-256 `42fdae369a0509618091f40df79ffd2826a95b6d7f2dde4f10e90d917aea6ea6`). **`ayarlar/android` yazılmadı** (hâlâ son 24 / 0.13.1, enDusuk 19):
+uygulamalarda güncelleme uyarısı çıkmaz. Kural: Android yayını **her zaman `--sessiz`**, `--zorunlu` yok.
+Terminallere 0.13.2'yi Ali kurulum sayfasından elle kurar (üzerine kurulum; veri ve rota kaydı korunur).
+
 # 20 Kasım 2026 gece — eksikler kapatıldı: depo canlıda, aralıklar, 0.13.2 (dal, yayın yok)
 
 Ali "eksikleri tespit et, düzelt" dedi (dışarıdaydı). Yapılanlar:
