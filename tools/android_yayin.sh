@@ -6,6 +6,9 @@
 #   bash tools/android_yayin.sh --yayinla      # kullanıcı onayıyla: kurallar →
 #                                              # APK (GitHub) → sayfa → ayarlar/android
 #   bash tools/android_yayin.sh --yayinla --zorunlu   # bu sürümün altı açılmaz
+#   bash tools/android_yayin.sh --yayinla --sessiz    # APK + sayfa yayınlanır, ayarlar/android
+#                                              # yazılmaz: cihazlarda güncelleme uyarısı çıkmaz
+#                                              # (Ali, 21 Kasım 2026: terminallere bildirim gitmesin)
 #
 # APK, Firebase Spark Hosting'de yasak olduğu için (çalıştırılabilir dosya) ayrı,
 # açık, yalnız APK tutan GitHub deposunun sürüm ekidir; kurulum sayfası Hosting'de.
@@ -13,15 +16,18 @@
 # dışındadır (~/.bup-sanal-pos/imza/); kaybı güncellemeyi imkânsız kılar.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-yayinla=false zorunlu=false
+yayinla=false zorunlu=false sessiz=false
 for a in "$@"; do
   case "$a" in
     --yayinla) yayinla=true ;;
     --zorunlu) zorunlu=true ;;
+    --sessiz) sessiz=true ;;
     *) echo "Bilinmeyen seçenek: $a" >&2; exit 2 ;;
   esac
 done
 $zorunlu && ! $yayinla && { echo '--zorunlu yalnız --yayinla ile' >&2; exit 2; }
+$sessiz && ! $yayinla && { echo '--sessiz yalnız --yayinla ile' >&2; exit 2; }
+$sessiz && $zorunlu && { echo '--sessiz ile --zorunlu birlikte olmaz' >&2; exit 2; }
 PROJE=bup-sanal-pos-izmir
 INDIRME=https://bup-sanal-pos-indir.web.app/
 APK_DEPO=alibedirhan/bup-sanal-pos-android
@@ -115,6 +121,10 @@ for _ in $(seq 1 24); do
   sleep 5
 done
 $sayfa_tamam || { echo 'Yayındaki kurulum sayfası bu sürümü göstermiyor' >&2; exit 1; }
+if $sessiz; then
+  echo "YAYINDA (sessiz): $INDIRME ($ad) — ayarlar/android yazılmadı, cihazlara güncelleme uyarısı gitmez."
+  exit 0
+fi
 secenek=()
 $zorunlu && secenek=(--zorunlu)
 node tools/sunucu-test/android_surum_yaz.mjs "$kod" "$ad" "$sha" "$INDIRME" "${secenek[@]}"
