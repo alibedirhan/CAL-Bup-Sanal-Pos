@@ -1,0 +1,531 @@
+<title>Rota Araç Profilleri</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Düzen: CAL_bup Rota sekmesinin üst çubuğu + tek sütun içerik; profil = başlık kartı + alt sekmeler.
+   Renkler onaylı Rota taslağının belirteçleri (rota-taslak.html) ile aynı. */
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#1d2330; --muted:#667085; --line:#e3e6ea; --soft:#f0f2f5;
+  --accent:#1f4e8c; --accent-ink:#ffffff; --warn:#b54708; --warn-bg:#fff4e5; --bad:#b42318; --bad-bg:#fdecea;
+  --info:#175cd3; --info-bg:#eaf2ff; --ok:#067647; --ok-bg:#e7f6ec;
+  --a10:#2563eb; --a11:#d9480f; --a12:#7c3aed; --yol:#c9ced6; --yol2:#dde1e6; --su:#d6e6f5;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151b; --panel:#1b2029; --ink:#e7eaf0; --muted:#98a2b3; --line:#2c3340; --soft:#222834;
+    --accent:#7fb0ff; --accent-ink:#0f1520; --warn:#fdb022; --warn-bg:#3a2a10; --bad:#f97066; --bad-bg:#3b1a18;
+    --info:#84adff; --info-bg:#172843; --ok:#47cd89; --ok-bg:#12301f;
+    --a10:#6ea0ff; --a11:#ff8a4c; --a12:#b18cff; --yol:#3a4250; --yol2:#2d3440; --su:#1c2a3a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151b; --panel:#1b2029; --ink:#e7eaf0; --muted:#98a2b3; --line:#2c3340; --soft:#222834;
+  --accent:#7fb0ff; --accent-ink:#0f1520; --warn:#fdb022; --warn-bg:#3a2a10; --bad:#f97066; --bad-bg:#3b1a18;
+  --info:#84adff; --info-bg:#172843; --ok:#47cd89; --ok-bg:#12301f;
+  --a10:#6ea0ff; --a11:#ff8a4c; --a12:#b18cff; --yol:#3a4250; --yol2:#2d3440; --su:#1c2a3a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.ust{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;min-height:52px;padding-block:6px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.logo{font-weight:700}
+nav{display:flex;gap:4px;overflow-x:auto;min-width:0}
+nav button{padding:8px 12px;border-radius:8px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}
+nav button[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.ornek{margin-left:auto;font-size:12px;color:var(--warn);background:var(--warn-bg);padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+.sayfa{max-width:1080px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:16px}
+.aciklama{margin:0;color:var(--muted);max-width:70ch}
+.aciklama b{color:var(--ink)}
+h1{font-size:20px;margin:0;text-wrap:balance}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0}
+h3{font-size:15px;margin:0}
+.kutu{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.satir{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ara{flex:1}
+.dugme{border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.dugme:hover{border-color:var(--muted)}
+.dugme.birincil{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.dugme.kucuk{padding:4px 9px;font-size:13px}
+.ipucu{font-size:12px;color:var(--muted);margin:0}
+.yeni{font-size:11px;font-weight:700;color:var(--info);background:var(--info-bg);padding:2px 7px;border-radius:6px;letter-spacing:.3px}
+
+/* Sabah özeti */
+.ozet-ust{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+.araclar{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}
+.arac{border-top:4px solid var(--renk)}
+.arac-bas{display:flex;align-items:center;gap:10px}
+.renk{width:12px;height:12px;border-radius:50%;background:var(--renk);flex:none}
+.arac-bas b{font-size:16px}
+.arac-bas small{color:var(--muted)}
+.olcu{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.olcu div{background:var(--soft);border-radius:8px;padding:8px 10px;min-width:0}
+.olcu span{display:block;font-size:12px;color:var(--muted)}
+.olcu b{font-size:18px;font-variant-numeric:tabular-nums}
+.olcu small{color:var(--muted);font-size:12px}
+.cipler{display:flex;flex-wrap:wrap;gap:6px}
+.cip{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--soft);white-space:nowrap}
+.c-ok{background:var(--ok-bg);color:var(--ok)}
+.c-bad{background:var(--bad-bg);color:var(--bad)}
+.c-warn{background:var(--warn-bg);color:var(--warn)}
+.c-info{background:var(--info-bg);color:var(--info)}
+.etiketli{display:flex;flex-direction:column;gap:6px}
+.etiketli > span{font-size:12px;color:var(--muted)}
+.bos-arac{border-style:dashed;align-items:flex-start;justify-content:center;color:var(--muted)}
+
+/* Araçlar listesi */
+.liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.liste li{display:grid;grid-template-columns:14px 1fr auto;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+.liste li:last-child{border-bottom:0}
+.liste small{color:var(--muted)}
+
+/* Profil */
+.profil-bas{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.profil-rozet{width:52px;height:52px;border-radius:12px;background:var(--renk);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px}
+.profil-bilgi{display:flex;flex-direction:column;gap:2px;min-width:0}
+.profil-bilgi small{color:var(--muted)}
+.terminal{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.sekmeler{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.sekmeler button{border:0;background:none;padding:10px 14px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.sekmeler button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+
+.tablo-kap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-weight:600;color:var(--muted);font-size:12px;white-space:nowrap}
+td.sag,th.sag{text-align:right}
+.gun-cip{display:inline-block;min-width:30px;text-align:center;font-size:11px;padding:2px 5px;border-radius:6px;margin:1px;background:var(--soft);color:var(--muted)}
+.gun-cip.on{background:var(--accent);color:var(--accent-ink)}
+.konum-kesin{color:var(--ok)}
+.konum-yaklasik{color:var(--warn)}
+.konum-yok{color:var(--bad)}
+
+form.ekle{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;background:var(--soft);border-radius:10px;padding:14px}
+form.ekle label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+form.ekle input,form.ekle select{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.genis{grid-column:1/-1}
+.gunsec{display:flex;flex-wrap:wrap;gap:4px}
+.gunsec label{flex-direction:row;align-items:center;gap:4px;color:var(--ink);font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer}
+.konumyol{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Rut ızgarası */
+.rut{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:8px;min-width:820px}
+.rut-gun{background:var(--soft);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.rut-gun.bugun{outline:2px solid var(--accent)}
+.rut-gun h3{font-size:13px;display:flex;justify-content:space-between}
+.rut-gun small{color:var(--muted);font-weight:400}
+.rm{font-size:12px;padding:5px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);display:flex;justify-content:space-between;gap:6px}
+.rm.gitti{border-color:var(--ok);color:var(--ok)}
+.rm.gitmedi{border-color:var(--bad);color:var(--bad)}
+
+/* Gün ve durak etiketleme */
+.gun-duzen{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+.harita{width:100%;height:auto;border-radius:10px;background:var(--soft);display:block}
+.durak-listesi{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.durak-listesi li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;padding:9px 0;border-bottom:1px solid var(--line)}
+.no{width:24px;height:24px;border-radius:50%;background:var(--renk);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.no.bilinmeyen{background:var(--muted)}
+.durak-ad{display:flex;flex-direction:column;gap:2px;min-width:0}
+.durak-ad small{color:var(--muted)}
+.sure{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
+.etiketle{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding:10px;border-radius:8px;background:var(--soft)}
+.etiketle select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);max-width:100%}
+
+/* Km doğrulama */
+.km-ozet{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px}
+.km-ozet div{background:var(--soft);border-radius:8px;padding:10px 12px}
+.km-ozet span{display:block;font-size:12px;color:var(--muted)}
+.km-ozet b{font-size:20px;font-variant-numeric:tabular-nums}
+.fark-iyi{color:var(--ok)}
+.fark-orta{color:var(--warn)}
+
+.not-kutusu{border-left:3px solid var(--info);background:var(--info-bg);padding:10px 12px;border-radius:0 8px 8px 0;font-size:13px;margin:0}
+.not-kutusu b{color:var(--info)}
+
+@media (max-width:760px){
+  .gun-duzen{grid-template-columns:1fr}
+  .profil-bas{grid-template-columns:auto 1fr}
+  .terminal{grid-column:1/-1;justify-content:flex-start}
+  .olcu b{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header>
+  <div class="ust">
+    <span class="logo">CAL bup · Rota</span>
+    <nav aria-label="Rota bölümleri">
+      <button type="button" data-git="harita">Harita</button>
+      <button type="button" data-git="ozet" aria-current="page">Dünün özeti</button>
+      <button type="button" data-git="araclar">Araçlar</button>
+      <button type="button" data-git="ayarlar">Ayarlar</button>
+    </nav>
+    <span class="ornek">TASLAK · ÖRNEK VERİLER</span>
+  </div>
+</header>
+
+<!-- ============ DÜNÜN ÖZETİ ============ -->
+<section class="sayfa" id="g-ozet">
+  <div class="ozet-ust">
+    <div>
+      <h1>Dünün özeti · Cumartesi 21 Kasım</h1>
+      <p class="aciklama">Sabah ilk açılışta bu ekran gelir. Her araç için tek bakışta: ne zaman çıktı, kaç km yaptı, rutundaki müşterilerden kaçına gitti, kimi atladı. Ayrıntı için kartta <b>Profili aç</b>.</p>
+    </div>
+    <div class="satir">
+      <button type="button" class="dugme kucuk">‹ Önceki gün</button>
+      <button type="button" class="dugme kucuk">Excel'e aktar</button>
+    </div>
+  </div>
+
+  <div class="araclar">
+    <article class="kutu arac" style="--renk:var(--a10)">
+      <div class="arac-bas"><span class="renk"></span><div><b>Araç 10</b> <small>· Plasiyer adı</small></div></div>
+      <div class="olcu">
+        <div><span>Çıkış – dönüş</span><b>07:34</b> <small>– 13:15</small></div>
+        <div><span>Yol</span><b>114 km</b> <small>sayaç 112</small></div>
+        <div><span>Rut</span><b>9 / 11</b> <small>müşteri</small></div>
+      </div>
+      <div class="etiketli"><span>Gidilmeyen (rutta vardı)</span>
+        <div class="cipler"><span class="cip c-bad">Kardeşler Market</span><span class="cip c-bad">Deniz Büfe</span></div></div>
+      <div class="etiketli"><span>Plan dışı ziyaret ve uyarılar</span>
+        <div class="cipler"><span class="cip c-info">Ege Şarküteri (rut dışı)</span><span class="cip c-warn">Hız 120 km/sa · 12:56</span><span class="cip c-warn">Sahaya %31 pille çıktı</span></div></div>
+      <div class="satir"><button type="button" class="dugme kucuk birincil" data-git="profil">Profili aç</button><button type="button" class="dugme kucuk" data-git="harita">Haritada gör</button></div>
+    </article>
+
+    <article class="kutu arac" style="--renk:var(--a11)">
+      <div class="arac-bas"><span class="renk"></span><div><b>Araç 11</b> <small>· Plasiyer adı</small></div></div>
+      <div class="olcu">
+        <div><span>Çıkış – dönüş</span><b>07:26</b> <small>– 15:46</small></div>
+        <div><span>Yol</span><b>76 km</b> <small>sayaç —</small></div>
+        <div><span>Rut</span><b>14 / 14</b> <small>müşteri</small></div>
+      </div>
+      <div class="etiketli"><span>Gidilmeyen (rutta vardı)</span>
+        <div class="cipler"><span class="cip c-ok">Hepsine gidildi</span></div></div>
+      <div class="etiketli"><span>Plan dışı ziyaret ve uyarılar</span>
+        <div class="cipler"><span class="cip c-warn">Tanınmayan yerde 56 dk · 08:03</span><span class="cip">4 durak etiketlenmedi</span></div></div>
+      <div class="satir"><button type="button" class="dugme kucuk birincil" data-git="profil">Profili aç</button><button type="button" class="dugme kucuk" data-git="harita">Haritada gör</button></div>
+    </article>
+
+    <article class="kutu arac bos-arac">
+      <h3>4 araç daha eklenecek</h3>
+      <p class="ipucu">Yeni araç Ayarlar'dan eklenir; terminal onaylanıp araca bağlanınca burada kendi kartıyla görünür.</p>
+    </article>
+  </div>
+
+  <div class="kutu">
+    <h2>Karşılaştırma · son 7 gün</h2>
+    <div class="tablo-kap">
+      <table>
+        <thead><tr><th>Araç</th><th class="sag">Km</th><th class="sag">Ziyaret</th><th class="sag">Rut uyumu</th><th class="sag">Müşteri başına km</th><th class="sag">Sahada (ort.)</th><th class="sag">Yakıt</th></tr></thead>
+        <tbody>
+          <tr><td><span class="renk" style="--renk:var(--a10);display:inline-block"></span> Araç 10</td><td class="sag">612</td><td class="sag">58</td><td class="sag">%88</td><td class="sag">10,6</td><td class="sag">6 sa 10 dk</td><td class="sag">73 L</td></tr>
+          <tr><td><span class="renk" style="--renk:var(--a11);display:inline-block"></span> Araç 11</td><td class="sag">431</td><td class="sag">81</td><td class="sag">%97</td><td class="sag">5,3</td><td class="sag">7 sa 40 dk</td><td class="sag">52 L</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ipucu">Sonraki adım (müşteriler oturunca): satış verisiyle birlikte <b>müşteri başına ciro / km</b> sütunu.</p>
+  </div>
+</section>
+
+<!-- ============ ARAÇLAR ============ -->
+<section class="sayfa" id="g-araclar" hidden>
+  <h1>Araçlar</h1>
+  <p class="aciklama">Her aracın kendi profili var: plasiyeri, terminali, müşteri listesi, rutu ve geçmişi. Müşteri listesini siz doldurursunuz; bir müşteriyi başka araca taşıyabilirsiniz.</p>
+  <div class="kutu">
+    <ul class="liste">
+      <li style="--renk:var(--a10)"><span class="renk"></span><div><b>Araç 10</b> · Plasiyer adı<br><small>Terminal CA3MWJ · 23 müşteri · son veri 1 dk önce</small></div><button type="button" class="dugme kucuk birincil" data-git="profil">Profil</button></li>
+      <li style="--renk:var(--a11)"><span class="renk"></span><div><b>Araç 11</b> · Plasiyer adı<br><small>Terminal RSFXKF · 31 müşteri · son veri 2 dk önce</small></div><button type="button" class="dugme kucuk" data-git="profil">Profil</button></li>
+    </ul>
+    <button type="button" class="dugme" data-git="ayarlar">+ Araç ekle (Ayarlar)</button>
+  </div>
+</section>
+
+<!-- ============ PROFİL ============ -->
+<section class="sayfa" id="g-profil" hidden style="--renk:var(--a10)">
+  <button type="button" class="dugme kucuk" data-git="araclar" style="align-self:flex-start">‹ Araçlar</button>
+  <div class="kutu">
+    <div class="profil-bas">
+      <div class="profil-rozet">10</div>
+      <div class="profil-bilgi">
+        <h1>Araç 10 · Plasiyer adı</h1>
+        <small>Dizel · 12 L/100 km · Terminal CA3MWJ (Sanal POS 0.13.3)</small>
+      </div>
+      <div class="terminal">
+        <span class="cip c-ok">Canlı · hareket</span>
+        <span class="cip">Pil %64</span>
+        <span class="cip c-ok">Kurulum tamam</span>
+      </div>
+    </div>
+    <div class="sekmeler" role="tablist" aria-label="Profil bölümleri">
+      <button type="button" role="tab" aria-selected="true" data-sekme="musteriler">Müşteriler</button>
+      <button type="button" role="tab" aria-selected="false" data-sekme="rut">Rut planı</button>
+      <button type="button" role="tab" aria-selected="false" data-sekme="gun">Gün ve duraklar</button>
+      <button type="button" role="tab" aria-selected="false" data-sekme="gecmis">Geçmiş</button>
+      <button type="button" role="tab" aria-selected="false" data-sekme="km">Km doğrulama</button>
+    </div>
+
+    <!-- Müşteriler -->
+    <div data-panel="musteriler" class="kutu" style="border:0;padding:0">
+      <div class="satir">
+        <input id="musteri-ara" class="ara" type="search" placeholder="Müşteri ara" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0">
+        <button type="button" class="dugme birincil" id="ekle-ac">+ Müşteri ekle</button>
+      </div>
+
+      <form class="ekle" id="ekle-form" hidden>
+        <label>Müşteri adı<input id="f-ad" required placeholder="ör. Yıldız Kasap"></label>
+        <label>Cari kodu (isteğe bağlı)<input id="f-kod" placeholder="ör. 120.01.045"></label>
+        <label class="genis">Konum
+          <span class="konumyol">
+            <button type="button" class="dugme kucuk">Haritada işaretle</button>
+            <button type="button" class="dugme kucuk">Bir duraktan al</button>
+            <input id="f-konum" placeholder="ya da Google Maps'ten yapıştır: 38.4105, 27.1361" style="flex:1;min-width:200px">
+          </span>
+        </label>
+        <label class="genis">Ziyaret günleri (rut — boş bırakılabilir)
+          <span class="gunsec" id="f-gunler">
+            <label><input type="checkbox" value="Pzt">Pzt</label><label><input type="checkbox" value="Sal">Sal</label>
+            <label><input type="checkbox" value="Çar">Çar</label><label><input type="checkbox" value="Per">Per</label>
+            <label><input type="checkbox" value="Cum">Cum</label><label><input type="checkbox" value="Cmt">Cmt</label>
+          </span>
+        </label>
+        <label class="genis">Not<input id="f-not" placeholder="ör. arka kapıdan teslim, öğleden önce"></label>
+        <div class="satir genis"><button type="submit" class="dugme birincil">Kaydet</button><button type="button" class="dugme" id="ekle-kapat">Vazgeç</button></div>
+      </form>
+
+      <div class="tablo-kap">
+        <table>
+          <thead><tr><th>Müşteri</th><th>Cari kodu</th><th>Ziyaret günleri</th><th>Konum</th><th class="sag">Son ziyaret</th><th class="sag">Son 30 gün</th><th></th></tr></thead>
+          <tbody id="musteri-satirlari"></tbody>
+        </table>
+      </div>
+      <p class="ipucu"><span class="konum-kesin">● kesin</span>: en az bir ziyaret durağıyla doğrulandı · <span class="konum-yaklasik">● yaklaşık</span>: elle girildi, henüz durakla doğrulanmadı · <span class="konum-yok">● yok</span>: konum girilmedi, durakla eşleşemez.</p>
+    </div>
+
+    <!-- Rut -->
+    <div data-panel="rut" hidden class="kutu" style="border:0;padding:0">
+      <p class="aciklama">Bugün rutu plasiyer belirliyor; burası ileride sabit ziyaret günleri için hazır dursun. Günler müşteri kartındaki "Ziyaret günleri"nden gelir. <b>Bu hafta</b> görünümünde gidilen müşteri yeşil, günü geçip gidilmeyen kırmızıdır.</p>
+      <div class="tablo-kap">
+        <div class="rut" id="rut"></div>
+      </div>
+      <p class="ipucu">Rutu boş müşteriler ("Ziyaret günleri" seçilmemiş) burada görünmez; ziyaret edildiklerinde özette "rut dışı" diye geçer.</p>
+    </div>
+
+    <!-- Gün ve duraklar -->
+    <div data-panel="gun" hidden class="kutu" style="border:0;padding:0">
+      <div class="satir"><b>Cumartesi 21 Kasım</b><span class="cip">11 durak</span><span class="cip c-ok">8 tanındı</span><span class="cip">3 etiketlenecek</span></div>
+      <div class="gun-duzen">
+        <svg class="harita" viewBox="0 0 400 300" role="img" aria-label="Günün güzergâhı, şematik">
+          <rect width="400" height="300" fill="var(--soft)"/>
+          <path d="M0 210 C80 200 120 230 200 215 S330 190 400 205 L400 300 L0 300Z" fill="var(--su)"/>
+          <g stroke="var(--yol2)" stroke-width="6" fill="none"><path d="M20 40 H380"/><path d="M20 110 H380"/><path d="M60 0 V200"/><path d="M180 0 V210"/><path d="M300 0 V200"/></g>
+          <g stroke="var(--yol)" stroke-width="10" fill="none"><path d="M0 160 C100 150 250 170 400 140"/></g>
+          <path d="M360 60 L300 110 L240 110 L180 75 L120 110 L60 70 L95 150 L180 150 L250 158 L330 145 L360 60" fill="none" stroke="var(--renk)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <g font-size="11" font-weight="700" text-anchor="middle" fill="#fff">
+            <rect x="345" y="45" width="30" height="30" rx="6" fill="var(--ink)"/><text x="360" y="64" fill="var(--bg)">D</text>
+            <circle cx="300" cy="110" r="11" fill="var(--renk)"/><text x="300" y="114">1</text>
+            <circle cx="240" cy="110" r="11" fill="var(--renk)"/><text x="240" y="114">2</text>
+            <circle cx="180" cy="75" r="11" fill="var(--muted)"/><text x="180" y="79">3</text>
+            <circle cx="120" cy="110" r="11" fill="var(--renk)"/><text x="120" y="114">4</text>
+            <circle cx="60" cy="70" r="11" fill="var(--renk)"/><text x="60" y="74">5</text>
+            <circle cx="95" cy="150" r="11" fill="var(--muted)"/><text x="95" y="154">6</text>
+            <circle cx="180" cy="150" r="11" fill="var(--renk)"/><text x="180" y="154">7</text>
+            <circle cx="250" cy="158" r="11" fill="var(--muted)"/><text x="250" y="162">8</text>
+          </g>
+          <text x="12" y="290" font-size="10" fill="var(--muted)">Şematik çizim · gerçek ekranda sokak haritası</text>
+        </svg>
+        <ul class="durak-listesi" id="duraklar"></ul>
+      </div>
+      <p class="not-kutusu"><b>Nasıl öğrenir:</b> bir durağı müşteriye bağladığınızda o yerin konumu müşteriye işlenir. Sonraki günlerde aynı yerde (≈ 60 m içinde) duran araç o müşteride sayılır; elle iş giderek azalır. "Mola", "Yakıt" gibi etiketli yerler de hatırlanır ve uzun duruş uyarısı vermez.</p>
+    </div>
+
+    <!-- Geçmiş -->
+    <div data-panel="gecmis" hidden class="kutu" style="border:0;padding:0">
+      <div class="tablo-kap">
+        <table>
+          <thead><tr><th>Gün</th><th class="sag">Çıkış</th><th class="sag">Dönüş</th><th class="sag">Km</th><th class="sag">Ziyaret</th><th class="sag">Rut</th><th class="sag">Müşteride</th><th class="sag">Yolda</th><th>Uyarılar</th></tr></thead>
+          <tbody>
+            <tr><td>Cmt 21.11</td><td class="sag">07:34</td><td class="sag">13:15</td><td class="sag">114</td><td class="sag">10</td><td class="sag">9/11</td><td class="sag">1 sa 54 dk</td><td class="sag">3 sa 42 dk</td><td><span class="cip c-warn">Hız</span></td></tr>
+            <tr><td>Cum 20.11</td><td class="sag">07:41</td><td class="sag">15:02</td><td class="sag">96</td><td class="sag">12</td><td class="sag">12/12</td><td class="sag">2 sa 31 dk</td><td class="sag">3 sa 18 dk</td><td></td></tr>
+            <tr><td>Per 19.11</td><td class="sag">07:30</td><td class="sag">14:48</td><td class="sag">102</td><td class="sag">11</td><td class="sag">10/11</td><td class="sag">2 sa 12 dk</td><td class="sag">3 sa 40 dk</td><td><span class="cip">Veri 9 dk kesildi</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Km doğrulama -->
+    <div data-panel="km" hidden class="kutu" style="border:0;padding:0">
+      <p class="aciklama">Sistemin GPS km'sini aracın gerçek kilometre sayacıyla karşılaştırır. Sayaç değerini siz girersiniz ya da yakıt kartı / araç takip raporundan yüklersiniz (kaynak belli olunca). Birkaç günlük kayıttan sonra araca özel <b>düzeltme katsayısı</b> çıkar ve km'ler ona göre gösterilir.</p>
+      <div class="km-ozet">
+        <div><span>Karşılaştırılan gün</span><b>5</b></div>
+        <div><span>Ortalama fark</span><b class="fark-iyi">%1,4</b></div>
+        <div><span>Düzeltme katsayısı</span><b>0,986</b></div>
+        <div><span>Hedef</span><b>&lt; %2</b></div>
+      </div>
+      <div class="satir">
+        <button type="button" class="dugme birincil">+ Sayaç kaydı ekle</button>
+        <button type="button" class="dugme">Yakıt kartı raporu yükle (Excel)</button>
+      </div>
+      <div class="tablo-kap">
+        <table>
+          <thead><tr><th>Gün</th><th class="sag">Sayaç sabah</th><th class="sag">Sayaç akşam</th><th class="sag">Gerçek km</th><th class="sag">Sistem km</th><th class="sag">Fark</th><th>Kaynak</th></tr></thead>
+          <tbody>
+            <tr><td>Cmt 21.11</td><td class="sag">184.220</td><td class="sag">184.332</td><td class="sag">112</td><td class="sag">113,6</td><td class="sag fark-iyi">%1,4</td><td>elle</td></tr>
+            <tr><td>Cum 20.11</td><td class="sag">184.126</td><td class="sag">184.220</td><td class="sag">94</td><td class="sag">95,9</td><td class="sag fark-iyi">%2,0</td><td>elle</td></tr>
+            <tr><td>Per 19.11</td><td class="sag">184.025</td><td class="sag">184.126</td><td class="sag">101</td><td class="sag">102,3</td><td class="sag fark-iyi">%1,3</td><td>elle</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="ipucu">Sistem km'si 0.13.3'ten itibaren terminalin saniyelik ölçümünden gelir (bugünkü 15 saniyelik noktalardan değil).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HARİTA / AYARLAR (bu taslakta değişmeyen ekranlar) ============ -->
+<section class="sayfa" id="g-harita" hidden>
+  <h1>Harita</h1>
+  <p class="aciklama">Bugünkü harita ekranı aynen kalır. Tek fark: durak listesinde tanınan duraklar müşteri adıyla görünür, tanınmayanların yanında <b>Etiketle</b> düğmesi çıkar (profilin "Gün ve duraklar" bölümündeki gibi).</p>
+</section>
+<section class="sayfa" id="g-ayarlar" hidden>
+  <h1>Ayarlar</h1>
+  <p class="aciklama">Bugünkü Ayarlar ekranı aynen kalır. Eklenenler: her terminalin yanında <b>kurulum durumu</b> (pil kısıtlaması, konum izni "her zaman"); eksikse "Kurulum eksik" uyarısı. Araç ekleme yine buradan; eklenen araç "Araçlar" listesinde profiliyle görünür.</p>
+</section>
+
+<script>
+(() => {
+  const gunler = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+  const musteriler = [
+    { ad: 'Yıldız Kasap', kod: '120.01.045', gun: ['Pzt', 'Per'], konum: 'kesin', son: 'Bugün 09:12', ziyaret: 9 },
+    { ad: 'Kardeşler Market', kod: '120.01.112', gun: ['Sal', 'Cmt'], konum: 'kesin', son: '18.11', ziyaret: 7 },
+    { ad: 'Deniz Büfe', kod: '', gun: ['Cmt'], konum: 'yaklasik', son: '14.11', ziyaret: 3 },
+    { ad: 'Ege Şarküteri', kod: '120.02.008', gun: [], konum: 'kesin', son: '21.11', ziyaret: 4 },
+    { ad: 'Güneş Lokanta', kod: '120.01.230', gun: ['Çar', 'Cmt'], konum: 'kesin', son: '21.11', ziyaret: 8 },
+    { ad: 'Merkez Pide', kod: '', gun: ['Cum'], konum: 'yok', son: '—', ziyaret: 0 },
+  ];
+  const el = (s) => document.querySelector(s);
+  const yazi = (t) => document.createTextNode(t);
+  const cip = (metin, sinif) => { const s = document.createElement('span'); s.className = sinif; s.textContent = metin; return s; };
+
+  function musteriCiz() {
+    const ara = (el('#musteri-ara').value || '').toLocaleLowerCase('tr');
+    const govde = el('#musteri-satirlari');
+    govde.replaceChildren();
+    for (const m of musteriler.filter((x) => x.ad.toLocaleLowerCase('tr').includes(ara))) {
+      const tr = document.createElement('tr');
+      const td = (icerik, sinif) => { const c = document.createElement('td'); if (sinif) c.className = sinif; c.append(icerik); tr.append(c); return c; };
+      const ad = document.createElement('b'); ad.textContent = m.ad; td(ad);
+      td(yazi(m.kod || '—'));
+      const g = document.createElement('span');
+      for (const gun of gunler) g.append(cip(gun, 'gun-cip' + (m.gun.includes(gun) ? ' on' : '')));
+      td(g);
+      const k = { kesin: ['● kesin', 'konum-kesin'], yaklasik: ['● yaklaşık', 'konum-yaklasik'], yok: ['● yok', 'konum-yok'] }[m.konum];
+      td(cip(k[0], k[1]));
+      td(yazi(m.son), 'sag');
+      td(yazi(String(m.ziyaret)), 'sag');
+      const s = document.createElement('span'); s.className = 'satir'; s.style.justifyContent = 'flex-end';
+      const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'dugme kucuk'; b1.textContent = 'Düzenle';
+      const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'dugme kucuk'; b2.textContent = 'Başka araca taşı';
+      s.append(b1, b2); td(s);
+      govde.append(tr);
+    }
+  }
+
+  function rutCiz() {
+    const durum = { 'Yıldız Kasap': 'gitti', 'Kardeşler Market': 'gitmedi', 'Deniz Büfe': 'gitmedi', 'Güneş Lokanta': 'gitti' };
+    const kap = el('#rut'); kap.replaceChildren();
+    gunler.forEach((gun, i) => {
+      const d = document.createElement('div'); d.className = 'rut-gun' + (gun === 'Cmt' ? ' bugun' : '');
+      const h = document.createElement('h3'); h.append(yazi(gun)); h.append(cip(['16.11', '17.11', '18.11', '19.11', '20.11', '21.11'][i], ''));
+      h.lastChild.style.cssText = 'color:var(--muted);font-weight:400'; d.append(h);
+      const liste = musteriler.filter((m) => m.gun.includes(gun));
+      if (!liste.length) d.append(cip('Rut yok', 'ipucu'));
+      for (const m of liste) {
+        const gecti = i <= 5;
+        const st = gun === 'Cmt' ? durum[m.ad] : (gecti ? (m.ad === 'Merkez Pide' ? 'gitmedi' : 'gitti') : '');
+        const r = document.createElement('div'); r.className = 'rm' + (st ? ' ' + st : '');
+        r.append(yazi(m.ad)); r.append(yazi(st === 'gitti' ? '✓' : st === 'gitmedi' ? '✗' : ''));
+        d.append(r);
+      }
+      kap.append(d);
+    });
+  }
+
+  const duraklar = [
+    { no: 1, saat: '08:03–08:06', sure: '3 dk', ad: 'Yıldız Kasap', tanindi: true },
+    { no: 2, saat: '08:07–08:36', sure: '29 dk', ad: 'Güneş Lokanta', tanindi: true },
+    { no: 3, saat: '08:40–08:55', sure: '15 dk', ad: null, tanindi: false },
+    { no: 4, saat: '10:41–11:00', sure: '19 dk', ad: 'Ege Şarküteri', tanindi: true, not: 'rut dışı' },
+    { no: 5, saat: '11:04–11:13', sure: '9 dk', ad: 'Yıldız Kasap', tanindi: true },
+    { no: 6, saat: '11:54–12:14', sure: '20 dk', ad: null, tanindi: false },
+    { no: 7, saat: '12:37–12:42', sure: '5 dk', ad: 'Güneş Lokanta', tanindi: true },
+    { no: 8, saat: '13:02–13:07', sure: '5 dk', ad: null, tanindi: false },
+  ];
+  function durakCiz() {
+    const ul = el('#duraklar'); ul.replaceChildren();
+    for (const d of duraklar) {
+      const li = document.createElement('li');
+      li.append(cip(String(d.no), 'no' + (d.tanindi ? '' : ' bilinmeyen')));
+      const orta = document.createElement('div'); orta.className = 'durak-ad';
+      const b = document.createElement('b'); b.textContent = d.tanindi ? d.ad : 'Tanınmayan yer';
+      orta.append(b);
+      const k = document.createElement('small'); k.textContent = d.saat + (d.not ? ' · ' + d.not : ''); orta.append(k);
+      if (!d.tanindi) {
+        const kutu = document.createElement('div'); kutu.className = 'etiketle'; kutu.hidden = true;
+        const sec = document.createElement('select'); sec.setAttribute('aria-label', 'Bu durak nedir');
+        for (const [v, t] of [['', 'Bu durak nedir?'], ...musteriler.map((m) => [m.ad, 'Müşteri: ' + m.ad]), ['yeni', '+ Yeni müşteri…'], ['Mola', 'Mola / yemek'], ['Yakıt', 'Yakıt'], ['Diğer', 'Diğer (adını yaz)']]) {
+          const o = document.createElement('option'); o.value = v; o.textContent = t; sec.append(o);
+        }
+        const kaydet = document.createElement('button'); kaydet.type = 'button'; kaydet.className = 'dugme kucuk birincil'; kaydet.textContent = 'Kaydet';
+        kaydet.addEventListener('click', () => { if (!sec.value || sec.value === 'yeni') return; d.ad = sec.value; d.tanindi = true; durakCiz(); });
+        const hatirla = document.createElement('label'); hatirla.className = 'ipucu'; hatirla.style.cssText = 'display:flex;gap:4px;align-items:center';
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; hatirla.append(cb, yazi('Bu yeri hatırla'));
+        kutu.append(sec, kaydet, hatirla); orta.append(kutu);
+        const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'dugme kucuk'; btn.textContent = 'Etiketle';
+        btn.addEventListener('click', () => { kutu.hidden = !kutu.hidden; });
+        li.append(orta);
+        const sag = document.createElement('div'); sag.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px';
+        sag.append(cip(d.sure, 'sure'), btn); li.append(sag);
+      } else {
+        li.append(orta, cip(d.sure, 'sure'));
+      }
+      ul.append(li);
+    }
+  }
+
+  // Gezinme
+  const sayfalar = ['ozet', 'araclar', 'profil', 'harita', 'ayarlar'];
+  function git(ad) {
+    for (const s of sayfalar) el('#g-' + s).hidden = s !== ad;
+    const ust = ad === 'profil' ? 'araclar' : ad;
+    document.querySelectorAll('nav button').forEach((b) => { if (b.dataset.git === ust) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+    window.scrollTo(0, 0);
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-git]'); if (b) git(b.dataset.git);
+    const s = e.target.closest('[data-sekme]');
+    if (s) {
+      document.querySelectorAll('[data-sekme]').forEach((x) => x.setAttribute('aria-selected', String(x === s)));
+      document.querySelectorAll('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== s.dataset.sekme; });
+    }
+  });
+  el('#musteri-ara').addEventListener('input', musteriCiz);
+  el('#ekle-ac').addEventListener('click', () => { el('#ekle-form').hidden = false; el('#f-ad').focus(); });
+  el('#ekle-kapat').addEventListener('click', () => { el('#ekle-form').hidden = true; });
+  el('#ekle-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ad = el('#f-ad').value.trim(); if (!ad) return;
+    const gun = [...document.querySelectorAll('#f-gunler input:checked')].map((x) => x.value);
+    musteriler.unshift({ ad, kod: el('#f-kod').value.trim(), gun, konum: el('#f-konum').value.trim() ? 'yaklasik' : 'yok', son: '—', ziyaret: 0 });
+    e.target.reset(); e.target.hidden = true; musteriCiz(); rutCiz(); durakCiz();
+  });
+  musteriCiz(); rutCiz(); durakCiz();
+})();
+</script>

@@ -76,6 +76,7 @@ class Parca private constructor(val cihaz: String, val kayitlar: List<KuyrukKayd
             "kay" to n.kaynak.kod,
             "sahte" to n.sahte,
             "zayif" to n.zayif,
+            "o" to n.km,
         )
 
         fun olayBelgesi(o: Olay): Map<String, Any?> = linkedMapOf<String, Any?>(

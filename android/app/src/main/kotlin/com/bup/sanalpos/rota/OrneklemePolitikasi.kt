@@ -77,6 +77,32 @@ class OrneklemePolitikasi(
     }
 
     companion object {
+        /**
+         * Km sayacı için saniyelik GPS (M23): hareketteyken her zaman; dururken (müşteride, trafikte) yalnız
+         * pil yetiyorsa — kalkış anı kaçmasın, durak çıkışı km'ye düz çizgiyle girmesin. Depoda ve takip
+         * dışında hayır (kayıt aralığı yeter).
+         */
+        fun sikGps(durum: TerminalDurumu, pil: Int, sarj: Boolean): Boolean = when (durum) {
+            TerminalDurumu.HAREKET -> true
+            TerminalDurumu.DURGUN -> sarj || pil >= SIK_GPS_EN_AZ_PIL
+            else -> false
+        }
+
+        /**
+         * Saniyelik GPS'te hangi ölçüm kayda gider (KonumAlici, M23): son iletimden [gecenMs] geçti. Kayıt
+         * aralığı dolduysa (saniyelik ölçümler tam denk gelmez: [PAY_MS] pay) ya da araç dururken ([erken])
+         * hızlandıysa (en erken [ERKEN_EN_AZ_MS] sonra) iletilir: politika hemen "hareket"e geçer.
+         */
+        fun iletilsinMi(gecenMs: Long, aralikMs: Long, hiz: Double?, erken: Boolean): Boolean =
+            gecenMs >= aralikMs - PAY_MS ||
+                (erken && hiz != null && hiz >= HAREKET_HIZI_MS && gecenMs >= ERKEN_EN_AZ_MS)
+
+        const val PAY_MS = 500L
+        const val ERKEN_EN_AZ_MS = 5_000L
+
+        /** Şarjsızken bundan düşük pilde dururken saniyelik GPS kapanır. */
+        const val SIK_GPS_EN_AZ_PIL = 30
+
         const val HAREKET_HIZI_MS = 2.0 // ~7 km/sa
         const val HAREKET_MESAFESI_M = 75.0
         const val DURGUN_SURE_MS = 3 * 60_000L

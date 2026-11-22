@@ -52,6 +52,40 @@ class NoktaKuyruguTest {
         assertEquals(4L, k.ekle(yeni()).sira)
     }
 
+    @Test fun kmSayaciSaklanir() {
+        val a = k.ekle(yeni().copy(km = 12_345))
+        val b = k.ekle(yeni())
+        assertEquals(listOf<Long?>(12_345, null), k.bas(10).map { (it as KuyrukKaydi.N).nokta.km })
+        assertEquals(12_345L, a.km)
+        assertNull(b.km)
+    }
+
+    /** 0.13.2 (şema 1) kuyruğu 0.13.3'e geçerken gönderilmemiş kayıtlar kaybolmaz. */
+    @Test fun eskiSemadanGecisVeriyiKorur() {
+        k.close()
+        ctx.deleteDatabase(dosya)
+        val eski = android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(ctx.getDatabasePath(dosya), null)
+        eski.execSQL(
+            """CREATE TABLE kayit (sira INTEGER PRIMARY KEY AUTOINCREMENT, tur INTEGER NOT NULL, zaman INTEGER NOT NULL,
+                en REAL, boy REAL, dog REAL, hiz REAL, yon REAL, yuk REAL, kay TEXT, sahte INTEGER, olay TEXT, ayrinti TEXT)""",
+        )
+        eski.execSQL("INSERT INTO kayit (tur, zaman, en, boy, dog, hiz, kay, sahte) VALUES (0, 7, 38.4, 27.2, 5, 3.5, 'g', 0)")
+        eski.execSQL("INSERT INTO kayit (tur, zaman, olay, ayrinti) VALUES (1, 8, 'acilis', NULL)")
+        eski.version = 1
+        eski.close()
+        k = NoktaKuyrugu(ctx, dosya, enCokKayit = 10, enEskiMs = 1_000_000)
+        val bas = k.bas(10)
+        assertEquals(listOf(1L, 2L), bas.map { it.sira })
+        val n = (bas[0] as KuyrukKaydi.N).nokta
+        assertNull(n.km)
+        assertEquals(3.5, n.hiz!!, 0.0)
+        assertEquals(OlayTuru.ACILIS, (bas[1] as KuyrukKaydi.O).olay.tur)
+        // Geçişten sonra sıra kaldığı yerden sürer, km yazılır.
+        val yeniNokta = k.ekle(yeni().copy(km = 99))
+        assertEquals(3L, yeniNokta.sira)
+        assertEquals(99L, (k.bas(10)[2] as KuyrukKaydi.N).nokta.km)
+    }
+
     @Test fun silmeYalnizAraligi() {
         repeat(5) { k.ekle(yeni()) }
         assertEquals(2, k.sil(2, 3))

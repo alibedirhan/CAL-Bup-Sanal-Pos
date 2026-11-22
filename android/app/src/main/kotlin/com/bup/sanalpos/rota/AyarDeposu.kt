@@ -61,4 +61,31 @@ class AyarDeposu(context: Context) {
         set(v) {
             if (v == null) p.edit().remove("konumAcik").apply() else p.edit().putBoolean("konumAcik", v).apply()
         }
+
+    /** Km sayacı (M23): hizmet yeniden başlasa da toplam sürsün. Her kayıtta yazılır (en sık 15 sn'de bir). */
+    var kmDurumu: KmSayaci.Durum?
+        get() = if (!p.contains("kmToplam")) null else KmSayaci.Durum(
+            java.lang.Double.longBitsToDouble(p.getLong("kmToplam", 0)), p.getLong("kmZaman", 0),
+            java.lang.Double.longBitsToDouble(p.getLong("kmEn", 0)), java.lang.Double.longBitsToDouble(p.getLong("kmBoy", 0)),
+            java.lang.Double.longBitsToDouble(p.getLong("kmDog", 0)),
+        )
+        set(d) {
+            if (d == null) return
+            p.edit().putLong("kmToplam", d.toplamM.toRawBits()).putLong("kmZaman", d.zaman)
+                .putLong("kmEn", d.enlem.toRawBits()).putLong("kmBoy", d.boylam.toRawBits())
+                .putLong("kmDog", d.dogruluk.toRawBits()).apply()
+        }
+
+    /** Merkeze en son bildirilen kurulum durumu (yalnız değişince yeniden bildirilir). */
+    var sonKurulum: String?
+        get() = p.getString("kurulum", null)
+        set(v) {
+            p.edit().putString("kurulum", v).apply()
+        }
+
+    var sonKurulumZamani: Long
+        get() = p.getLong("kurulumZamani", 0)
+        set(v) {
+            p.edit().putLong("kurulumZamani", v).apply()
+        }
 }

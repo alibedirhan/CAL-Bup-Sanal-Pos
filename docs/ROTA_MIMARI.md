@@ -47,6 +47,9 @@
 | M19 | **Bekçi** (0.13.1), iki katlı: (1) iş zamanlayıcısında kalıcı 15 dk'lık iş (`RotaBekci`, ayrıntı `bekci`); Android 12+'da yalnız pil muafiyeti varken başlatabilir (emülatörde ölçüldü: muafiyetsiz "Background started FGS: Disallowed"). (2) 15 dk'lık tam zamanlı alarm (`RotaBekciAlarmi`, ayrıntı `bekci_alarm`, `USE_EXACT_ALARM`; uygulama Play'de olmadığı için uygundur): muafiyet sonradan kalksa da başlatır ("Allowed … ALARM_MANAGER_WHILE_IDLE"); kendini yeniden kurar, duvar saatine göredir. Hizmet çalışıyorsa ikisi de hiçbir şey yapmaz. "Durmaya zorla" bekçiyi de siler; uygulama açılışı ya da telefon açılışı yeniden kurar. | 17 Kasım gecesi gerçek telefonda: Google Play Hizmetleri güncellenince Android uygulamayı kapattı ("stop com.google.android.gms due to installPackageLI"), START_STICKY işlemedi, 9 saat veri gelmedi. |
 | M22 | **Uykuda gönderim (0.13.2, 20 Kasım).** Her konum gelişinde gönderim denetlenir (`Gonderici` tekdüze `elapsedRealtime` ile sınırlar; erken yazma olmaz) ve denetim bitene kadar en çok 30 sn kısmi uyanıklık kilidi (`WAKE_LOCK`, `RotaHizmeti.uyanik`) tutulur. Handler gecikmeleri uyurken ilerlemeyen saate bağlıdır. | 20 Kasım TC15 (şarjsız, ekran kapalı): gönderim 4–20 dk gecikti; Araç 10 18:09'dan sonra 2,5 sa neredeyse sustu. Emülatörde işlemci gerçekten uyumadığından yeniden üretilemez (`rota_uyku_deneyi.mjs`: API 35'te derin uykuda muafiyetli/muafiyetsiz 4/5 nokta). |
 | M21 | **Cihaz saati (0.13.1, 18 Kasım düzeltmesi).** Olay ve ağ konumu zamanları cihaz saatiyle değil **gerçek zaman tahminiyle** yazılır (`SaatFarki`): son GPS zamanı tekdüze saatle (`elapsedRealtime`, elle değiştirilemez) birlikte tutulur, `gerçek = gps + (tekdüze − tekdüze_gps)`; referans açılış sayısıyla (`Settings.Global.BOOT_COUNT`) saklanır, hizmet yeniden başlasa da (bekçi) aynı açılışta geçerlidir. GPS yokken ağ saati (Android 13+, `currentNetworkTimeClock`), o da yoksa cihaz saati. Ağ konumunun zamanı aynı yaşla gerçek zamana taşınır. Parçadaki `cihazSaati` ham kalır: CAL_bup 5 dk'dan büyük farkı "Terminal saati yanlış" diye gösterir. **Kalan sınır:** yeniden başlatmadan sonra GPS gelmeden, ağ saati olmayan (Android ≤12) cihazda saat 10 dk'dan fazla ileriyse ilk kayıtlar ilk GPS'e kadar bekler. Uçtan uca testte GPS yokken (konum kapalı) saat 30 dk ileri alındı: "saat değişti" olayı gerçek zamanla ve takılmadan gitti; ölen hizmetin yerine yeni süreçte yazılan "izin yok" olayı da gerçek zamanla. (Gözlem: konum kapalıyken Android konum hizmetinin başlamasına izin vermez; bekçi yalnız "izin yok" olayı yazar, konum açılınca hizmet bekçiyle kalkar. Merkezde bu süre "veri kesildi" olarak görünür.) **Dikkat:** emülatörün GPS zamanı cihaz saatini izler (gerçek GNSS uydu saatini verir); GPS zamanı sistem saatine bağlı bir cihazda ileri saat GPS noktalarını da ileri damgalar — TC15'te kabulde bakılacak (§10). | Eskiden fark GPS anında ölçülüp sabit tutuluyordu: saat GPS'ten *sonra* ileri alınınca olaylar da ileri kayıyor, kapalı alanda parça sunucunun 10 dk sınırına takılıyordu; fark hizmet ölünce de unutuluyordu (emülatörde 16 dk ileri saatle görüldü). |
+| M23 | **Cihazda km sayacı (0.13.3, 22 Kasım).** Hareketteyken (ve dururken, şarjda ya da pil ≥ %30 ise) GPS saniyede bir istenir (`KonumAlici`, `OrneklemePolitikasi.sikGps`); her ölçüm `KmSayaci`'na gider, kayda yine kayıt aralığında bir tanesi (`iletilsinMi`; dururken araç hızlanırsa 5 sn sonra beklemeden). Sayaç ≤ 5 sn aralıklı iki ölçümde uydu hızını (Doppler) zamanla toplar (< 0,5 m/sn sıfır), seyrek ölçümde düz mesafe sayar ama doğruluk payları içindeki oynamayı saymaz; sahte, ağ ve doğruluğu > 30 m ölçüm kullanılmaz; sıçrama çapayı kaydırmaz. Toplam (m) her noktaya `o` olarak yazılır, `AyarDeposu`'nda saklanır (yeniden başlatmada sürer). Kuyruk şeması 2 (`km` sütunu; geçiş veriyi korur). Okuyan taraf iki nokta arası yolu sayaç farkından alır; sayaç yoksa/geri gittiyse düz mesafe. Kural değişikliği gerekmez (liste içi denetlenmez). | 21 Kasım: aynı noktalardan konumla ve hızla hesaplanan km %3–6 ayrıştı (15 sn'lik noktalar virajı kısaltır, dur-kalkta titreme ekler). JVM testi: virajda ve gürültülü şehir içinde %1 içinde, 1 saat duran araçta 0 m; emülatörde 1279 m yolda sayaç 1279 m. |
+| M24 | **Duruma göre gönderim (0.13.3).** Depodayken iki yazma arası en az 10 dk, dururken en az 5 dk; harekette merkezin `gonderimSn`'i (`TakipAyari.gonderimMs`). Araç kalkınca durum "hareket"e döner, bekleyenler hemen gider. Kural değişikliği yok. | 21 Kasım: Araç 11'in gönderimlerinin yarısından fazlası gece depoda şarjdayken gitti (saatte ~22). 6 araçta kota sorun değil, ama boşa yazma ve pil. CAL_bup "veri kesildi" eşiği 15 dk'dır. |
+| M25 | **Kurulum bildirimi (0.13.3).** Hizmet başlarken, değişince ve 6 saatte bir `kurulum` olayı: `a = "pil:1,arka:1"` (pil kısıtlaması kaldırılmış mı, arka plan konum izni var mı). CAL_bup Ayarlar'da terminal satırında ve uyarı şeridinde "Kurulum eksik". Eski okuyucu bilinmeyen olay türünü atlar, parça düşmez. | 20 Kasım: TC15'lerde muafiyetin verilip verilmediği uzaktan görülemiyordu (§10). |
 | M20 | **Gönderim aralığı** (0.13.1, K31): `rotaCihazlar.gonderimSn` (isteğe bağlı, 15–3600, yoksa 120). İki yazma arası en az bu; kuyrukta tam parça (240 nokta) birikmişse hız sınırıyla (16 sn) boşaltılır. Noktalar yine `hareketSn`'de alınır. | Spark'ın günlük 20.000 yazma sınırı (ROTA_ASAMA2_ANALIZ §3.6). |
 
 ## 3. Bileşenler
@@ -105,11 +108,13 @@ Bütün zamanlar Firestore `timestamp`'tir; cihazın ürettiği zamanlar ayrıca
 
 Nokta (map): `q` sıra (int), `z` GPS zamanı ms (int), `en`, `boy` (double),
 `dog` yatay doğruluk m (double), `hiz` m/s (double | null), `yon` derece (double | null),
-`yuk` rakım m (double | null), `kay` `"g"` GPS / `"a"` ağ, `sahte` (bool), `zayif` (bool).
+`yuk` rakım m (double | null), `kay` `"g"` GPS / `"a"` ağ, `sahte` (bool), `zayif` (bool),
+`o` km sayacı m (int | null; 0.13.3, M23 — eski terminalde alan yok).
 
 Olay (map): `q` sıra, `z` cihaz saati ms, `tur` (aşağıdaki listeden), `a` kısa ayrıntı (string ≤ 80, isteğe bağlı).
 `tur`: `hizmet_basladi`, `acilis`, `kapanis`, `konum_kapandi`, `konum_acildi`, `izin_yok`,
-`pil_dusuk`, `saat_degisti`, `sahte_konum`, `takip_acildi`, `takip_kapandi`, `kuyruk_tasti`.
+`pil_dusuk`, `saat_degisti`, `sahte_konum`, `takip_acildi`, `takip_kapandi`, `kuyruk_tasti`,
+`kurulum` (0.13.3, M25; `a` = `pil:0|1,arka:0|1`).
 
 **`rotaSonDurum/{uid}`** — terminal oluşturur ve günceller (canlı harita bunu dinler)
 
@@ -241,6 +246,10 @@ Uçak kipi doğrudan kayıt değildir; veri kesintisi ve olaylar CAL_bup'ta uyar
 - TC15'te GPS noktası zamanının uydu saati olduğu (cihaz saati elle ileri alınınca `kay: g` noktaların zamanı değişmemeli; M21).
 - Anonymous ve Google sağlayıcılarının canlı projede açılması (Ali'nin onayıyla).
 
+- **Saniyelik GPS'in pil etkisi (0.13.3, M23):** TC15'te sahada `rota_pil.mjs` ile 0.13.2 günleriyle (saatte ~%2–3)
+  karşılaştırılacak. Dururken saniyelik GPS şarjsız ve pil < %30'da zaten kapanır.
+- **Km doğruluğu (M23):** sayaç km'si aracın kilometre sayacıyla birkaç gün karşılaştırılacak (gün başı/sonu sayaç
+  ya da yakıt kartı raporu; Ali kaynağı bildirecek). Hedef < %2.
 - **Pil muafiyeti ve uyku (20 Kasım):** TC15'lerde şarjsız ve kullanılmazken nokta saatte 3–4'e düşüyor (≈ 15 dk bekçi alarmı aralığı); muafiyetli Redmi gece 2 dk'da bir nokta verdi. Muafiyetin terminallerde gerçekten verildiği kurulum ekranında ("Pil kısıtlaması kaldırıldı") elle doğrulanmalı; uzaktan görünmüyor (muafiyet sunucuya yazılmıyor — ileride `rotaSonDurum`a).
 
 ## 11. Durum (17 Kasım 2026 akşam)
@@ -295,3 +304,44 @@ yazmadığı için eski kuralla da çalışır.
 4. Ali telefonda: Bilgi → "Yönetici kurulumu" → izinler → terminal kodu; bilgisayarda
    `node tools/sunucu-test/rota_yonet.mjs onayla KOD "Ali telefon"` ve `takip KOD ac`.
 5. 24 saat sonra: `rota_yonet.mjs durum`; pil tüketimi, kesinti, boşluk ölçümü.
+
+## 12. Araç profilleri, müşteriler, rut, km doğrulama — teknik tasarım (22 Kasım 2026; taslak Ali'nin onayında)
+
+Görsel taslak: `docs/route-taslak/arac-profili-taslak.html`. Ali'nin istekleri (22 Kasım): her aracın profili, müşteri
+listesini kendisi girer/özelleştirir, durak bilgilerini kendisi girer; rut planı şimdiden (bugün rutu plasiyer belirliyor);
+sabah özeti; km'nin gerçek veriyle doğrulanması (kaynak — yakıt kartı/araç takip/sayaç — Ali bildirecek).
+Kod, taslak onaylanınca bu bölüme göre yazılır. Hepsi merkezin (rota yöneticisinin) yazdığı küçük belgelerdir;
+terminal okumaz, terminal uygulaması değişmez. Kural değişikliği gerekir (canlıya Ali'nin onayıyla, önce emülatör testi, M18).
+
+### 12.1 Yeni belgeler (yalnız rota yöneticisi yazar, her yazma `rotaDenetim` ile aynı toplu yazmada)
+
+| Belge | Alanlar | Not |
+|-------|---------|-----|
+| `rotaMusteriler/{id}` | `ad` (1–80), `kod` (0–30, cari kodu), `arac` (rotaAraclar kimliği \| null), `en`, `boy` (\| null), `konum` (`elle` \| `durak`), `gunler` (1–6 tamsayı listesi, Pzt=1; boş = rutsuz), `not` (0–200), `aktif`, `olusturma`, `guncelleme`, `guncelleyen`, `denetim` | Müşteri başka araca taşınınca yalnız `arac` değişir; geçmiş günler eşleşmeyi konumdan yaptığı için bozulmaz. |
+| `rotaYerler/{id}` | `ad` (1–40), `tur` (`mola` \| `yakit` \| `diger`), `en`, `boy`, `yaricap` (20–300), `aktif`, … | Müşteri olmayan, hatırlanan yerler: bu yerdeki duruş "uzun duruş" uyarısı vermez. |
+| `rotaDurakEtiketleri/{cihaz}_{bas}` | `cihaz`, `bas` (durak başı ms), `musteri` \| `yer` \| `metin` (biri), … | Yalnız "bu yeri hatırlama" denen tek seferlik etiket. Hatırlanan etiket müşteri/yer konumuna yazılır. |
+| `rotaSayac/{arac}_{gun}` | `arac`, `gun` (YYYY-AA-GG), `sabah`, `aksam` (km, tamsayı), `kaynak` (`elle` \| `yakit_karti` \| `arac_takip`), … | Km doğrulama; günlük gerçek km = akşam − sabah. |
+
+Kota: yüzlerce belge, nadiren yazılır; okunurlar önbelleğe alınır (değişiklik dinlenir). Spark sınırını etkilemez.
+
+### 12.2 Hesaplar (CAL_bup `cekirdek/guzergah`, saf, birim testli)
+
+- **Durak → müşteri:** durağın ağırlık merkezine en yakın aktif müşteri, mesafe ≤ max(60 m, 2 × durak doğruluğu). Önce
+  günün aracının müşterileri, yoksa bütün müşteriler (başka aracın müşterisine gidiş "başka araç" notuyla). Müşteri
+  yoksa en yakın `rotaYerler` (kendi yarıçapı). Yoksa tek seferlik etiket, yoksa "tanınmayan". Depo durakları ayrı (K22).
+- **Durağı bağlama:** "Müşteri X" + "Bu yeri hatırla" → müşterinin konumu durak merkezine yazılır (`konum: durak`); konumu
+  `elle` olan müşteride önce sorulur. Kesinlik: konumu en az bir ziyaret durağıyla örtüşmüş müşteri "kesin" görünür.
+- **Rut:** günün haftagünü `w` için plan = aracın `gunler` içinde `w` olan aktif müşterileri; gidilen = eşleşen duraklar;
+  gidilmeyen = plan − gidilen; rut dışı = gidilen − plan. Rut boşsa (bugünkü durum) yalnız "ziyaret edilenler".
+- **Sabah özeti:** dünün `TerminalGunu`'lerinden araç başına çıkış/dönüş (depo geçişleri), km, ziyaret, rut uyumu,
+  gidilmeyenler, uyarılar; son 7 gün karşılaştırması (müşteri başına km dahil).
+- **Km doğrulama:** gün başına gerçek km (sayaç) / sistem km; araç katsayısı = Σ gerçek / Σ sistem (en az 3 gün, aykırı
+  gün %15'ten fazla sapıyorsa dışarıda ve gösterilir). Km gösterimi katsayıyla düzeltilmiş ve ham olarak ikisi birlikte.
+
+### 12.3 Sıra
+
+1. Kurallar + emülatör kural testleri (yeni dört belge, yetkisiz yazma/okuma reddi, denetim zorunluluğu).
+2. Saf hesaplar + testler (eşleştirme, rut, özet, katsayı).
+3. Ekranlar (taslağa göre): Dünün özeti, Araçlar → profil (Müşteriler, Rut, Gün ve duraklar, Geçmiş, Km doğrulama).
+4. CAL_bup tarayıcı testi (örnek veriyle), gerçek kurallarla emülatör denemesi (`tools/rotaEmulatorDenemesi.mjs`).
+5. Ali'nin onayıyla: kurallar canlıya, CAL_bup yayını.

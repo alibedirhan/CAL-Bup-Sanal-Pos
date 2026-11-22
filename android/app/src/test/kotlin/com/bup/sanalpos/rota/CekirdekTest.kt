@@ -307,12 +307,12 @@ class SozlesmeTest {
     @Test fun parcaBelgesiOrnekleAyni() {
         val uid = "terminalBir0000000000000001"
         val k = listOf(
-            KuyrukKaydi.N(Nokta(41, 1_763_366_400_000, 38.4612345, 27.2198765, 4.5, 11.25, 87.5, 41.0, NoktaKaynagi.GPS, false)),
+            KuyrukKaydi.N(Nokta(41, 1_763_366_400_000, 38.4612345, 27.2198765, 4.5, 11.25, 87.5, 41.0, NoktaKaynagi.GPS, false, km = 18_250)),
             KuyrukKaydi.O(Olay(42, 1_763_366_405_000, OlayTuru.KONUM_KAPANDI)),
-            KuyrukKaydi.O(Olay(43, 1_763_366_465_000, OlayTuru.KONUM_ACILDI, "ag")),
+            KuyrukKaydi.O(Olay(43, 1_763_366_465_000, OlayTuru.KURULUM, KurulumDurumu.ayrinti(pilMuaf = false, arkaPlanIzni = true))),
             KuyrukKaydi.N(Nokta(44, 1_763_366_470_000, 38.4613, 27.22, 650.0, null, null, null, NoktaKaynagi.AG, true)),
         )
-        val belge = Parca.olustur(uid, k)!!.belge(1_763_366_480_000, 77, false, 23)
+        val belge = Parca.olustur(uid, k)!!.belge(1_763_366_480_000, 77, false, 26)
         val beklenen = java.io.File("../../docs/rota/sozlesme/parca-ornek.json").readText()
         assertEquals(sikistir(beklenen), Json.yaz(belge))
     }

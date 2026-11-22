@@ -34,7 +34,10 @@ async function bekleyerek(ad, sn, f) {
   }
 }
 let konumNo = 0;
-const konum = (en, boy) => { adb('emu', 'geo', 'fix', String(boy), String(en)); konumNo++; };
+const konum = (en, boy, knot) => {
+  adb('emu', 'geo', 'fix', String(boy), String(en), ...(knot === undefined ? [] : ['0', '8', String(knot)]));
+  konumNo++;
+};
 async function parcalar(uid) {
   const q = await db.collection('rotaParcalar').where('cihaz', '==', uid).get();
   return q.docs.map(d => {
@@ -49,6 +52,11 @@ async function parcalar(uid) {
   }).sort((a, b) => a.ilk - b.ilk);
 }
 const olaylar = ps => ps.flatMap(p => p.olaylar.map(o => o.tur));
+const metre = (a, b) => {
+  const r = Math.PI / 180, dEn = (b.en - a.en) * r, dBoy = (b.boy - a.boy) * r;
+  const h = Math.sin(dEn / 2) ** 2 + Math.cos(a.en * r) * Math.cos(b.en * r) * Math.sin(dBoy / 2) ** 2;
+  return 2 * 6_371_008.8 * Math.asin(Math.min(1, Math.sqrt(h)));
+};
 
 console.log('== Temiz kurulum, izin, konum açık');
 adb('shell', 'pm', 'clear', PAKET);
@@ -74,7 +82,14 @@ const cihazAyari = takip => ({ ad: 'Terminal Test', aktif: true, takip, hareketS
 await db.doc(`rotaCihazlar/${uid}`).set(cihazAyari(true));
 
 console.log('== Güzergâh (kuzeye, ~55 m adımlar)');
-const yuru = async (adim, ms = 2000) => { for (let i = 0; i < adim; i++) { en += 0.0005; konum(en, boy); await bekle(ms); } };
+// Her adım ~55,6 m / 2 sn (~100 km/sa): gerçek araç gibi saniyede bir konum ve uydu hızı (knot) verilir
+// (km sayacı hızı toplar; konumu 2 sn'de bir sıçrayan iz gerçekçi değildir).
+const KNOT = 0.00025 * 111_195 * 1.943844;
+const yuru = async adim => {
+  // Mutlak saniye adımları: adb çağrısının süresi hızı bozmasın (verilen hız = gerçek yer değiştirme).
+  const t0 = Date.now();
+  for (let i = 0; i < 2 * adim; i++) { en += 0.00025; konum(en, boy, KNOT); await bekle(t0 + (i + 1) * 1000 - Date.now()); }
+};
 await yuru(25);
 const ilk = await bekleyerek('ilk parçalar', 120, async () => {
   const ps = await parcalar(uid);
@@ -89,6 +104,16 @@ const durum = (await db.doc(`rotaSonDurum/${uid}`).get()).data();
 assert.equal(durum.s, 1);
 assert.ok(['hareket', 'durgun'].includes(durum.durum), `durum: ${durum.durum}`);
 console.log(`   ${ilk.length} parça, ${noktalar.length} nokta; canlı durum ${durum.durum}`);
+
+console.log('== Km sayacı (M23) ve kurulum bilgisi (0.13.3)');
+// Güzergâh düz kuzey çizgisi: sayaç farkı iki nokta arası mesafeyi tutmalı.
+assert.ok(noktalar.every(n => Number.isInteger(n.o)), 'Her noktada km sayacı olmalı');
+assert.ok(noktalar.every((n, i) => i === 0 || n.o >= noktalar[i - 1].o), 'Km sayacı geri gitmemeli');
+const kmDuz = metre(noktalar[0], noktalar.at(-1)), kmSayac = noktalar.at(-1).o - noktalar[0].o;
+assert.ok(Math.abs(kmSayac - kmDuz) <= Math.max(60, kmDuz * 0.05), `Km sayacı ${kmSayac} m, yol ${Math.round(kmDuz)} m`);
+const kurulumIlk = ilk.flatMap(p => p.olaylar).find(o => o.tur === 'kurulum');
+assert.match(kurulumIlk?.a ?? '', /^pil:[01],arka:1$/, `Kurulum olayı: ${kurulumIlk?.a}`);
+console.log(`   km sayacı ${kmSayac} m, yol ${Math.round(kmDuz)} m; kurulum ${kurulumIlk.a}`);
 
 console.log('== Merkez takibi kapatır');
 await db.doc(`rotaCihazlar/${uid}`).set(cihazAyari(false));
@@ -203,6 +228,10 @@ assert.equal(son[0].ilk, 1, 'İlk kayıt sıra 1');
 const zamanlar = son.flatMap(p => p.noktalar.map(n => n.z));
 assert.ok(zamanlar.every((z, i) => i === 0 || z >= zamanlar[i - 1]), 'Nokta zamanları sıralı');
 console.log(`   ${son.length} parça, ${siralar.length} kayıt (sıra 1–${son.at(-1).son}), boşluk yok, çift yok`);
+// Pil muafiyeti bekçi adımında verildi: hizmet yeniden başlayınca kurulum olayı bunu bildirmeli.
+assert.ok(son.flatMap(p => p.olaylar).some(o => o.tur === 'kurulum' && o.a === 'pil:1,arka:1'), 'Muafiyetten sonra "pil:1,arka:1" bildirilmeli');
+const kmSon = son.flatMap(p => p.noktalar).filter(n => n.kay === 'g');
+assert.ok(kmSon.every((n, i) => i === 0 || n.o >= kmSon[i - 1].o), 'Km sayacı yeniden başlatmalarda geri gitmemeli');
 // Alarm bekçisi (yalnız cihazda doğrulanır): pil muafiyeti kalkmışken iş bekçisinin başlatması
 // reddedilir; tam zamanlı alarm istisnadır. Alarm 15 dk sonraya kurulu olduğu için saat 16 dk ileri
 // alınır, sonra geri getirilir (sunucu kuralı 10 dk'dan ileri zamanlı parçayı kabul etmez; bu yüzden

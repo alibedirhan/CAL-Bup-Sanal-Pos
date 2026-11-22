@@ -19,7 +19,7 @@ class NoktaKuyrugu(
     dosya: String = DOSYA,
     private val enCokKayit: Long = 200_000,
     private val enEskiMs: Long = 35L * 24 * 3600 * 1000,
-) : SQLiteOpenHelper(context.applicationContext, dosya, null, 1), KuyrukDeposu {
+) : SQLiteOpenHelper(context.applicationContext, dosya, null, SEMA_SURUMU), KuyrukDeposu {
 
     override fun onConfigure(db: SQLiteDatabase) {
         // Yazma önceden günlüğe (WAL): çökmede yarım kayıt kalmaz, okuma yazmayı beklemez.
@@ -34,12 +34,14 @@ class NoktaKuyrugu(
                 zaman INTEGER NOT NULL,
                 en REAL, boy REAL, dog REAL, hiz REAL, yon REAL, yuk REAL,
                 kay TEXT, sahte INTEGER,
-                olay TEXT, ayrinti TEXT)""",
+                olay TEXT, ayrinti TEXT, km INTEGER)""",
         )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, eski: Int, yeni: Int) {
-        // Şema 1. Değişirse burada veri koruyarak geçiş yazılır; kuyruk asla silinmez.
+        // Geçişler veriyi korur; kuyruk asla silinmez (gönderilmemiş noktalar 0.13.2'den 0.13.3'e geçer).
+        // 2 (0.13.3): km sayacı sütunu; eski kayıtlarda boş (sözleşmede `o: null`).
+        if (eski < 2) db.execSQL("ALTER TABLE kayit ADD COLUMN km INTEGER")
     }
 
     /** Noktayı ekler; [n].sira yok sayılır (0 olmalı), verilen sıra döner. */
@@ -56,6 +58,7 @@ class NoktaKuyrugu(
             put("yuk", n.rakim)
             put("kay", n.kaynak.kod)
             put("sahte", if (n.sahte) 1 else 0)
+            put("km", n.km)
         }
         return n.copy(sira = writableDatabase.insertOrThrow("kayit", null, v))
     }
@@ -80,6 +83,7 @@ class NoktaKuyrugu(
             val iZaman = c.getColumnIndexOrThrow("zaman")
             fun dbl(ad: String): Double? = c.getColumnIndexOrThrow(ad).let { if (c.isNull(it)) null else c.getDouble(it) }
             fun str(ad: String): String? = c.getColumnIndexOrThrow(ad).let { if (c.isNull(it)) null else c.getString(it) }
+            fun lng(ad: String): Long? = c.getColumnIndexOrThrow(ad).let { if (c.isNull(it)) null else c.getLong(it) }
             while (c.moveToNext()) {
                 val sira = c.getLong(iSira)
                 val zaman = c.getLong(iZaman)
@@ -89,6 +93,7 @@ class NoktaKuyrugu(
                             sira, zaman, dbl("en")!!, dbl("boy")!!, dbl("dog")!!, dbl("hiz"), dbl("yon"), dbl("yuk"),
                             if (str("kay") == NoktaKaynagi.AG.kod) NoktaKaynagi.AG else NoktaKaynagi.GPS,
                             sahte = c.getInt(c.getColumnIndexOrThrow("sahte")) == 1,
+                            km = lng("km"),
                         ),
                     )
                 } else {
@@ -147,6 +152,9 @@ class NoktaKuyrugu(
 
     companion object {
         const val DOSYA = "rota_kuyruk.db"
+
+        /** 1: 0.13.0–0.13.2; 2: 0.13.3 (km sütunu). */
+        const val SEMA_SURUMU = 2
         private const val TUR_NOKTA = 0
         private const val TUR_OLAY = 1
 

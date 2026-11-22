@@ -1,3 +1,48 @@
+# 22 Kasım 2026 gece — 0.13.3 (dal `rota-0.13.3`, yayın yok) + araç profili taslağı
+
+Ali "önerdiklerini yapmaya başla, aynı titizlikle" dedi; km'nin gerçek veriyle doğrulanmasını istedi (kaynağı —
+yakıt kartı/araç takip/sayaç — kendisi bildirecek). Terminallere kurulumu Ali yapar (yine sessiz yayın).
+- **0.13.3+26** (ROTA_MIMARI M23–M25; kural değişikliği YOK, eski CAL_bup yeni veriyi sorunsuz okur):
+  cihazda km sayacı (saniyelik GPS, uydu hızı toplamı, titreme/sıçrama ayıklama; noktada `o`), dururken hızlanınca
+  erken kayıt, depoda 10 dk / dururken 5 dk gönderim, `kurulum` olayı (pil muafiyeti, arka plan izni; 6 saatte bir).
+  Kuyruk şeması 2 (geçiş veriyi korur, androidTest). Kanıt: JVM 59 test (km: virajda ve gürültülü şehir içinde %1
+  içinde, 1 saat duran araç 0 m), 243 Dart, `rota_test.sh` tam geçti: uçtan uca km sayacı 1279 m = yol 1279 m (son koşu 1261/1279, %1,4),
+  kurulum `pil:0`→muafiyetten sonra `pil:1`, 52 kayıt boşluksuz. 21 Kasım verisinde eski 15 sn'lik noktalarda
+  titreme etkisi ~0,2 km; %3–6'lık fark örneklemeden — gerçek doğruluk 0.13.3 + sayaç karşılaştırmasıyla görülecek.
+- **CAL_bup 1.47.0** (dal `rota-km`, yerelde): sayaçtan km (`aradakiYol`), "Kurulum eksik" uyarısı ve Ayarlar satırı.
+- **Taslak** (Ali'nin onayında): `docs/route-taslak/arac-profili-taslak.html` (claude.ai artifact olarak da paylaşıldı):
+  dünün özeti, araçlar → profil (müşteriler, rut, gün ve durak etiketleme, geçmiş, km doğrulama). Teknik tasarım
+  ROTA_MIMARI §12 (yeni dört belge, kurallar Ali'nin onayıyla).
+**Sıradaki:** Ali taslağı onaylarsa §12.3 sırası. Yayın sırası önerisi: (1) 0.13.3 APK sessiz yayın + Ali iki araca kurar,
+(2) CAL_bup 1.47.0. İkisi bağımsız (geriye uyumlu). Km kaynağı Ali'den bekleniyor.
+
+---
+
+# 22 Kasım 2026 — 21 Kasım saha günü çözümlemesi (salt okunur)
+
+CAL_bup'ın kendi hesabıyla (`gunuHesapla`, varsayılan eşikler, araç/atama yok). İki araç terminali de bütün gün veri
+verdi: kayıp kayıt 0, geçersiz/sahte 0, olay yok (hizmet ölmedi), bölge dışı 0. GPS doğruluğu ortanca 7–9 m.
+Gönderim gecikmesi ortanca ~40 sn, p90 ~77 sn, en çok 3–4 dk (gonderimSn 60 işe yaradı; 20 Kasım'da 4–20 dk idi).
+- **ARAÇ 10 (CA3MWJ):** 07:34 çıkış, 09:36–10:12 depo, 10:14 çıkış, 13:15 dönüş; 114,5 km (depo titremesi ≈1 km),
+  10 durak, sürüş 3 sa 42 dk; **12:23 ve 12:52–13:08 arası 92–120 km/sa** (42 ardışık nokta, gerçek hız). Gece
+  şarja takılmamış (%42→%31), depoda 20.11 20:44–00:42 ve 00:42–06:39 nokta yok (uyku); 13:30'da şarja takıldı.
+- **ARAÇ 11 (RSFXKF):** 07:26 çıkış, 09:22–10:01 depo, 10:05 çıkış, 15:46 dönüş; 75,8 km, 22 durak, en yüksek
+  87 km/sa; 08:03–08:59 56 dk duruş (uyarı); 08:59–09:12 duruşta 13 dk boşluk. Gece şarjda, gün %100→%73.
+- Pil sahada saatte ~%2 (Araç 10) ve ~%3 (Araç 11). İki terminal de hâlâ **sürüm 24 (0.13.1)**; 0.13.2 kurulmamış.
+Betik: oturum karalama dizininde (commit'siz); veri `rotaRest` + CAL_bup `gunuHesapla`.
+**Ali'nin kararları (22 Kasım):** canlıda araç/atama hâlâ 0 → Ali Ayarlar'dan girecek (başlangıç 21.11 00:00). Toplam 6 araç
+(2 test + 4); kurulumları Ali yapar. Depo terminali takibi kapatılabilir. İstek: **araç profilleri** (aracın kendi müşteri
+listesi, Ali girer) + durak etiketleme. Önerilen sıra: (1) müşteri/durak + profil (CAL_bup), (2) 0.13.3: depoda/şarjda seyrek
+gönderim (bugün gece gönderimlerin yarısı boşa; 6 araçta kota sorun değil, ≈6.600/20.000) + pil muafiyeti/konum izni
+merkeze. Ses kaydı soruldu → gizli dinleme yapılmaz (TCK 133/KVKK); seçenek plasiyerin kendi sesli notu.
+Sonra Ali: rut planı da yapılsın (bugün rutu plasiyer belirliyor, ileride değişebilir); sabah özeti ve satış×km de
+yapılabilir; terminal şarjı sorun değil (araçta takıyorlar). **İstek: km'yi kesin doğrulukla, gerçek veriyle hesaplamak.**
+Ölçüm (21 Kasım, GPS ≤50 m): konumdan 113,7 / 74,4 km, GPS hızı toplamından 110,2 / 69,9 km (fark %-3,1 / %-6,1; dur-kalk
+çok olan Araç 11'de titreme payı büyük). Hareketteyken nokta aralığı 15 sn. Öneri: kilometre sayacı referansı (taşıt
+tanıma/yakıt kartı, OBD, gün başı/sonu sayaç) + 0.13.3'te cihazda 1 sn'lik km sayacı; 1–2 hafta kalibrasyon.
+
+---
+
 # 21 Kasım 2026 — 0.13.2 SESSİZ yayında (Ali'nin onayıyla)
 
 Ali "0.13.2'yi yayınla" ve **"terminallere bildirim gitmesin asla"** dedi. `rota-0.13.2` → main (ileri sarma,

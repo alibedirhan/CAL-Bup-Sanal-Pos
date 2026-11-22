@@ -12,7 +12,8 @@ test('Kotlin örneği geçerli', () => {
   assert.deepEqual(r.hatalar, []);
   assert.equal(r.gecerli, true);
   assert.deepEqual(r.noktalar.map(n => n.q), [41, 44]);
-  assert.deepEqual(r.olaylar.map(o => o.tur), ['konum_kapandi', 'konum_acildi']);
+  assert.deepEqual(r.olaylar.map(o => o.tur), ['konum_kapandi', 'kurulum']);
+  assert.deepEqual(r.noktalar.map(n => n.o), [18250, null]);
   assert.equal(r.atlanan, 0);
 });
 
@@ -28,6 +29,19 @@ test('Bozuk nokta atlanır, parça düşmez; bozuk parça düşer', () => {
   const cift = structuredClone(ornek);
   cift.n[1].q = 41;
   assert.equal(parcaDogrula(cift, kimlik).gecerli, false);
+});
+
+test('Km sayacı isteğe bağlı; bozuksa yalnız o nokta atlanır', () => {
+  const eski = structuredClone(ornek);
+  for (const n of eski.n) delete n.o;
+  assert.equal(parcaDogrula(eski, kimlik).noktalar.length, 2);
+  for (const bozuk of [-1, 1.5, '12', 1e11]) {
+    const p = structuredClone(ornek);
+    p.n[0].o = bozuk;
+    const r = parcaDogrula(p, kimlik);
+    assert.equal(r.gecerli, true);
+    assert.equal(r.atlanan, 1);
+  }
 });
 
 test('Parçalar arası boşluk bulunur', () => {

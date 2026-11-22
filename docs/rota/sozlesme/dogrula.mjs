@@ -4,7 +4,9 @@
 // (parca-ornek.json). Zaman alanları burada epoch ms sayısıdır (okuyucu Timestamp'i çevirir).
 
 export const OLAY_TURLERI = new Set(['hizmet_basladi', 'acilis', 'kapanis', 'konum_kapandi', 'konum_acildi',
-  'izin_yok', 'pil_dusuk', 'saat_degisti', 'sahte_konum', 'takip_acildi', 'takip_kapandi', 'kuyruk_tasti']);
+  'izin_yok', 'pil_dusuk', 'saat_degisti', 'sahte_konum', 'takip_acildi', 'takip_kapandi', 'kuyruk_tasti',
+  // 0.13.3: kurulum durumu (a: "pil:1,arka:1"). Eski okuyucu bilinmeyen türü atlar, parça düşmez.
+  'kurulum']);
 
 const sayi = (x, en, ust) => typeof x === 'number' && Number.isFinite(x) && x >= en && x <= ust;
 const tam = (x, en, ust) => Number.isInteger(x) && x >= en && x <= ust;
@@ -22,6 +24,8 @@ export function noktaHatasi(n) {
   if (!bosOlur(n.yuk, x => sayi(x, -1000, 10000))) return 'yuk';
   if (n.kay !== 'g' && n.kay !== 'a') return 'kay';
   if (typeof n.sahte !== 'boolean' || typeof n.zayif !== 'boolean') return 'işaret';
+  // 0.13.3 km sayacı (m, M23); eski terminallerde yok.
+  if ('o' in n && !bosOlur(n.o, x => tam(x, 0, 1e10))) return 'o';
   return null;
 }
 

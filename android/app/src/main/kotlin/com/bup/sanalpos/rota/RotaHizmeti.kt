@@ -1,9 +1,6 @@
 package com.bup.sanalpos.rota
 
 import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -12,14 +9,12 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.LocationManager
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
 import android.os.PowerManager
 import android.os.SystemClock
-import com.bup.sanalpos.R
 import com.google.firebase.firestore.ListenerRegistration
 
 /**
@@ -53,6 +48,8 @@ class RotaHizmeti : Service() {
     // --- konum iş parçacığına ait ---
     private val politika = OrneklemePolitikasi()
     private val saat = SaatFarki()
+    private val km = KmSayaci()
+    private var sonKurulumDenetimi = Long.MIN_VALUE / 2
     private var ayar = TakipAyari.KAPALI
     private var depolar = emptyList<Depo>()
     private var konumAcik = true
@@ -62,7 +59,7 @@ class RotaHizmeti : Service() {
     @Volatile private var sonNokta: Nokta? = null
     @Volatile private var durum = TerminalDurumu.ONAY_BEKLIYOR
     @Volatile private var onayli = false
-    @Volatile private var gonderimMs = TakipAyari.VARSAYILAN_GONDERIM_SN * 1000L
+    @Volatile private var gonderimSn = TakipAyari.VARSAYILAN_GONDERIM_SN
 
     // --- ağ iş parçacığına ait ---
     private var bulut: RotaBulut? = null
@@ -83,7 +80,7 @@ class RotaHizmeti : Service() {
         // Saat referansı (M21) her yolda geçerli olsun: izin yokken erken biten başlatmada da olay yazılır.
         saat.yukle(depo.saatReferansi, acilisSayisi())
         lm = getSystemService(LocationManager::class.java)
-        alici = KonumAlici(lm, konumIs.looper) { noktaGeldi(it) }
+        alici = KonumAlici(lm, konumIs.looper, hamGps = { kmGeldi(it) }) { noktaGeldi(it) }
         uyanik = getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bup:rota-gonderim")
             .apply { setReferenceCounted(false) }
@@ -123,32 +120,13 @@ class RotaHizmeti : Service() {
     private fun onPlanaGec(): Boolean = try {
         if (!izinVar(this)) throw SecurityException("Konum izni yok")
         if (Build.VERSION.SDK_INT >= 29) {
-            startForeground(BILDIRIM_NO, bildirim(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+            startForeground(BILDIRIM_NO, CihazBilgisi.bildirim(this, KANAL), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
-            startForeground(BILDIRIM_NO, bildirim())
+            startForeground(BILDIRIM_NO, CihazBilgisi.bildirim(this, KANAL))
         }
         true
     } catch (e: Exception) {
         false
-    }
-
-    private fun bildirim(): Notification {
-        val nm = getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(
-            NotificationChannel(KANAL, "Arka plan", NotificationManager.IMPORTANCE_MIN).apply {
-                setShowBadge(false)
-                setSound(null, null)
-                enableVibration(false)
-            },
-        )
-        return Notification.Builder(this, KANAL)
-            .setSmallIcon(R.drawable.ic_arka_plan)
-            .setContentTitle("BUP Sanal POS")
-            .setOngoing(true)
-            .setShowWhen(false)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .setVisibility(Notification.VISIBILITY_SECRET)
-            .build()
     }
 
     // ===================== konum iş parçacığı =====================
@@ -159,8 +137,10 @@ class RotaHizmeti : Service() {
         ayar = depo.ayar
         depolar = depo.depolar
         onayli = ayar.aktif
-        gonderimMs = ayar.gonderimSn * 1000L
+        gonderimSn = ayar.gonderimSn
         politika.ayarla(ayar, depolar)
+        km.yukle(depo.kmDurumu)
+        kurulumuDenetle(her = true)
         konumAcik = lm.isLocationEnabled
         val onceki = depo.konumAcikti
         if (onceki != null && onceki != konumAcik) olay(if (konumAcik) OlayTuru.KONUM_ACILDI else OlayTuru.KONUM_KAPANDI)
@@ -212,16 +192,9 @@ class RotaHizmeti : Service() {
     private fun saatFarki(): Long =
         saat.fark(System.currentTimeMillis(), SystemClock.elapsedRealtime(), agSaati())
 
-    /** Ağ saati (operatör/NTP; Android 13+); bilinmiyorsa null. */
-    private fun agSaati(): Long? = if (Build.VERSION.SDK_INT >= 33) {
-        runCatching { SystemClock.currentNetworkTimeClock().millis() }.getOrNull()
-    } else {
-        null
-    }
+    private fun agSaati(): Long? = CihazBilgisi.agSaati()
 
-    private fun acilisSayisi(): Int =
-        runCatching { android.provider.Settings.Global.getInt(contentResolver, android.provider.Settings.Global.BOOT_COUNT) }
-            .getOrDefault(-1)
+    private fun acilisSayisi(): Int = CihazBilgisi.acilisSayisi(this)
 
     private fun noktaGeldi(gelen: Nokta) {
         if (!ayar.calisir) return
@@ -242,13 +215,42 @@ class RotaHizmeti : Service() {
         }
         if (n.sahte && !sonSahte) olay(OlayTuru.SAHTE_KONUM)
         sonSahte = n.sahte
-        val k = kuyruk.ekle(n)
+        val k = kuyruk.ekle(n.copy(km = km.toplamM))
+        depo.kmDurumu = km.durum
         sonNokta = k
-        alici.baslat(politika.degerlendir(k).aralikSn)
+        val karar = politika.degerlendir(k)
+        alici.baslat(karar.aralikSn, sikGps(), erken = karar.durum == TerminalDurumu.DURGUN)
         durum = durumHesapla()
+        if (tekduze - sonKurulumDenetimi >= KURULUM_DENETIM_MS) kurulumuDenetle(her = false)
         // Uyurken zamanlayıcı ilerlemez: gönderim zamanı geldiyse şimdi (Gonderici tekdüze saatle sınırlar).
         uyanik.acquire(UYANIK_MS)
         gonderimiTetikle()
+    }
+
+    /** Her GPS ölçümü (saniyelik olabilir; M23): yalnız km sayacı. Kayıt [noktaGeldi]'de. */
+    private fun kmGeldi(n: Nokta) {
+        if (ayar.calisir) km.ekle(n)
+    }
+
+    private fun sikGps(): Boolean {
+        val (p, sarj) = pil()
+        return OrneklemePolitikasi.sikGps(politika.simdikiKarar.durum, p, sarj)
+    }
+
+    /**
+     * Kurulum durumu (0.13.3): pil kısıtlaması ve arka plan konum izni merkeze olay olarak gider. Hizmet
+     * başlarken her zaman ([her]), değişince hemen, değişmese de [KURULUM_YINELEME_MS]'de bir (merkez her gün
+     * görsün); denetim en sık [KURULUM_DENETIM_MS]'de bir.
+     */
+    private fun kurulumuDenetle(her: Boolean) {
+        sonKurulumDenetimi = SystemClock.elapsedRealtime()
+        val ayrinti = CihazBilgisi.kurulum(this)
+        val simdi = gercekZaman()
+        if (her || ayrinti != depo.sonKurulum || simdi - depo.sonKurulumZamani >= KURULUM_YINELEME_MS) {
+            olay(OlayTuru.KURULUM, ayrinti)
+            depo.sonKurulum = ayrinti
+            depo.sonKurulumZamani = simdi
+        }
     }
 
     private fun ayarGeldi(a: TakipAyari?) {
@@ -257,7 +259,7 @@ class RotaHizmeti : Service() {
         ayar = yeni
         depo.ayar = yeni
         onayli = yeni.aktif
-        gonderimMs = yeni.gonderimSn * 1000L
+        gonderimSn = yeni.gonderimSn
         politika.ayarla(yeni, depolar)
         takibiUygula()
         if (yeni.aktif) {
@@ -268,7 +270,8 @@ class RotaHizmeti : Service() {
 
     private fun takibiUygula() {
         if (ayar.calisir && konumAcik && izinVar(this)) {
-            runCatching { alici.baslat(politika.simdikiKarar.aralikSn) }.onFailure { olay(OlayTuru.IZIN_YOK, it.javaClass.simpleName) }
+            val karar = politika.simdikiKarar
+            runCatching { alici.baslat(karar.aralikSn, sikGps(), erken = karar.durum == TerminalDurumu.DURGUN) }.onFailure { olay(OlayTuru.IZIN_YOK, it.javaClass.simpleName) }
         } else {
             alici.durdur()
         }
@@ -286,6 +289,7 @@ class RotaHizmeti : Service() {
     private val bakim: Runnable = object : Runnable {
         override fun run() {
             kuyruk.bakim(gercekZaman())
+            kurulumuDenetle(her = false)
             konumH.postDelayed(this, BAKIM_MS)
         }
     }
@@ -301,7 +305,8 @@ class RotaHizmeti : Service() {
                 depo.basvuruKimligi = uid
             }
             bulut = b
-            gonderici = Gonderici(uid, kuyruk, b, gonderimMs = { gonderimMs })
+            // Duruma göre aralık (M24): depoda ve dururken seyrek, harekette merkezin aralığı.
+            gonderici = Gonderici(uid, kuyruk, b, gonderimMs = { TakipAyari.gonderimMs(gonderimSn, durum) })
             dinlemeKur()
             agGeri.basarili()
             gonderimiTetikle()
@@ -359,24 +364,17 @@ class RotaHizmeti : Service() {
 
     // ===================== ortak =====================
 
-    private fun pil(): Pair<Int, Boolean> {
-        val i = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) ?: return 0 to false
-        val seviye = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-        val olcek = i.getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
-        val sarj = i.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
-        return (if (seviye < 0) 0 else seviye * 100 / olcek) to sarj
-    }
+    private fun pil(): Pair<Int, Boolean> = CihazBilgisi.pil(this)
 
-    private fun surum(): Long = runCatching {
-        val p = packageManager.getPackageInfo(packageName, 0)
-        if (Build.VERSION.SDK_INT >= 28) p.longVersionCode else @Suppress("DEPRECATION") p.versionCode.toLong()
-    }.getOrDefault(1L).coerceAtLeast(1L)
+    private fun surum(): Long = CihazBilgisi.surum(this)
 
     companion object {
         private const val KANAL = "rota"
         private const val BILDIRIM_NO = 4701
         private const val BAKIM_MS = 60 * 60_000L
         private const val UYANIK_MS = 30_000L
+        private const val KURULUM_DENETIM_MS = 10 * 60_000L
+        private const val KURULUM_YINELEME_MS = 6 * 3_600_000L
         const val NEDEN = "neden"
         const val NEDEN_ACILIS = "acilis"
 

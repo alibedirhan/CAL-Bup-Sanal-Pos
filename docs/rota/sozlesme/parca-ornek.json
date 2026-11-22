@@ -10,13 +10,13 @@
   "cihazSaati": 1763366480000,
   "pil": 77,
   "sarj": false,
-  "surum": 23,
+  "surum": 26,
   "n": [
-    {"q": 41, "z": 1763366400000, "en": 38.4612345, "boy": 27.2198765, "dog": 4.5, "hiz": 11.25, "yon": 87.5, "yuk": 41.0, "kay": "g", "sahte": false, "zayif": false},
-    {"q": 44, "z": 1763366470000, "en": 38.4613, "boy": 27.22, "dog": 650.0, "hiz": null, "yon": null, "yuk": null, "kay": "a", "sahte": true, "zayif": true}
+    {"q": 41, "z": 1763366400000, "en": 38.4612345, "boy": 27.2198765, "dog": 4.5, "hiz": 11.25, "yon": 87.5, "yuk": 41.0, "kay": "g", "sahte": false, "zayif": false, "o": 18250},
+    {"q": 44, "z": 1763366470000, "en": 38.4613, "boy": 27.22, "dog": 650.0, "hiz": null, "yon": null, "yuk": null, "kay": "a", "sahte": true, "zayif": true, "o": null}
   ],
   "olaylar": [
     {"q": 42, "z": 1763366405000, "tur": "konum_kapandi"},
-    {"q": 43, "z": 1763366465000, "tur": "konum_acildi", "a": "ag"}
+    {"q": 43, "z": 1763366465000, "tur": "kurulum", "a": "pil:0,arka:1"}
   ]
 }

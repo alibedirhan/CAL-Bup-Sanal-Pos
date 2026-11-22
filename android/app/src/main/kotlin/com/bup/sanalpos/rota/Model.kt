@@ -23,6 +23,11 @@ data class Nokta(
     val rakim: Double?,
     val kaynak: NoktaKaynagi,
     val sahte: Boolean,
+    /**
+     * Cihazdaki km sayacının bu andaki toplamı (m; 0.13.3, M23, sözleşmede `o`). Bilinmiyorsa (eski kayıt) null.
+     * Uygulama verisi silinirse sıfırdan başlar: okuyan taraf geri gidişi sayaç sıfırlanması sayar.
+     */
+    val km: Long? = null,
 ) {
     /** Çok kötü doğruluk: gönderilir ama durum kararına katılmaz (M10). */
     val zayif: Boolean get() = dogruluk > ZAYIF_DOGRULUK_M
@@ -46,6 +51,9 @@ enum class OlayTuru(val kod: String) {
     TAKIP_ACILDI("takip_acildi"),
     TAKIP_KAPANDI("takip_kapandi"),
     KUYRUK_TASTI("kuyruk_tasti"),
+
+    /** Kurulum durumu (0.13.3): ayrıntı `pil:1,arka:1` — pil kısıtlaması kaldırılmış mı, arka plan konum izni var mı. */
+    KURULUM("kurulum"),
 }
 
 /** Kuyruktaki bir olay. [zaman] saat farkıyla düzeltilmiş cihaz saatidir (ROTA_MIMARI §5.6). */
@@ -102,9 +110,26 @@ data class TakipAyari(
         /** Onay gelmeden ve belge okunamazken: konum alınmaz. */
         val KAPALI = TakipAyari(aktif = false, takip = false, hareketSn = 15, durgunSn = 120, depoSn = 300)
 
-        /** Sunucudan gelen değerleri doğrular; bozuk değer güvenli varsayılana döner. */
         /** K31: 2 dakika. Alan merkezde yoksa (0.13.0 dönemi belgeleri) de bu geçerlidir. */
         const val VARSAYILAN_GONDERIM_SN = 120
+
+        /** Depodayken iki yazma arası en az (0.13.3, M24): gece depoda bekleyen araç kotayı boşa harcamasın. */
+        const val DEPO_GONDERIM_SN = 600
+
+        /** Dururken (müşteride, park) iki yazma arası en az (M24). CAL_bup'ın "veri kesildi" eşiği 15 dk'dır. */
+        const val DURGUN_GONDERIM_SN = 300
+
+        /**
+         * Duruma göre gönderim aralığı (M24). Hareketteyken merkezin aralığı aynen geçerlidir; araç kalkınca
+         * durum "hareket"e döner ve bekleyen kayıtlar hemen gider (kalkış haritada gecikmez).
+         */
+        fun gonderimMs(gonderimSn: Int, durum: TerminalDurumu): Long = 1000L * when (durum) {
+            TerminalDurumu.DEPODA -> maxOf(gonderimSn, DEPO_GONDERIM_SN)
+            TerminalDurumu.DURGUN -> maxOf(gonderimSn, DURGUN_GONDERIM_SN)
+            else -> gonderimSn
+        }
+
+        /** Sunucudan gelen değerleri doğrular; bozuk değer güvenli varsayılana döner. */
 
         fun guvenli(aktif: Any?, takip: Any?, hareketSn: Any?, durgunSn: Any?, depoSn: Any?, gonderimSn: Any? = null): TakipAyari {
             fun sn(x: Any?, varsayilan: Int, en: Long = 5L) = (x as? Number)?.toLong()?.takeIf { it in en..3600L }?.toInt() ?: varsayilan
@@ -134,4 +159,10 @@ data class Depo(val ad: String, val enlem: Double, val boylam: Double, val yaric
             Depo((m["ad"] as? String)?.take(40) ?: "Depo", en, boy, r)
         }.take(10)
     }
+}
+
+/** Kurulum olayının ayrıntısı (0.13.3): merkez, terminale gitmeden eksik kurulumu görsün. */
+object KurulumDurumu {
+    fun ayrinti(pilMuaf: Boolean, arkaPlanIzni: Boolean): String =
+        "pil:${if (pilMuaf) 1 else 0},arka:${if (arkaPlanIzni) 1 else 0}"
 }
