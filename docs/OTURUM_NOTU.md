@@ -1,3 +1,13 @@
+# 22 Kasım 2026 gece (23:45) — 0.13.3 SESSİZ yayında, CAL_bup 1.47.0 canlıda (Ali "yayınla")
+
+`rota-0.13.3` → main (`e54f8e5`, ileri sarma, GitHub'a gönderildi); `android_yayin.sh --yayinla --sessiz`: kurallar
+(değişmedi), APK `alibedirhan/bup-sanal-pos-android` v0.13.3 (SHA-256 `a16c786b1d915bd51bfec08d2efa0ea62a3b30a68786847d855f8d01e4c8e2f8`,
+indirilen ekle aynı), kurulum sayfası 0.13.3. **`ayarlar/android` yazılmadı** (hâlâ 0.13.1/24): terminallerde uyarı yok.
+Ali iki araç terminaline kurulum sayfasından elle kuracak (üzerine kurulum). Kurunca bak: `rota_yonet durum` sürüm 26,
+noktalarda `o`, Ayarlar'da "Kurulum tamam/eksik"; birkaç gün sonra `rota_pil.mjs` (saniyelik GPS'in pil etkisi, M23).
+CAL_bup 1.47.0 yayını CAL_bup OTURUM_NOTU en üstünde. 23:45'te dört terminal veri gönderiyordu (hepsi 0.13.2).
+**Ali dönünce:** araç profili taslağını değerlendirecek (onaylarsa ROTA_MIMARI §12.3), km kaynağını bildirecek.
+
 # 22 Kasım 2026 gece — 0.13.3 (dal `rota-0.13.3`, yayın yok) + araç profili taslağı
 
 Ali "önerdiklerini yapmaya başla, aynı titizlikle" dedi; km'nin gerçek veriyle doğrulanmasını istedi (kaynağı —
